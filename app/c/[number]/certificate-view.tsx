@@ -182,6 +182,22 @@ export default function CertificateView(props: CertificateViewProps) {
               )}
             </div>
 
+            {certificate.status === 'revoked' && certificate.revokedAt && (
+              <div className="border-t pt-8 mb-8">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-red-800 mb-2">This Certificate Has Been Revoked</h3>
+                  <p className="text-sm text-red-700 mb-2">
+                    Revoked on {formatDate(certificate.revokedAt)}
+                  </p>
+                  {certificate.revokeReason && (
+                    <p className="text-sm text-red-700">
+                      <strong>Reason:</strong> {certificate.revokeReason}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {certificate.status === 'valid' && (
               <>
                 <div className="border-t pt-8 mb-8">

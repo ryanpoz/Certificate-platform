@@ -14,6 +14,7 @@ export default function SingleCertificateForm({ course, academyId, userId }: { c
     issueDate: new Date().toISOString().split('T')[0],
     custom: {} as Record<string, any>,
     publish: false,
+    isPreview: false,
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -28,6 +29,7 @@ export default function SingleCertificateForm({ course, academyId, userId }: { c
         issueDate: new Date(formData.issueDate),
         custom: formData.custom,
         publish: formData.publish,
+        isPreview: formData.isPreview,
       })
 
       alert(`Certificate ${result.number} ${formData.publish ? 'published' : 'created as draft'}!`)
@@ -84,17 +86,32 @@ export default function SingleCertificateForm({ course, academyId, userId }: { c
         />
       </div>
 
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="publish"
-          checked={formData.publish}
-          onChange={(e) => setFormData({ ...formData, publish: e.target.checked })}
-          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-        />
-        <label htmlFor="publish" className="ml-2 block text-sm text-gray-900">
-          Publish immediately (send email)
-        </label>
+      <div className="space-y-3">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="publish"
+            checked={formData.publish}
+            onChange={(e) => setFormData({ ...formData, publish: e.target.checked })}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="publish" className="ml-2 block text-sm text-gray-900">
+            Publish immediately (send email)
+          </label>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="isPreview"
+            checked={formData.isPreview}
+            onChange={(e) => setFormData({ ...formData, isPreview: e.target.checked })}
+            className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+          />
+          <label htmlFor="isPreview" className="ml-2 block text-sm text-gray-900">
+            Create as preview (excluded from usage tracking)
+          </label>
+        </div>
       </div>
 
       {error && (

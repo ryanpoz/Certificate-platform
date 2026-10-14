@@ -1,4 +1,4 @@
-# Certificate Platform - Sprint 1 & 2
+# Certificate Platform - Sprints 1, 2 & 3
 
 A proof-of-concept certificate platform for issuing and managing digital certificates. Built as a lower-cost alternative to Accredible for academies and training programs.
 
@@ -18,10 +18,10 @@ A proof-of-concept certificate platform for issuing and managing digital certifi
 - **Validation**: row-by-row validation with error reporting (created/skipped/error)
 - **Draft creation**: validated rows become unpublished drafts
 - **Publishing**: idempotent batch publishing (safe to retry)
-- **Single-person form**: issue individual certificates
+- **Single-person form**: issue individual certificates with preview option
 - **Unpublished draft count**: visible throughout the interface
 
-### Sprint 2: Learner Experience ✨ NEW
+### Sprint 2: Learner Experience
 **Workflow 3: Certificate Viewing & Verification**
 - **Public certificate page**: Branded page at `/c/{number}` with status badge (valid/expired/revoked)
 - **Email delivery**: Resend integration with fallback to console logging
@@ -33,9 +33,37 @@ A proof-of-concept certificate platform for issuing and managing digital certifi
 - **QR code verification**: Scannable QR code on certificates links to public page
 - **Preview mode**: Mark certificates as preview to exclude from usage tracking
 
+### Sprint 3: Management & Analytics ✨ NEW
+**Workflow 4: Certificate Management**
+- **Certificate list**: Advanced search and filtering by:
+  - Course, status (unpublished/published/revoked), date range
+  - Engagement (delivered, viewed, LinkedIn clicked, CTA clicked)
+  - Name, email, or certificate number
+- **Engagement indicators**: Per-certificate icons showing delivery, views, and clicks
+- **Edit certificates**: Update learner name, issue date, and custom fields (changes reflected after republish)
+- **Reissue/Renew**: Create new certificate linked to prior version via `prior_certificate_id`
+- **Revoke**: Mark certificates as revoked with reason, displayed on public page
+- **Bulk actions**: 
+  - Bulk publish (with email sending)
+  - Bulk revoke (with reason)
+  - CSV export (includes all fields, status, and engagement data)
+
+**Workflow 5: Results Dashboard**
+- **Free analytics**: Included for all academies, no gating
+- **Filters**: Course selection and date range
+- **Funnel metrics**:
+  - Certificates issued (excludes previews)
+  - Emails delivered (and delivery rate)
+  - Unique page views (non-bot traffic only)
+  - LinkedIn add clicks (and conversion rate)
+  - CTA clicks (and conversion rate)
+- **Per-course breakdown**: Detailed metrics for each course
+- **Trend visualization**: Daily issuance and engagement over time
+- **Data integrity**: Excludes preview certificates and bot traffic from all counts
+
 ### Data Model
 - Academies, Users, Courses, Templates, Custom Fields
-- Learners, Certificates, Batches, Events
+- Learners, Certificates (with `isPreview`, `priorCertificateId`, `revokedAt`, `revokeReason`), Batches, Events
 
 ## Tech Stack
 

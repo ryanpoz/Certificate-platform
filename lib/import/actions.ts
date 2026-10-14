@@ -131,6 +131,7 @@ export async function createSingleCertificate(
     issueDate: Date
     custom: Record<string, any>
     publish: boolean
+    isPreview?: boolean
   }
 ) {
   const [course] = await db
@@ -185,6 +186,7 @@ export async function createSingleCertificate(
       custom: data.custom,
       source: 'form',
       publishedAt: data.publish ? new Date() : null,
+      isPreview: data.isPreview || false,
     })
     .returning()
 
