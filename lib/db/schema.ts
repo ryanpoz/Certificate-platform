@@ -93,6 +93,7 @@ export const certificates = pgTable('certificates', {
   revokedAt: timestamp('revoked_at'),
   revokeReason: text('revoke_reason'),
   publishedAt: timestamp('published_at'),
+  isPreview: boolean('is_preview').default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

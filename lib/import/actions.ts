@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { learners, certificates, batches, courses } from '@/lib/db/schema'
+import { learners, certificates, batches, courses, academies, templates, events } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { normalizeEmail, generateCertificateNumber, calculateExpiryDate } from '@/lib/utils/helpers'
 import { revalidatePath } from 'next/cache'
@@ -194,15 +194,26 @@ export async function createSingleCertificate(
 
 export async function publishCertificates(certificateIds: string[]) {
   const publishedAt = new Date()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   
   for (const certId of certificateIds) {
     const [cert] = await db
-      .select()
+      .select({
+        certificate: certificates,
+        course: courses,
+        learner: learners,
+        academy: academies,
+        template: templates,
+      })
       .from(certificates)
+      .innerJoin(courses, eq(certificates.courseId, courses.id))
+      .innerJoin(learners, eq(certificates.learnerId, learners.id))
+      .innerJoin(academies, eq(certificates.academyId, academies.id))
+      .leftJoin(templates, eq(courses.templateId, templates.id))
       .where(eq(certificates.id, certId))
       .limit(1)
 
-    if (!cert || cert.status !== 'unpublished') {
+    if (!cert || cert.certificate.status !== 'unpublished') {
       continue
     }
 
@@ -214,7 +225,34 @@ export async function publishCertificates(certificateIds: string[]) {
       })
       .where(eq(certificates.id, certId))
 
-    console.log(`Published certificate ${cert.number} (email stubbed in Sprint 1)`)
+    if (!cert.certificate.isPreview) {
+      const certificateUrl = `${appUrl}/c/${cert.certificate.number}`
+      
+      const { sendCertificateEmail } = await import('@/lib/email/resend')
+      
+      const emailResult = await sendCertificateEmail({
+        to: cert.learner.email,
+        learnerName: cert.learner.fullName,
+        courseName: cert.course.name,
+        certificateNumber: cert.certificate.number,
+        issueDate: cert.certificate.issueDate,
+        expiryDate: cert.certificate.expiryDate,
+        academyName: cert.academy.name,
+        academySenderName: cert.academy.senderName,
+        academyReplyTo: cert.academy.replyTo,
+        emailSubject: cert.template?.emailSubject || 'Your Certificate is Ready',
+        emailBody: cert.template?.emailBody || 'Congratulations! Your certificate is ready.',
+        certificateUrl,
+      })
+
+      await db.insert(events).values({
+        certificateId: cert.certificate.id,
+        academyId: cert.academy.id,
+        type: emailResult.success ? 'email_delivered' : 'email_bounced',
+        at: new Date(),
+        meta: { messageId: emailResult.messageId, error: emailResult.error },
+      })
+    }
   }
 
   revalidatePath('/dashboard')

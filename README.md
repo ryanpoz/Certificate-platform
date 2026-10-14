@@ -1,17 +1,18 @@
-# Certificate Platform - Sprint 1
+# Certificate Platform - Sprint 1 & 2
 
 A proof-of-concept certificate platform for issuing and managing digital certificates. Built as a lower-cost alternative to Accredible for academies and training programs.
 
-## Features (Sprint 1)
+## Features
 
-### Workflow 1: Academy Setup
+### Sprint 1: Academy Setup & Issuing
+**Workflow 1: Academy Setup**
 - **Sign up / Sign in** with magic link authentication
 - **Academy settings**: branding (name, brand color, website), email configuration
 - **Course management**: create courses with codes, descriptions, validity periods, and CTAs
 - **Certificate templates**: customizable templates with merge fields and live preview
 - **Custom fields**: define additional fields for certificates
 
-### Workflow 2: Certificate Issuing
+**Workflow 2: Certificate Issuing**
 - **Bulk upload**: CSV/XLSX file upload (up to 5,000 rows)
 - **Column mapping**: automatic and manual column mapping with saved preferences
 - **Validation**: row-by-row validation with error reporting (created/skipped/error)
@@ -20,9 +21,21 @@ A proof-of-concept certificate platform for issuing and managing digital certifi
 - **Single-person form**: issue individual certificates
 - **Unpublished draft count**: visible throughout the interface
 
+### Sprint 2: Learner Experience ✨ NEW
+**Workflow 3: Certificate Viewing & Verification**
+- **Public certificate page**: Branded page at `/c/{number}` with status badge (valid/expired/revoked)
+- **Email delivery**: Resend integration with fallback to console logging
+- **PDF generation**: Downloadable PDF with QR code for verification
+- **LinkedIn integration**: One-click "Add to LinkedIn" button with pre-filled certification data
+- **Share functionality**: Copy link button for easy sharing
+- **CTA tracking**: Automatic UTM parameters added to academy call-to-action links
+- **Event logging**: Track page views, PDF downloads, LinkedIn clicks, CTA clicks with bot filtering
+- **QR code verification**: Scannable QR code on certificates links to public page
+- **Preview mode**: Mark certificates as preview to exclude from usage tracking
+
 ### Data Model
 - Academies, Users, Courses, Templates, Custom Fields
-- Learners, Certificates, Batches, Events (stubbed)
+- Learners, Certificates, Batches, Events
 
 ## Tech Stack
 
@@ -31,6 +44,10 @@ A proof-of-concept certificate platform for issuing and managing digital certifi
 - **Styling**: Tailwind CSS
 - **File parsing**: xlsx (SheetJS)
 - **Authentication**: Magic link with JWT (jose)
+- **Email**: Resend API with console fallback
+- **PDF Generation**: Puppeteer
+- **QR Codes**: qrcode npm package
+- **Bot Filtering**: isbot npm package
 - **Deployment**: Vercel-ready (or any Node.js host)
 
 ## Prerequisites
@@ -60,6 +77,7 @@ Edit `.env.local` and add your database connection:
 DATABASE_URL=postgresql://user:password@localhost:5432/certificate_platform
 JWT_SECRET=<generate with: openssl rand -base64 32>
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+RESEND_API_KEY=<get from resend.com/api-keys - optional, falls back to console>
 \`\`\`
 
 ### 3. Create Database and Push Schema
@@ -98,7 +116,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Testing the Workflow
 
-### Complete Academy Setup (Workflow 1)
+### Complete Academy Setup (Workflow 1 - Sprint 1)
 
 1. After logging in, go to **Settings** and verify the academy details
 2. Go to **Dashboard** and click on "Creative Strategy Bootcamp"
@@ -106,15 +124,41 @@ Open [http://localhost:3000](http://localhost:3000)
 4. Click "Edit Template" to modify merge fields
 5. Preview shows how the certificate will look with dummy data
 
-### Issue Certificates in Bulk (Workflow 2)
+### Issue Certificates in Bulk (Workflow 2 - Sprint 1)
 
 1. Click **"Issue Certificates"** from the course page
-2. Upload a test CSV file (create one with columns: Name, Email, Date)
+2. Upload a test CSV file (use `test-graduates.csv` or `test-graduates-500.csv`)
 3. Map columns to Name, Email, and Issue Date (optional)
 4. Review validation results (valid/skipped/errors)
 5. Click **"Create Drafts"** to generate unpublished certificates
 6. View drafts in the **Certificates** page
-7. Click **"Publish"** to mark them as published (email stubbed)
+7. Click **"Publish"** to publish certificates and send emails
+
+### View & Share Certificate (Workflow 3 - Sprint 2) ✨ NEW
+
+1. After publishing, check console for email log (or Resend dashboard if API key is set)
+2. Copy the certificate URL from the email or logs
+3. Visit the certificate page at `/c/{certificate-number}`
+4. Verify the following features:
+   - Certificate displays with valid status badge
+   - QR code is visible and scannable
+   - **"Download PDF"** button generates PDF with QR code
+   - **"Add to LinkedIn"** button opens LinkedIn with pre-filled data
+   - **"Copy Link"** button copies the certificate URL
+   - Call-to-action button (if configured) has UTM parameters
+5. Open the PDF and verify QR code links back to the certificate page
+6. Click the LinkedIn button and verify certification form is pre-filled
+
+### Test Event Logging (Sprint 2) ✨ NEW
+
+1. Visit a published certificate page
+2. Click each action button (Download PDF, Add to LinkedIn, CTA)
+3. Check the database `events` table to see tracked events:
+   - `page_view` (with bot filtering)
+   - `pdf_download`
+   - `linkedin_add_click`
+   - `cta_click`
+4. Test with preview mode by adding `?preview=true` to URL - events should not be tracked
 
 ### Issue Single Certificate
 
@@ -122,6 +166,7 @@ Open [http://localhost:3000](http://localhost:3000)
 2. Fill in name, email, issue date
 3. Optionally check "Publish immediately"
 4. Submit to create the certificate
+5. If published, email will be sent (or logged to console)
 
 ### Sample CSV Format
 
