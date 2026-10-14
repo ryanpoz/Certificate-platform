@@ -169,6 +169,7 @@ export default async function CertificateDetailPage({
             learnerName={learner.fullName}
             issueDate={certificate.issueDate}
             custom={certificate.custom as Record<string, any> || {}}
+            pendingChanges={certificate.pendingChanges as any}
           />
         </div>
       </div>

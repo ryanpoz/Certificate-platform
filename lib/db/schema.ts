@@ -94,6 +94,7 @@ export const certificates = pgTable('certificates', {
   revokeReason: text('revoke_reason'),
   publishedAt: timestamp('published_at'),
   isPreview: boolean('is_preview').default(false),
+  pendingChanges: jsonb('pending_changes'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

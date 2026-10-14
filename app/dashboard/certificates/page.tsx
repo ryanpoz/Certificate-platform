@@ -17,10 +17,15 @@ export default async function CertificatesPage({
     startDate?: string
     endDate?: string
     engagement?: string
+    page?: string
   }>
 }) {
   const user = await requireAuth()
   const params = await searchParams
+  
+  const page = parseInt(params.page || '1', 10)
+  const limit = 50
+  const offset = (page - 1) * limit
 
   let query = db
     .select({
@@ -60,7 +65,10 @@ export default async function CertificatesPage({
     query = query.where(lte(certificates.issueDate, new Date(params.endDate)))
   }
 
-  const results = await query.orderBy(desc(certificates.createdAt)).limit(100)
+  const countQuery = query
+  const totalCount = (await countQuery).length
+
+  const results = await query.orderBy(desc(certificates.createdAt)).limit(limit).offset(offset)
 
   const certIds = results.map(r => r.certificate.id)
   
@@ -102,7 +110,10 @@ export default async function CertificatesPage({
     .where(eq(courses.academyId, user.academyId))
 
   const unpublishedCerts = results.filter(r => r.certificate.status === 'unpublished')
-  const selectedIds = results.map(r => r.certificate.id)
+  
+  const totalPages = Math.ceil(totalCount / limit)
+  const hasNextPage = page < totalPages
+  const hasPrevPage = page > 1
 
   return (
     <div className="px-4 sm:px-0">
@@ -110,12 +121,16 @@ export default async function CertificatesPage({
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Certificates</h1>
           <p className="mt-2 text-sm text-gray-700">
-            {results.length} certificate{results.length !== 1 ? 's' : ''}
-            {params.status === 'unpublished' && ` (${unpublishedCerts.length} unpublished)`}
+            Showing {offset + 1}–{Math.min(offset + limit, totalCount)} of {totalCount} certificate{totalCount !== 1 ? 's' : ''}
+            {params.status === 'unpublished' && ` (${unpublishedCerts.length} unpublished on this page)`}
           </p>
         </div>
-        {results.length > 0 && (
-          <BulkActions certificateIds={selectedIds} hasUnpublished={unpublishedCerts.length > 0} />
+        {totalCount > 0 && (
+          <BulkActions 
+            filters={params}
+            academyId={user.academyId}
+            hasUnpublished={unpublishedCerts.length > 0}
+          />
         )}
       </div>
 
@@ -303,6 +318,11 @@ export default async function CertificatesPage({
                               Preview
                             </span>
                           )}
+                          {certificate.pendingChanges !== null && certificate.pendingChanges !== undefined && (
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Pending Changes
+                            </span>
+                          )}
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500">
                           <span className="mr-4">{course.name}</span>
@@ -343,6 +363,124 @@ export default async function CertificatesPage({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between bg-white px-4 py-3 sm:px-6 rounded-lg shadow">
+          <div className="flex flex-1 justify-between sm:hidden">
+            {hasPrevPage ? (
+              <a
+                href={`?${new URLSearchParams({ ...params as any, page: String(page - 1) }).toString()}`}
+                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Previous
+              </a>
+            ) : (
+              <span className="relative inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-400">
+                Previous
+              </span>
+            )}
+            {hasNextPage ? (
+              <a
+                href={`?${new URLSearchParams({ ...params as any, page: String(page + 1) }).toString()}`}
+                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Next
+              </a>
+            ) : (
+              <span className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-400">
+                Next
+              </span>
+            )}
+          </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                {hasPrevPage ? (
+                  <a
+                    href={`?${new URLSearchParams({ ...params as any, page: String(page - 1) }).toString()}`}
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                    </svg>
+                  </a>
+                ) : (
+                  <span className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-300 ring-1 ring-inset ring-gray-300 bg-gray-100">
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                )}
+                
+                {(() => {
+                  const pages = []
+                  for (let i = 0; i < Math.min(totalPages, 7); i++) {
+                    let pageNum
+                    if (totalPages <= 7) {
+                      pageNum = i + 1
+                    } else if (page <= 4) {
+                      pageNum = i + 1
+                    } else if (page >= totalPages - 3) {
+                      pageNum = totalPages - 6 + i
+                    } else {
+                      pageNum = page - 3 + i
+                    }
+                    
+                    const searchParams = new URLSearchParams(params as any)
+                    searchParams.set('page', String(pageNum))
+                    
+                    if (pageNum === page) {
+                      pages.push(
+                        <span
+                          key={pageNum}
+                          className="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
+                        >
+                          {pageNum}
+                        </span>
+                      )
+                    } else {
+                      pages.push(
+                        <a
+                          key={pageNum}
+                          href={`?${searchParams.toString()}`}
+                          className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                        >
+                          {pageNum}
+                        </a>
+                      )
+                    }
+                  }
+                  return pages
+                })()}
+
+                {hasNextPage ? (
+                  <a
+                    href={`?${new URLSearchParams({ ...params as any, page: String(page + 1) }).toString()}`}
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                    </svg>
+                  </a>
+                ) : (
+                  <span className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-300 ring-1 ring-inset ring-gray-300 bg-gray-100">
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                )}
+              </nav>
+            </div>
+          </div>
         </div>
       )}
     </div>

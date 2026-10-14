@@ -1,27 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { publishCertificates } from '@/lib/import/actions'
-import { revokeCertificates, exportCertificatesToCSV } from './actions'
+import { publishCertificatesFiltered, revokeCertificatesFiltered, exportCertificatesToCSVFiltered } from './actions'
 
 export default function BulkActions({ 
-  certificateIds, 
+  filters,
+  academyId,
   hasUnpublished 
 }: { 
-  certificateIds: string[]
+  filters: any
+  academyId: string
   hasUnpublished: boolean
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function handlePublish() {
-    if (!confirm(`Publish ${certificateIds.length} certificate${certificateIds.length !== 1 ? 's' : ''}? Emails will be sent.`)) {
+    if (!confirm('Publish ALL unpublished certificates matching the current filters? Emails will be sent.')) {
       return
     }
     setLoading(true)
     try {
-      await publishCertificates(certificateIds)
-      alert('Certificates published!')
+      const result = await publishCertificatesFiltered(academyId, filters)
+      alert(`${result.count} certificate${result.count !== 1 ? 's' : ''} published!`)
       window.location.reload()
     } catch (error) {
       alert(`Failed to publish: ${error}`)
@@ -30,13 +31,13 @@ export default function BulkActions({
   }
 
   async function handleRevoke() {
-    const reason = prompt(`Revoke ${certificateIds.length} certificate${certificateIds.length !== 1 ? 's' : ''}?\n\nEnter reason for revocation:`)
+    const reason = prompt('Revoke ALL certificates matching the current filters?\n\nEnter reason for revocation:')
     if (!reason) return
 
     setLoading(true)
     try {
-      await revokeCertificates(certificateIds, reason)
-      alert('Certificates revoked!')
+      const result = await revokeCertificatesFiltered(academyId, filters, reason)
+      alert(`${result.count} certificate${result.count !== 1 ? 's' : ''} revoked!`)
       window.location.reload()
     } catch (error) {
       alert(`Failed to revoke: ${error}`)
@@ -47,7 +48,7 @@ export default function BulkActions({
   async function handleExport() {
     setLoading(true)
     try {
-      const csv = await exportCertificatesToCSV(certificateIds)
+      const csv = await exportCertificatesToCSVFiltered(academyId, filters)
       const blob = new Blob([csv], { type: 'text/csv' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -79,27 +80,27 @@ export default function BulkActions({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 z-20 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+          <div className="absolute right-0 z-20 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
             <div className="py-1">
               {hasUnpublished && (
                 <button
                   onClick={handlePublish}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
-                  Publish Selected
+                  Publish All Filtered
                 </button>
               )}
               <button
                 onClick={handleRevoke}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
-                Revoke Selected
+                Revoke All Filtered
               </button>
               <button
                 onClick={handleExport}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
-                Export to CSV
+                Export All Filtered to CSV
               </button>
             </div>
           </div>

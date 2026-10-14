@@ -1,5 +1,43 @@
 # Sprint 3 Summary: Certificate Management & Results Dashboard
 
+## Ryan's Requested Fixes (Implemented)
+
+### Fix 1: Pending Changes for Published Certificates ✅
+**Requirement**: Edits to published certificates must not appear on public page, PDF, or LinkedIn data until admin explicitly republishes.
+
+**Implementation**:
+- Added `pendingChanges` JSON field to certificates schema
+- Edits to **published** certificates now stored in `pendingChanges` (not applied immediately)
+- Edits to **unpublished** certificates applied immediately (no pending state needed)
+- "Pending Changes" badge displayed on certificate list and detail page
+- Actions panel shows:
+  - **Republish** button: Applies pending changes, optional email sending
+  - **Discard Changes** button: Removes pending edits
+- Public certificate page, PDF generation, and LinkedIn data use original (not pending) data
+- Server actions: `editCertificate()`, `republishCertificate()`, `discardPendingChanges()`
+- **Tests**: 3 new tests for pending changes behavior (32 tests total, all passing)
+
+### Fix 2: Server-Side Pagination ✅
+**Requirement**: Motion has 2,000+ certificates. Add pagination (50 per page) that works with all filters. Bulk actions and CSV export must apply to ALL filtered results, not just current page.
+
+**Implementation**:
+- **Pagination**: 50 certificates per page with offset/limit queries
+- **Total count**: Displays "Showing X–Y of Z certificates"
+- **Page controls**:
+  - Desktop: Previous/Next + numbered page links (shows up to 7 page numbers)
+  - Mobile: Previous/Next buttons
+- **Filters preserved**: All filters (course, status, date, engagement, search) carried across pages
+- **Bulk actions rewritten**:
+  - `publishCertificatesFiltered()`: Publishes ALL unpublished certificates matching filters
+  - `revokeCertificatesFiltered()`: Revokes ALL certificates matching filters
+  - `exportCertificatesToCSVFiltered()`: Exports ALL certificates matching filters
+  - Actions now accept `filters` and `academyId` instead of `certificateIds`
+- **Query builder**: `buildFilteredQuery()` applies filters consistently across bulk operations
+- **CSV export**: Includes "Has Pending Changes" column
+- **Tests**: 6 new tests for pagination logic (edge cases, 2,500 certs, bulk actions)
+
+---
+
 ## What Was Built
 
 ### 1. Certificate Management UI (Workflow 4)

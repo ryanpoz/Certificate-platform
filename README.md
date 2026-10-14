@@ -39,14 +39,19 @@ A proof-of-concept certificate platform for issuing and managing digital certifi
   - Course, status (unpublished/published/revoked), date range
   - Engagement (delivered, viewed, LinkedIn clicked, CTA clicked)
   - Name, email, or certificate number
+  - **Server-side pagination** (50 per page) with total count
 - **Engagement indicators**: Per-certificate icons showing delivery, views, and clicks
-- **Edit certificates**: Update learner name, issue date, and custom fields (changes reflected after republish)
+- **Edit certificates**: Update learner name, issue date, and custom fields
+  - **Pending changes system**: Edits to published certificates stored separately until explicit republish
+  - Changes not visible on public page, PDF, or LinkedIn data until republished
+  - Optional email sending on republish
 - **Reissue/Renew**: Create new certificate linked to prior version via `prior_certificate_id`
 - **Revoke**: Mark certificates as revoked with reason, displayed on public page
 - **Bulk actions**: 
-  - Bulk publish (with email sending)
-  - Bulk revoke (with reason)
-  - CSV export (includes all fields, status, and engagement data)
+  - Bulk publish (applies to all filtered unpublished certificates)
+  - Bulk revoke (applies to all filtered certificates, with reason)
+  - CSV export (exports all filtered certificates, not just current page)
+  - All bulk actions respect current filters
 
 **Workflow 5: Results Dashboard**
 - **Free analytics**: Included for all academies, no gating
