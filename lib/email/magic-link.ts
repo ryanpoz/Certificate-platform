@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+const emailFrom = process.env.EMAIL_FROM || 'onboarding@resend.dev'
 
 export async function sendMagicLink(email: string, magicLink: string): Promise<void> {
   const subject = 'Your login link'
@@ -28,17 +29,25 @@ export async function sendMagicLink(email: string, magicLink: string): Promise<v
 
   if (resend) {
     try {
-      await resend.emails.send({
-        from: 'noreply@resend.dev',
+      const result = await resend.emails.send({
+        from: emailFrom,
         to: email,
         subject,
         html,
       })
+      
+      if (result.error) {
+        console.error('Resend email failed:', result.error)
+        throw new Error(`Failed to send email: ${result.error.message}`)
+      }
+      
+      console.log(`Magic link sent to ${email} via Resend (ID: ${result.data?.id})`)
     } catch (error) {
-      console.error('Resend email failed:', error)
+      console.error('Failed to send magic link email:', error)
       console.log(`[FALLBACK] Magic link for ${email}: ${magicLink}`)
+      throw error
     }
   } else {
-    console.log(`[CONSOLE] Magic link for ${email}: ${magicLink}`)
+    console.log(`[NO RESEND_API_KEY] Magic link for ${email}: ${magicLink}`)
   }
 }

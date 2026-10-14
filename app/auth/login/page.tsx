@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { sendMagicLink } from './actions'
+import { sendMagicLinkAction } from './actions'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,7 +13,7 @@ export default function LoginPage() {
     setLoading(true)
     setMessage(null)
 
-    const result = await sendMagicLink(email)
+    const result = await sendMagicLinkAction(email)
     
     if (result.error) {
       setMessage({ type: 'error', text: result.error })

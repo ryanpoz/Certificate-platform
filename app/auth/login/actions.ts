@@ -2,11 +2,12 @@
 
 import { db } from '@/lib/db'
 import { users, academies } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { createMagicLinkToken } from '@/lib/utils/auth'
 import { normalizeEmail } from '@/lib/utils/helpers'
+import { sendMagicLink } from '@/lib/email/magic-link'
 
-export async function sendMagicLink(email: string) {
+export async function sendMagicLinkAction(email: string) {
   const normalised = normalizeEmail(email)
   
   const [user] = await db
@@ -37,10 +38,10 @@ export async function sendMagicLink(email: string) {
     })
     .where(eq(users.id, user.id))
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL!
   const magicLink = `${appUrl}/auth/verify?token=${token}`
 
-  console.log('Magic link for', email, ':', magicLink)
+  await sendMagicLink(normalised, magicLink)
 
-  return { success: true, message: 'Magic link sent! Check console for link (email stubbed in Sprint 1).' }
+  return { success: true, message: 'Magic link sent! Check your email.' }
 }
