@@ -1,4 +1,5 @@
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 import { formatDate, renderMergeFields } from '../utils/helpers'
 
 // @ts-ignore
@@ -174,13 +175,14 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
   `
 
   const browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   })
 
   try {
     const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
+    await page.setContent(html, { waitUntil: 'load' })
     const pdfBuffer = await page.pdf({
       format: 'letter',
       printBackground: true,

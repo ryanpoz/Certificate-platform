@@ -55,7 +55,7 @@ export default function ResultsMetrics({
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
-          <strong>Note:</strong> LinkedIn button clicks are tracked, but profile adds and post impressions are not available from LinkedIn's API.
+          <strong>Note:</strong> LinkedIn button clicks are tracked, but profile adds and post impressions are not available from LinkedIn&apos;s API.
           Conversion rates show percentage of previous stage (e.g., views from delivered emails).
         </p>
       </div>
