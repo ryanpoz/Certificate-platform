@@ -5,19 +5,20 @@ import { academies, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { createMagicLinkToken } from '@/lib/utils/auth'
 import { sendMagicLink } from '@/lib/email/magic-link'
+import { normalizeEmail } from '@/lib/utils/helpers'
 
 export async function signupAction(data: {
   name: string
   email: string
   academyName: string
 }) {
-  const emailNorm = data.email.toLowerCase().trim()
+  const emailNorm = normalizeEmail(data.email)
   
   // Check if user already exists
   const existingUser = await db
     .select()
     .from(users)
-    .where(eq(users.email, data.email))
+    .where(eq(users.email, emailNorm))
     .limit(1)
 
   if (existingUser.length > 0) {
@@ -34,27 +35,40 @@ export async function signupAction(data: {
       name: data.academyName,
       slug,
       senderName: data.academyName,
-      replyTo: data.email,
+      replyTo: emailNorm,
       brandColor: '#2563eb',
     })
     .returning()
 
-  // Create user
+  // Create magic link token
+  const token = await createMagicLinkToken('temp', emailNorm)
+  const expiry = new Date()
+  expiry.setMinutes(expiry.getMinutes() + 15)
+
+  // Create user with magic link token
   const [user] = await db
     .insert(users)
     .values({
       academyId: academy.id,
       name: data.name,
-      email: data.email,
+      email: emailNorm,
+      magicLinkToken: token,
+      magicLinkExpiry: expiry,
     })
     .returning()
 
-  // Send magic link
-  const token = await createMagicLinkToken(user.id, data.email)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  const magicLink = `${appUrl}/auth/verify?token=${token}`
-  
-  await sendMagicLink(data.email, magicLink)
+  // Update token with actual user ID
+  const actualToken = await createMagicLinkToken(user.id, emailNorm)
+  await db
+    .update(users)
+    .set({ magicLinkToken: actualToken })
+    .where(eq(users.id, user.id))
 
-  return { success: true, email: data.email }
+  // Send magic link
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+  const magicLink = `${appUrl}/auth/verify?token=${actualToken}`
+  
+  await sendMagicLink(emailNorm, magicLink)
+
+  return { success: true, email: emailNorm }
 }
