@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { sendMagicLinkAction } from './actions'
+import { GoogleSignInButton } from '@/components/auth/google-signin-button'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -24,6 +25,8 @@ export default function LoginPage() {
     setLoading(false)
   }
 
+  const hasGoogleOAuth = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === 'true'
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
@@ -32,9 +35,24 @@ export default function LoginPage() {
             Sign in to your academy
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email to receive a magic link
+            {hasGoogleOAuth ? 'Sign in with Google or email' : 'Enter your email to receive a magic link'}
           </p>
         </div>
+
+        {hasGoogleOAuth && (
+          <>
+            <GoogleSignInButton />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+              </div>
+            </div>
+          </>
+        )}
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="sr-only">
