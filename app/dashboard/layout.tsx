@@ -43,28 +43,34 @@ export default async function DashboardLayout({
                   Dashboard
                 </Link>
                 <Link
+                  href="/dashboard/certificates/issue"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+                >
+                  Issue Certificate
+                </Link>
+                <Link
                   href="/dashboard/results"
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
                 >
                   Results
                 </Link>
                 <Link
-                  href="/dashboard/settings"
+                  href="/dashboard/programs"
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
                 >
-                  Settings
-                </Link>
-                <Link
-                  href="/dashboard/courses"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
-                >
-                  Courses
+                  Certificate Programs
                 </Link>
                 <Link
                   href="/dashboard/certificates"
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
                 >
                   Certificates
+                </Link>
+                <Link
+                  href="/dashboard/settings"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+                >
+                  Settings
                 </Link>
               </div>
             </div>

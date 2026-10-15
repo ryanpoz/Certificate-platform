@@ -44,32 +44,32 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="mt-2 text-sm text-gray-700">
-            Manage your courses and certificates
+            Manage your certificate programs
           </p>
         </div>
         <div className="mt-4 sm:mt-0">
           <Link
-            href="/dashboard/courses/new"
+            href="/dashboard/certificates/issue"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
           >
-            Create Course
+            Issue Certificate
           </Link>
         </div>
       </div>
 
       <div className="mt-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Your Courses</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Your Programs</h2>
         
         {coursesWithStats.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
-            <h3 className="mt-2 text-sm font-semibold text-gray-900">No courses yet</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by creating your first course.</p>
+            <h3 className="mt-2 text-sm font-semibold text-gray-900">No certificates yet</h3>
+            <p className="mt-1 text-sm text-gray-500">Get started by issuing your first certificate.</p>
             <div className="mt-6">
               <Link
-                href="/dashboard/courses/new"
+                href="/dashboard/certificates/issue"
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
               >
-                Create Course
+                Issue Certificate
               </Link>
             </div>
           </div>
