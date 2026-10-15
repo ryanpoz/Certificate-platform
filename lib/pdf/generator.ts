@@ -16,6 +16,7 @@ export interface GeneratePDFParams {
   bodyText: string
   custom: Record<string, any>
   certificateUrl: string
+  designConfig?: any // Template design config with logo, background, signatures
 }
 
 export async function generateCertificatePDF(params: GeneratePDFParams): Promise<Buffer> {
@@ -32,6 +33,13 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
     certificateNumber: params.certificateNumber,
     custom: params.custom,
   })
+
+  // Support template background images (including data URLs)
+  const backgroundStyle = params.designConfig?.background?.type === 'image' && params.designConfig.background.value
+    ? `background-image: url('${params.designConfig.background.value}'); background-size: cover; background-position: center; opacity: ${params.designConfig.background.opacity || 1};`
+    : params.designConfig?.background?.type === 'gradient' && params.designConfig.background.value
+    ? `background: ${params.designConfig.background.value};`
+    : `background: ${params.designConfig?.background?.value || 'white'};`
 
   const html = `
 <!DOCTYPE html>
@@ -55,6 +63,12 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
       padding: 0.75in;
       box-sizing: border-box;
       position: relative;
+      ${backgroundStyle}
+    }
+    .logo {
+      max-width: 200px;
+      max-height: 100px;
+      margin-bottom: 20px;
     }
     .header {
       border-bottom: 4px solid ${params.brandColor};
@@ -138,6 +152,7 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
 <body>
   <div class="page">
     <div class="header">
+      ${params.designConfig?.logo?.url ? `<img src="${params.designConfig.logo.url}" alt="Logo" class="logo" />` : ''}
       <h1 class="academy-name">${params.academyName}</h1>
     </div>
     
@@ -166,6 +181,17 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
       <div class="verify-section">
         <div class="verify-label">Verify This Certificate</div>
         <div class="verify-url">${params.certificateUrl}</div>
+        ${params.designConfig?.signatures?.length ? `
+          <div style="display: flex; gap: 40px; margin-top: 20px;">
+            ${params.designConfig.signatures.map((sig: any) => `
+              <div style="text-align: center;">
+                ${sig.type === 'image' && sig.value ? `<img src="${sig.value}" alt="Signature" style="max-width: 150px; max-height: 60px; margin-bottom: 8px;" />` : ''}
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">${sig.type === 'text' ? sig.value : ''}</div>
+                <div style="font-size: 11px; color: #6b7280;">${sig.title || ''}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
       <img src="${qrCodeDataUrl}" alt="QR Code" class="qr-code" />
     </div>
