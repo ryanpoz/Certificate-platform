@@ -78,6 +78,42 @@ export default function TemplateBuilder({ template, academyId }: TemplateBuilder
       <div className="flex-1 flex overflow-hidden">
         <div className="w-1/3 border-r overflow-y-auto p-6 space-y-6">
           <div>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Logo</h3>
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={config.logo?.url || ''}
+                onChange={(e) => setConfig({ ...config, logo: { ...config.logo, url: e.target.value, size: config.logo?.size || 'medium', position: config.logo?.position || 'top-center' }})}
+                placeholder="Logo URL or data URL"
+                className="w-full px-3 py-2 border rounded text-sm"
+              />
+              <div className="flex gap-2">
+                <select
+                  value={config.logo?.size || 'medium'}
+                  onChange={(e) => setConfig({ ...config, logo: { ...config.logo, size: e.target.value as any, url: config.logo?.url, position: config.logo?.position || 'top-center' }})}
+                  className="flex-1 px-3 py-2 border rounded text-sm"
+                >
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+                <select
+                  value={config.logo?.position || 'top-center'}
+                  onChange={(e) => setConfig({ ...config, logo: { ...config.logo, position: e.target.value as any, url: config.logo?.url, size: config.logo?.size || 'medium' }})}
+                  className="flex-1 px-3 py-2 border rounded text-sm"
+                >
+                  <option value="top-left">Top Left</option>
+                  <option value="top-center">Top Center</option>
+                  <option value="top-right">Top Right</option>
+                </select>
+              </div>
+              <p className="text-xs text-gray-500">
+                Upload to Supabase Storage or use data URL for images &lt;500KB
+              </p>
+            </div>
+          </div>
+
+          <div>
             <h3 className="text-sm font-medium text-gray-900 mb-3">Colors</h3>
             <div className="space-y-3">
               <div>
@@ -116,6 +152,103 @@ export default function TemplateBuilder({ template, academyId }: TemplateBuilder
                   className="w-full h-10 rounded border"
                 />
               </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Background</h3>
+            <div className="space-y-3">
+              <select
+                value={config.background.type}
+                onChange={(e) => setConfig({ ...config, background: { ...config.background, type: e.target.value as any }})}
+                className="w-full px-3 py-2 border rounded"
+              >
+                <option value="color">Solid Color</option>
+                <option value="pattern">Pattern</option>
+                <option value="image">Image</option>
+              </select>
+              {config.background.type === 'color' && (
+                <input
+                  type="color"
+                  value={config.background.value}
+                  onChange={(e) => setConfig({ ...config, background: { ...config.background, value: e.target.value }})}
+                  className="w-full h-10 rounded border"
+                />
+              )}
+              {config.background.type === 'image' && (
+                <>
+                  <input
+                    type="text"
+                    value={config.background.value}
+                    onChange={(e) => setConfig({ ...config, background: { ...config.background, value: e.target.value }})}
+                    placeholder="Background image URL or data URL"
+                    className="w-full px-3 py-2 border rounded text-sm"
+                  />
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Opacity (%)</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={(config.background.opacity || 1) * 100}
+                      onChange={(e) => setConfig({ ...config, background: { ...config.background, opacity: parseInt(e.target.value) / 100 }})}
+                      className="w-full"
+                    />
+                    <div className="text-xs text-gray-500 text-center">{Math.round((config.background.opacity || 1) * 100)}%</div>
+                  </div>
+                </>
+              )}
+              {config.background.type === 'pattern' && (
+                <select
+                  value={config.background.value}
+                  onChange={(e) => setConfig({ ...config, background: { ...config.background, value: e.target.value }})}
+                  className="w-full px-3 py-2 border rounded"
+                >
+                  <option value="dots">Dots</option>
+                  <option value="grid">Grid</option>
+                  <option value="diagonal">Diagonal Lines</option>
+                  <option value="waves">Waves</option>
+                </select>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Border</h3>
+            <div className="space-y-3">
+              <select
+                value={config.border.style}
+                onChange={(e) => setConfig({ ...config, border: { ...config.border, style: e.target.value as any }})}
+                className="w-full px-3 py-2 border rounded"
+              >
+                <option value="none">None</option>
+                <option value="simple">Simple</option>
+                <option value="double">Double</option>
+                <option value="ornamental">Ornamental</option>
+                <option value="modern">Modern</option>
+              </select>
+              {config.border.style !== 'none' && (
+                <>
+                  <input
+                    type="color"
+                    value={config.border.color}
+                    onChange={(e) => setConfig({ ...config, border: { ...config.border, color: e.target.value }})}
+                    className="w-full h-10 rounded border"
+                  />
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Width (px)</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="20"
+                      value={config.border.width}
+                      onChange={(e) => setConfig({ ...config, border: { ...config.border, width: parseInt(e.target.value) }})}
+                      className="w-full"
+                    />
+                    <div className="text-xs text-gray-500 text-center">{config.border.width}px</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -181,6 +314,97 @@ export default function TemplateBuilder({ template, academyId }: TemplateBuilder
           </div>
 
           <div>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Signatures (up to 2)</h3>
+            <div className="space-y-4">
+              {config.signatures.map((sig, idx) => (
+                <div key={idx} className="p-3 border rounded bg-gray-50 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-gray-600">Signature {idx + 1}</span>
+                    <button
+                      onClick={() => setConfig({ ...config, signatures: config.signatures.filter((_, i) => i !== idx) })}
+                      className="text-xs text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <select
+                    value={sig.type}
+                    onChange={(e) => {
+                      const newSigs = [...config.signatures]
+                      newSigs[idx] = { ...sig, type: e.target.value as any }
+                      setConfig({ ...config, signatures: newSigs })
+                    }}
+                    className="w-full px-3 py-2 border rounded text-sm"
+                  >
+                    <option value="text">Typed Name</option>
+                    <option value="image">Uploaded Image</option>
+                  </select>
+                  {sig.type === 'text' ? (
+                    <>
+                      <input
+                        type="text"
+                        value={sig.value}
+                        onChange={(e) => {
+                          const newSigs = [...config.signatures]
+                          newSigs[idx] = { ...sig, value: e.target.value }
+                          setConfig({ ...config, signatures: newSigs })
+                        }}
+                        placeholder="Signature name"
+                        className="w-full px-3 py-2 border rounded text-sm"
+                      />
+                      <select
+                        value={sig.font || 'Allura'}
+                        onChange={(e) => {
+                          const newSigs = [...config.signatures]
+                          newSigs[idx] = { ...sig, font: e.target.value }
+                          setConfig({ ...config, signatures: newSigs })
+                        }}
+                        className="w-full px-3 py-2 border rounded text-sm"
+                      >
+                        <option value="Allura">Allura (script)</option>
+                        <option value="Dancing Script">Dancing Script</option>
+                        <option value="Great Vibes">Great Vibes</option>
+                        <option value="Pacifico">Pacifico</option>
+                      </select>
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={sig.value}
+                      onChange={(e) => {
+                        const newSigs = [...config.signatures]
+                        newSigs[idx] = { ...sig, value: e.target.value }
+                        setConfig({ ...config, signatures: newSigs })
+                      }}
+                      placeholder="Signature image URL or data URL"
+                      className="w-full px-3 py-2 border rounded text-sm"
+                    />
+                  )}
+                  <input
+                    type="text"
+                    value={sig.title}
+                    onChange={(e) => {
+                      const newSigs = [...config.signatures]
+                      newSigs[idx] = { ...sig, title: e.target.value }
+                      setConfig({ ...config, signatures: newSigs })
+                    }}
+                    placeholder="Title (e.g. Director, CEO)"
+                    className="w-full px-3 py-2 border rounded text-sm"
+                  />
+                </div>
+              ))}
+              {config.signatures.length < 2 && (
+                <button
+                  onClick={() => setConfig({ ...config, signatures: [...config.signatures, { type: 'text', value: '', title: '' }] })}
+                  className="w-full py-2 border-2 border-dashed border-gray-300 rounded text-sm text-gray-600 hover:border-gray-400 hover:text-gray-800"
+                >
+                  + Add Signature
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div>
             <h3 className="text-sm font-medium text-gray-900 mb-3">Options</h3>
             <div className="space-y-2">
               <label className="flex items-center gap-2">
@@ -216,54 +440,107 @@ export default function TemplateBuilder({ template, academyId }: TemplateBuilder
 
         <div className="flex-1 bg-gray-50 p-8 overflow-auto flex items-center justify-center">
           <div 
-            className="w-full max-w-4xl aspect-[1.414/1] bg-white shadow-xl p-12 relative"
+            className="w-full max-w-4xl aspect-[1.414/1] bg-white shadow-xl relative overflow-hidden"
             style={{ 
-              backgroundColor: config.colors.background,
+              backgroundColor: config.background.type === 'color' ? config.background.value : config.colors.background,
+              backgroundImage: config.background.type === 'image' && config.background.value ? `url(${config.background.value})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
               color: config.colors.text,
             }}
           >
-            {config.border.style !== 'none' && (
+            {config.background.type === 'image' && config.background.value && (
               <div 
-                className="absolute inset-4 pointer-events-none"
-                style={{
-                  border: `${config.border.width}px ${config.border.style === 'double' ? 'double' : 'solid'} ${config.border.color}`,
-                  borderRadius: config.border.style === 'modern' ? '8px' : '0',
-                }}
+                className="absolute inset-0 bg-white" 
+                style={{ opacity: 1 - (config.background.opacity || 1) }}
               />
             )}
             
-            <div className={`relative h-full flex flex-col ${config.layout.alignment === 'center' ? 'items-center text-center' : 'items-start text-left'}`}>
-              <div className="mb-8">
-                <h1 
-                  className="text-4xl font-bold"
-                  style={{ 
-                    fontFamily: config.fonts.heading,
-                    color: config.colors.primary,
+            <div className="relative h-full p-12">
+              {config.border.style !== 'none' && (
+                <div 
+                  className="absolute inset-4 pointer-events-none"
+                  style={{
+                    border: `${config.border.width}px ${config.border.style === 'double' ? 'double' : 'solid'} ${config.border.color}`,
+                    borderRadius: config.border.style === 'modern' ? '8px' : '0',
+                  }}
+                />
+              )}
+              
+              {config.logo?.url && (
+                <div 
+                  className={`absolute ${
+                    config.logo.position === 'top-left' ? 'top-8 left-8' :
+                    config.logo.position === 'top-right' ? 'top-8 right-8' :
+                    'top-8 left-1/2 -translate-x-1/2'
+                  }`}
+                  style={{
+                    width: config.logo.size === 'small' ? '60px' : config.logo.size === 'large' ? '120px' : '90px',
+                    height: config.logo.size === 'small' ? '60px' : config.logo.size === 'large' ? '120px' : '90px',
                   }}
                 >
-                  {config.layout.titleText}
-                </h1>
-              </div>
+                  <img src={config.logo.url} alt="Logo" className="w-full h-full object-contain" />
+                </div>
+              )}
+              
+              <div className={`relative h-full flex flex-col ${config.layout.alignment === 'center' ? 'items-center text-center' : 'items-start text-left'}`} style={{ paddingTop: config.logo?.url ? '80px' : '0' }}>
+                <div className="mb-8">
+                  <h1 
+                    className="text-4xl font-bold"
+                    style={{ 
+                      fontFamily: config.fonts.heading,
+                      color: config.colors.primary,
+                    }}
+                  >
+                    {config.layout.titleText}
+                  </h1>
+                </div>
 
-              <div className="flex-1 flex items-center">
-                <p 
-                  className="text-lg whitespace-pre-line"
-                  style={{ fontFamily: config.fonts.body }}
-                >
-                  {renderedText}
-                </p>
-              </div>
+                <div className="flex-1 flex items-center">
+                  <p 
+                    className="text-lg whitespace-pre-line"
+                    style={{ fontFamily: config.fonts.body }}
+                  >
+                    {renderedText}
+                  </p>
+                </div>
 
-              <div className="mt-auto pt-8 flex justify-between items-end w-full text-sm">
-                {config.showCertNumber && (
-                  <div>Certificate No: {sampleData.certificateNumber}</div>
+                {config.signatures.length > 0 && (
+                  <div className={`mt-8 grid ${config.signatures.length === 2 ? 'grid-cols-2' : 'grid-cols-1'} gap-8 w-full`}>
+                    {config.signatures.map((sig, idx) => (
+                      <div key={idx} className="text-center">
+                        {sig.type === 'text' ? (
+                          <div
+                            className="text-3xl mb-2"
+                            style={{ fontFamily: sig.font || 'Allura' }}
+                          >
+                            {sig.value || 'Signature'}
+                          </div>
+                        ) : sig.value ? (
+                          <img src={sig.value} alt={`Signature ${idx + 1}`} className="h-16 mx-auto mb-2" />
+                        ) : (
+                          <div className="h-16 bg-gray-200 rounded mb-2 flex items-center justify-center text-xs text-gray-400">
+                            Signature Image
+                          </div>
+                        )}
+                        <div className="text-sm font-medium">{sig.value || `Signatory ${idx + 1}`}</div>
+                        <div className="text-xs text-gray-600">{sig.title || 'Title'}</div>
+                      </div>
+                    ))}
+                  </div>
                 )}
-                {config.showExpiryDate && sampleData.expiryDate && (
-                  <div>Expires: {sampleData.expiryDate}</div>
-                )}
-                {config.showQrCode && (
-                  <div className="w-16 h-16 bg-gray-200 rounded" title="QR Code"></div>
-                )}
+
+                <div className="mt-auto pt-8 flex justify-between items-end w-full text-sm">
+                  {config.showCertNumber && (
+                    <div>Certificate No: {sampleData.certificateNumber}</div>
+                  )}
+                  {config.showExpiryDate && sampleData.expiryDate && (
+                    <div>Expires: {sampleData.expiryDate}</div>
+                  )}
+                  {config.showQrCode && (
+                    <div className="w-16 h-16 bg-gray-200 rounded" title="QR Code"></div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
