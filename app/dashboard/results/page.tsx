@@ -100,7 +100,7 @@ export default async function ResultsDashboardPage({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Course
+              Program
             </label>
             <select
               defaultValue={params.course || ''}
@@ -115,7 +115,7 @@ export default async function ResultsDashboardPage({
               }}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
             >
-              <option value="">All Courses</option>
+              <option value="">All Programs</option>
               {allCourses.map(course => (
                 <option key={course.id} value={course.id}>
                   {course.name}
