@@ -45,13 +45,18 @@ export const courses = pgTable('courses', {
 export const templates = pgTable('templates', {
   id: uuid('id').primaryKey().defaultRandom(),
   academyId: uuid('academy_id').notNull().references(() => academies.id),
+  name: text('name').notNull().default('Untitled Template'),
+  isDefault: boolean('is_default').default(false),
   layout: text('layout').notNull().default('letter'),
+  designConfig: jsonb('design_config'),
   backgroundUrl: text('background_url'),
   signatureUrl: text('signature_url'),
   bodyText: text('body_text').notNull(),
   emailSubject: text('email_subject').notNull(),
   emailBody: text('email_body').notNull(),
+  version: integer('version').notNull().default(1),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
 export const customFields = pgTable('custom_fields', {
