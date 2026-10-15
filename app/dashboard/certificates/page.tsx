@@ -65,8 +65,15 @@ export default async function CertificatesPage({
     query = query.where(lte(certificates.issueDate, new Date(params.endDate)))
   }
 
-  const countQuery = query
-  const totalCount = (await countQuery).length
+  // Get total count efficiently
+  const [countResult] = await db
+    .select({ count: sql<number>`cast(count(*) as int)` })
+    .from(certificates)
+    .innerJoin(courses, eq(certificates.courseId, courses.id))
+    .innerJoin(learners, eq(certificates.learnerId, learners.id))
+    .where(eq(certificates.academyId, user.academyId))
+  
+  const totalCount = countResult?.count || 0
 
   const results = await query.orderBy(desc(certificates.createdAt)).limit(limit).offset(offset)
 
@@ -80,7 +87,7 @@ export default async function CertificatesPage({
     .from(events)
     .where(
       and(
-        inArray(events.certificateId, certIds),
+        sql`${events.certificateId} = ANY(ARRAY[${sql.join(certIds.map(id => sql`${id}`), sql`, `)}]::uuid[])`,
         inArray(events.type, ['email_delivered', 'page_view', 'linkedin_add_click', 'cta_click'])
       )
     )

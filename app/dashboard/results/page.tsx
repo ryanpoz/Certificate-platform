@@ -60,7 +60,7 @@ export default async function ResultsDashboardPage({
     .from(events)
     .where(
       and(
-        sql`${events.certificateId} = ANY(${certIds})`,
+        sql`${events.certificateId} = ANY(ARRAY[${sql.join(certIds.map(id => sql`${id}`), sql`, `)}]::uuid[])`,
         eq(events.isBot, false)
       )
     )
@@ -273,7 +273,7 @@ async function getPerCourseMetrics(academyId: string, startDate: Date, endDate: 
       .from(events)
       .where(
         and(
-          sql`${events.certificateId} = ANY(${certIds})`,
+          sql`${events.certificateId} = ANY(ARRAY[${sql.join(certIds.map(id => sql`${id}`), sql`, `)}]::uuid[])`,
           eq(events.isBot, false)
         )
       )
