@@ -1,11 +1,12 @@
 import { requireAuth } from '@/lib/utils/session'
 import { db } from '@/lib/db'
 import { certificates, courses, learners, events } from '@/lib/db/schema'
-import { eq, and, desc, like, or, gte, lte, inArray, sql } from 'drizzle-orm'
+import { eq, and, desc, like, or, gte, lte, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils/helpers'
 import BulkActions from './bulk-actions'
 import EngagementIcons from './engagement-icons'
+import { FilterSelect, FilterInput } from '@/components/dashboard/filters'
 
 export default async function CertificatesPage({
   searchParams,
@@ -88,7 +89,7 @@ export default async function CertificatesPage({
     .where(
       and(
         sql`${events.certificateId} = ANY(ARRAY[${sql.join(certIds.map(id => sql`${id}`), sql`, `)}]::uuid[])`,
-        inArray(events.type, ['email_delivered', 'page_view', 'linkedin_add_click', 'cta_click'])
+        sql`${events.type} IN ('email_delivered', 'page_view', 'linkedin_add_click', 'cta_click')`
       )
     )
     : []
@@ -132,163 +133,89 @@ export default async function CertificatesPage({
             {params.status === 'unpublished' && ` (${unpublishedCerts.length} unpublished on this page)`}
           </p>
         </div>
-        {totalCount > 0 && (
-          <BulkActions 
-            filters={params}
-            academyId={user.academyId}
-            hasUnpublished={unpublishedCerts.length > 0}
-          />
-        )}
+        <div className="mt-4 sm:mt-0 flex space-x-3">
+          <Link
+            href="/dashboard/certificates/issue"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Issue Certificate
+          </Link>
+          {totalCount > 0 && (
+            <BulkActions 
+              filters={params}
+              academyId={user.academyId}
+              hasUnpublished={unpublishedCerts.length > 0}
+            />
+          )}
+        </div>
       </div>
 
       <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <div>
-            <label htmlFor="course-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Program
-            </label>
-            <select
-              id="course-filter"
-              defaultValue={params.course || ''}
-              onChange={(e) => {
-                const url = new URL(window.location.href)
-                if (e.target.value) {
-                  url.searchParams.set('course', e.target.value)
-                } else {
-                  url.searchParams.delete('course')
-                }
-                window.location.href = url.toString()
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            >
-              <option value="">All Programs</option>
-              {allCourses.map(course => (
-                <option key={course.id} value={course.id}>
-                  {course.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            id="course-filter"
+            label="Program"
+            value={params.course || ''}
+            paramName="course"
+            options={[
+              { value: '', label: 'All Programs' },
+              ...allCourses.map(course => ({ value: course.id, label: course.name }))
+            ]}
+          />
 
-          <div>
-            <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              id="status-filter"
-              defaultValue={params.status || ''}
-              onChange={(e) => {
-                const url = new URL(window.location.href)
-                if (e.target.value) {
-                  url.searchParams.set('status', e.target.value)
-                } else {
-                  url.searchParams.delete('status')
-                }
-                window.location.href = url.toString()
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            >
-              <option value="">All Statuses</option>
-              <option value="unpublished">Unpublished</option>
-              <option value="published">Published</option>
-              <option value="revoked">Revoked</option>
-            </select>
-          </div>
+          <FilterSelect
+            id="status-filter"
+            label="Status"
+            value={params.status || ''}
+            paramName="status"
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'unpublished', label: 'Unpublished' },
+              { value: 'published', label: 'Published' },
+              { value: 'revoked', label: 'Revoked' },
+            ]}
+          />
 
-          <div>
-            <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 mb-1">
-              From Date
-            </label>
-            <input
-              type="date"
-              id="start-date"
-              defaultValue={params.startDate || ''}
-              onChange={(e) => {
-                const url = new URL(window.location.href)
-                if (e.target.value) {
-                  url.searchParams.set('startDate', e.target.value)
-                } else {
-                  url.searchParams.delete('startDate')
-                }
-                window.location.href = url.toString()
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            />
-          </div>
+          <FilterInput
+            id="start-date"
+            label="From Date"
+            type="date"
+            defaultValue={params.startDate || ''}
+            paramName="startDate"
+          />
 
-          <div>
-            <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 mb-1">
-              To Date
-            </label>
-            <input
-              type="date"
-              id="end-date"
-              defaultValue={params.endDate || ''}
-              onChange={(e) => {
-                const url = new URL(window.location.href)
-                if (e.target.value) {
-                  url.searchParams.set('endDate', e.target.value)
-                } else {
-                  url.searchParams.delete('endDate')
-                }
-                window.location.href = url.toString()
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            />
-          </div>
+          <FilterInput
+            id="end-date"
+            label="To Date"
+            type="date"
+            defaultValue={params.endDate || ''}
+            paramName="endDate"
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-              Search
-            </label>
-            <input
-              type="text"
-              id="search"
-              defaultValue={params.search || ''}
-              placeholder="Name, email, or certificate number"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const url = new URL(window.location.href)
-                  const value = (e.target as HTMLInputElement).value
-                  if (value) {
-                    url.searchParams.set('search', value)
-                  } else {
-                    url.searchParams.delete('search')
-                  }
-                  window.location.href = url.toString()
-                }
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            />
-          </div>
+          <FilterInput
+            id="search"
+            label="Search"
+            type="text"
+            defaultValue={params.search || ''}
+            paramName="search"
+            placeholder="Name, email, or certificate number"
+          />
 
-          <div>
-            <label htmlFor="engagement-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Engagement
-            </label>
-            <select
-              id="engagement-filter"
-              defaultValue={params.engagement || ''}
-              onChange={(e) => {
-                const url = new URL(window.location.href)
-                if (e.target.value) {
-                  url.searchParams.set('engagement', e.target.value)
-                } else {
-                  url.searchParams.delete('engagement')
-                }
-                window.location.href = url.toString()
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            >
-              <option value="">All</option>
-              <option value="email_delivered">Delivered</option>
-              <option value="page_view">Viewed</option>
-              <option value="linkedin_add_click">LinkedIn Clicked</option>
-              <option value="cta_click">CTA Clicked</option>
-            </select>
-          </div>
+          <FilterSelect
+            id="engagement-filter"
+            label="Engagement"
+            value={params.engagement || ''}
+            paramName="engagement"
+            options={[
+              { value: '', label: 'All' },
+              { value: 'email_delivered', label: 'Delivered' },
+              { value: 'page_view', label: 'Viewed' },
+              { value: 'linkedin_add_click', label: 'LinkedIn Clicked' },
+              { value: 'cta_click', label: 'CTA Clicked' },
+            ]}
+          />
         </div>
       </div>
 

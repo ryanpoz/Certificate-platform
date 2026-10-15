@@ -5,6 +5,7 @@ import { eq, and, gte, lte, desc, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import ResultsMetrics from './metrics'
 import ResultsTrend from './trend'
+import { FilterSelect, FilterInput } from '@/components/dashboard/filters'
 
 export default async function ResultsDashboardPage({
   searchParams,
@@ -98,63 +99,32 @@ export default async function ResultsDashboardPage({
 
       <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Program
-            </label>
-            <select
-              defaultValue={params.course || ''}
-              onChange={(e) => {
-                const url = new URL(window.location.href)
-                if (e.target.value) {
-                  url.searchParams.set('course', e.target.value)
-                } else {
-                  url.searchParams.delete('course')
-                }
-                window.location.href = url.toString()
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            >
-              <option value="">All Programs</option>
-              {allCourses.map(course => (
-                <option key={course.id} value={course.id}>
-                  {course.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            id="course-filter"
+            label="Program"
+            value={params.course || ''}
+            paramName="course"
+            options={[
+              { value: '', label: 'All Programs' },
+              ...allCourses.map(course => ({ value: course.id, label: course.name }))
+            ]}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              From Date
-            </label>
-            <input
-              type="date"
-              defaultValue={params.startDate || defaultStartDate.toISOString().split('T')[0]}
-              onChange={(e) => {
-                const url = new URL(window.location.href)
-                url.searchParams.set('startDate', e.target.value)
-                window.location.href = url.toString()
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            />
-          </div>
+          <FilterInput
+            id="start-date"
+            label="From Date"
+            type="date"
+            defaultValue={params.startDate || defaultStartDate.toISOString().split('T')[0]}
+            paramName="startDate"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              To Date
-            </label>
-            <input
-              type="date"
-              defaultValue={params.endDate || new Date().toISOString().split('T')[0]}
-              onChange={(e) => {
-                const url = new URL(window.location.href)
-                url.searchParams.set('endDate', e.target.value)
-                window.location.href = url.toString()
-              }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-            />
-          </div>
+          <FilterInput
+            id="end-date"
+            label="To Date"
+            type="date"
+            defaultValue={params.endDate || new Date().toISOString().split('T')[0]}
+            paramName="endDate"
+          />
         </div>
       </div>
 
