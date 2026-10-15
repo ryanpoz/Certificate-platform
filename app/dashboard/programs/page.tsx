@@ -1,6 +1,6 @@
 import { requireAuth } from '@/lib/utils/session'
 import { db } from '@/lib/db'
-import { courses, certificates } from '@/lib/db/schema'
+import { courses, certificates, events } from '@/lib/db/schema'
 import { eq, and, desc, sql } from 'drizzle-orm'
 import Link from 'next/link'
 
@@ -15,7 +15,7 @@ export default async function ProgramsPage() {
     .where(eq(courses.academyId, user.academyId))
     .orderBy(desc(courses.createdAt))
 
-  // Get certificate counts for each program
+  // Get certificate counts and engagement metrics for each program
   const coursesWithStats = await Promise.all(
     allCourses.map(async ({ course }) => {
       const [unpublishedResult] = await db
@@ -33,10 +33,40 @@ export default async function ProgramsPage() {
         .from(certificates)
         .where(eq(certificates.courseId, course.id))
 
+      // Get all certificate IDs for this program
+      const certIds = await db
+        .select({ id: certificates.id })
+        .from(certificates)
+        .where(and(
+          eq(certificates.courseId, course.id),
+          eq(certificates.isPreview, false)
+        ))
+
+      const ids = certIds.map(c => c.id)
+
+      // Get engagement events for these certificates
+      const engagementData = ids.length > 0 ? await db
+        .select({
+          type: events.type,
+        })
+        .from(events)
+        .where(
+          and(
+            sql`${events.certificateId} = ANY(ARRAY[${sql.join(ids.map(id => sql`${id}`), sql`, `)}]::uuid[])`,
+            eq(events.isBot, false)
+          )
+        )
+        : []
+
+      const views = engagementData.filter(e => e.type === 'page_view').length
+      const linkedinClicks = engagementData.filter(e => e.type === 'linkedin_add_click').length
+
       return {
         ...course,
         unpublishedCount: unpublishedResult?.count || 0,
         totalCertificates: totalResult?.count || 0,
+        views,
+        linkedinClicks,
       }
     })
   )
@@ -104,9 +134,15 @@ export default async function ProgramsPage() {
                           <p className="mt-1 text-sm text-gray-500">
                             {course.description || 'No description'}
                           </p>
-                          <div className="mt-2 flex items-center text-sm text-gray-500">
-                            <span className="mr-4">
-                              Issued: {course.totalCertificates} certificates
+                          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                            <span>
+                              Issued: {course.totalCertificates}
+                            </span>
+                            <span>
+                              Views: {course.views}
+                            </span>
+                            <span>
+                              LinkedIn clicks: {course.linkedinClicks}
                             </span>
                             {course.unpublishedCount > 0 && (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
