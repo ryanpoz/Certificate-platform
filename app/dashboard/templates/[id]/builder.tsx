@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { type CertificateDesignConfig, FONT_PAIRS, MERGE_FIELDS, getDefaultDesignConfig, renderMergeFields } from '@/lib/certificate-builder/types'
 import { updateTemplateAction } from './actions'
+import ImageUpload from '@/components/dashboard/image-upload'
 
 interface TemplateBuilderProps {
   template: any
@@ -79,38 +80,37 @@ export default function TemplateBuilder({ template, academyId }: TemplateBuilder
         <div className="w-1/3 border-r overflow-y-auto p-6 space-y-6">
           <div>
             <h3 className="text-sm font-medium text-gray-900 mb-3">Logo</h3>
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={config.logo?.url || ''}
-                onChange={(e) => setConfig({ ...config, logo: { ...config.logo, url: e.target.value, size: config.logo?.size || 'medium', position: config.logo?.position || 'top-center' }})}
-                placeholder="Logo URL or data URL"
-                className="w-full px-3 py-2 border rounded text-sm"
-              />
-              <div className="flex gap-2">
-                <select
-                  value={config.logo?.size || 'medium'}
-                  onChange={(e) => setConfig({ ...config, logo: { ...config.logo, size: e.target.value as any, url: config.logo?.url, position: config.logo?.position || 'top-center' }})}
-                  className="flex-1 px-3 py-2 border rounded text-sm"
-                >
-                  <option value="small">Small</option>
-                  <option value="medium">Medium</option>
-                  <option value="large">Large</option>
-                </select>
-                <select
-                  value={config.logo?.position || 'top-center'}
-                  onChange={(e) => setConfig({ ...config, logo: { ...config.logo, position: e.target.value as any, url: config.logo?.url, size: config.logo?.size || 'medium' }})}
-                  className="flex-1 px-3 py-2 border rounded text-sm"
-                >
-                  <option value="top-left">Top Left</option>
-                  <option value="top-center">Top Center</option>
-                  <option value="top-right">Top Right</option>
-                </select>
+            <ImageUpload
+              value={config.logo?.url}
+              onChange={(url) => setConfig({ ...config, logo: { ...config.logo, url, size: config.logo?.size || 'medium', position: config.logo?.position || 'top-center' }})}
+              label="Upload Logo"
+              maxWidth={600}
+              helpText="Max 600px wide, optimized automatically"
+            />
+            {config.logo?.url && (
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-2">
+                  <select
+                    value={config.logo.size || 'medium'}
+                    onChange={(e) => setConfig({ ...config, logo: { url: config.logo?.url || '', size: e.target.value as any, position: config.logo?.position || 'top-center' }})}
+                    className="flex-1 px-3 py-2 border rounded text-sm"
+                  >
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                  </select>
+                  <select
+                    value={config.logo.position || 'top-center'}
+                    onChange={(e) => setConfig({ ...config, logo: { url: config.logo?.url || '', size: config.logo?.size || 'medium', position: e.target.value as any }})}
+                    className="flex-1 px-3 py-2 border rounded text-sm"
+                  >
+                    <option value="top-left">Top Left</option>
+                    <option value="top-center">Top Center</option>
+                    <option value="top-right">Top Right</option>
+                  </select>
+                </div>
               </div>
-              <p className="text-xs text-gray-500">
-                Upload to Supabase Storage or use data URL for images &lt;500KB
-              </p>
-            </div>
+            )}
           </div>
 
           <div>
@@ -176,27 +176,27 @@ export default function TemplateBuilder({ template, academyId }: TemplateBuilder
                 />
               )}
               {config.background.type === 'image' && (
-                <>
+                <ImageUpload
+                  value={config.background.value}
+                  onChange={(url) => setConfig({ ...config, background: { ...config.background, value: url }})}
+                  label="Upload Background Image"
+                  maxWidth={2000}
+                  helpText="Max 2000px wide, optimized automatically"
+                />
+              )}
+              {config.background.type === 'image' && config.background.value && (
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Opacity (%)</label>
                   <input
-                    type="text"
-                    value={config.background.value}
-                    onChange={(e) => setConfig({ ...config, background: { ...config.background, value: e.target.value }})}
-                    placeholder="Background image URL or data URL"
-                    className="w-full px-3 py-2 border rounded text-sm"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={(config.background.opacity || 1) * 100}
+                    onChange={(e) => setConfig({ ...config, background: { ...config.background, opacity: parseInt(e.target.value) / 100 }})}
+                    className="w-full"
                   />
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Opacity (%)</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={(config.background.opacity || 1) * 100}
-                      onChange={(e) => setConfig({ ...config, background: { ...config.background, opacity: parseInt(e.target.value) / 100 }})}
-                      className="w-full"
-                    />
-                    <div className="text-xs text-gray-500 text-center">{Math.round((config.background.opacity || 1) * 100)}%</div>
-                  </div>
-                </>
+                  <div className="text-xs text-gray-500 text-center">{Math.round((config.background.opacity || 1) * 100)}%</div>
+                </div>
               )}
               {config.background.type === 'pattern' && (
                 <select
@@ -368,16 +368,16 @@ export default function TemplateBuilder({ template, academyId }: TemplateBuilder
                       </select>
                     </>
                   ) : (
-                    <input
-                      type="text"
+                    <ImageUpload
                       value={sig.value}
-                      onChange={(e) => {
+                      onChange={(url) => {
                         const newSigs = [...config.signatures]
-                        newSigs[idx] = { ...sig, value: e.target.value }
+                        newSigs[idx] = { ...sig, value: url }
                         setConfig({ ...config, signatures: newSigs })
                       }}
-                      placeholder="Signature image URL or data URL"
-                      className="w-full px-3 py-2 border rounded text-sm"
+                      label="Upload Signature"
+                      maxWidth={600}
+                      helpText="Max 600px wide"
                     />
                   )}
                   <input

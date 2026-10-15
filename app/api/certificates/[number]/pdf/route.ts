@@ -56,6 +56,7 @@ export async function GET(
       bodyText: template?.bodyText || '',
       custom: certificate.custom as Record<string, any>,
       certificateUrl,
+      designConfig: template?.designConfig as any,
     })
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
