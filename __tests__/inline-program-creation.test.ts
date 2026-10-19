@@ -91,11 +91,11 @@ describe('Per-Program Metrics', () => {
   })
 
   it('should exclude bot traffic from metrics', () => {
-    const resultsPage = readFileSync(join(process.cwd(), 'app/dashboard/results/page.tsx'), 'utf-8')
+    const shareImpact = readFileSync(join(process.cwd(), 'app/dashboard/results/share-impact.tsx'), 'utf-8')
     
-    // Results page filters out bot traffic
-    expect(resultsPage).toContain('isBot')
-    expect(resultsPage).toContain('false')
+    // Share Impact component filters out bot traffic
+    expect(shareImpact).toContain('isBot')
+    expect(shareImpact).toContain('false')
   })
 })
 

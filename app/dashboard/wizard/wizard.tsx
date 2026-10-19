@@ -23,6 +23,8 @@ export default function CertificateWizard({ academyId, userId, academyName, user
   const [certificateName, setCertificateName] = useState('')
   const [description, setDescription] = useState('')
   const [programName, setProgramName] = useState('')
+  const [showEditor, setShowEditor] = useState(false)
+  const [customDesign, setCustomDesign] = useState<any>(null)
 
   // Step 2: People
   const [recipients, setRecipients] = useState([{ name: userName, email: userEmail }])
@@ -173,11 +175,8 @@ export default function CertificateWizard({ academyId, userId, academyName, user
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {STARTER_TEMPLATES.map((template) => {
-              const bgColor = template.config.background.type === 'color' 
-                ? template.config.background.value 
-                : template.config.background.type === 'gradient'
-                ? '#4F46E5'
-                : '#6B7280'
+              // Use SVG preview from public/templates/
+              const previewPath = `/templates/${template.id}.svg`
               
               return (
                 <button
@@ -189,11 +188,12 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                       : 'border-gray-200'
                   }`}
                 >
-                  <div
-                    className="aspect-[1.414] rounded mb-2 flex items-center justify-center text-white text-xs font-medium"
-                    style={{ backgroundColor: bgColor }}
-                  >
-                    {template.name}
+                  <div className="aspect-[1.414] rounded mb-2 overflow-hidden bg-white border border-gray-200">
+                    <img
+                      src={previewPath}
+                      alt={template.name}
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   <div className="font-medium text-sm">{template.name}</div>
                   <div className="text-xs text-gray-500 mt-1">{template.tags.slice(0, 2).join(', ')}</div>
@@ -205,12 +205,15 @@ export default function CertificateWizard({ academyId, userId, academyName, user
           <div className="border-t pt-4">
             <button
               onClick={() => {
-                // TODO: Save template as draft and redirect to editor
-                router.push(`/dashboard/templates/${selectedTemplate.id}/editor`)
+                if (!certificateName.trim()) {
+                  alert('Please enter a certificate name first')
+                  return
+                }
+                setShowEditor(true)
               }}
               className="text-sm text-blue-600 hover:text-blue-800"
             >
-              ✏️ Customize this template before issuing
+              ✏️ Customize this template before adding recipients
             </button>
           </div>
 

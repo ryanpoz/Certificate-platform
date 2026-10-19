@@ -7,7 +7,7 @@ import { isbot } from 'isbot'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { certificateNumber, type, referrer } = body
+    const { certificateNumber, type, referrer, isRecipient } = body
 
     const [cert] = await db
       .select()
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       userAgent,
       isBot: isBotRequest,
       visitorHash,
+      meta: isRecipient ? { isRecipient: true } : null,
     })
 
     return NextResponse.json({ success: true })

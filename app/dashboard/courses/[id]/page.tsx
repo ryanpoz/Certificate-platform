@@ -5,6 +5,7 @@ import { eq, and } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import TemplateEditor from './template-editor'
+import RecipientProgress from './recipient-progress'
 
 export default async function CourseDetailPage({
   params,
@@ -142,6 +143,10 @@ export default async function CourseDetailPage({
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-8">
+        <RecipientProgress courseId={course.id} />
       </div>
 
       <div className="mt-8">
