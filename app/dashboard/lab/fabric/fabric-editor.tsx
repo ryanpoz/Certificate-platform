@@ -151,37 +151,44 @@ export default function FabricEditor() {
     canvas.clear()
     canvas.setDimensions({ width: template.width, height: template.height })
     
-    // Set background
-    if (template.background.type === 'gradient') {
-      canvas.set('backgroundColor', template.background.value.replace('linear-gradient(135deg, ', '').replace(')', '').split(' ')[0])
+    // Set background - defensive checks to prevent undefined access
+    if (template.background?.type === 'gradient' && template.background?.value) {
+      // Extract first color from gradient string safely
+      const gradientValue = template.background.value
+      const colorMatch = gradientValue.match(/#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgb\([^)]+\)|rgba\([^)]+\)/)
+      canvas.set('backgroundColor', colorMatch ? colorMatch[0] : '#667eea')
     } else {
-      canvas.set('backgroundColor', template.background.value)
+      canvas.set('backgroundColor', template.background?.value || '#ffffff')
     }
 
-    // Add elements
-    template.elements.forEach((el) => {
-      const displayText = showFieldNames ? el.id.replace(/_/g, ' ').toUpperCase() : (SAMPLE_DATA[el.id as keyof typeof SAMPLE_DATA] || el.text)
+    // Add elements - defensive checks for undefined properties
+    template.elements?.forEach((el) => {
+      if (!el || !el.id) return
+      
+      const displayText = showFieldNames 
+        ? el.id.replace(/_/g, ' ').toUpperCase() 
+        : (SAMPLE_DATA[el.id as keyof typeof SAMPLE_DATA] || el.text || 'Text')
       
       if (el.type === 'textbox') {
         const textbox = new Textbox(displayText, {
-          left: el.x,
-          top: el.y,
-          fontSize: el.fontSize,
-          fontFamily: el.fontFamily,
-          fill: el.fill,
-          width: el.width,
-          textAlign: el.textAlign as any,
+          left: el.x || 0,
+          top: el.y || 0,
+          fontSize: el.fontSize || 16,
+          fontFamily: el.fontFamily || 'Inter',
+          fill: el.fill || '#000000',
+          width: el.width || 200,
+          textAlign: (el.textAlign || 'left') as any,
           data: { id: el.id, shrinkToFit: el.shrinkToFit }
         })
         canvas.add(textbox)
       } else {
         const text = new IText(displayText, {
-          left: el.x,
-          top: el.y,
-          fontSize: el.fontSize,
-          fontFamily: el.fontFamily,
-          fill: el.fill,
-          textAlign: el.textAlign as any,
+          left: el.x || 0,
+          top: el.y || 0,
+          fontSize: el.fontSize || 16,
+          fontFamily: el.fontFamily || 'Inter',
+          fill: el.fill || '#000000',
+          textAlign: (el.textAlign || 'left') as any,
           data: { id: el.id }
         })
         if (el.width) {
@@ -625,7 +632,7 @@ export default function FabricEditor() {
           style={{ left: toolbarPos.x, top: toolbarPos.y, transform: 'translateX(-50%)' }}
         >
           <select
-            value={selectedObject.fontFamily}
+            value={selectedObject.fontFamily || 'Inter'}
             onChange={(e) => updateTextStyle('fontFamily', e.target.value)}
             className="text-xs border rounded px-2 py-1"
           >
@@ -636,7 +643,7 @@ export default function FabricEditor() {
 
           <input
             type="number"
-            value={selectedObject.fontSize}
+            value={selectedObject.fontSize || 16}
             onChange={(e) => updateTextStyle('fontSize', parseInt(e.target.value))}
             className="text-xs border rounded px-2 py-1 w-16"
           />
@@ -661,7 +668,7 @@ export default function FabricEditor() {
 
           <input
             type="color"
-            value={selectedObject.fill as string}
+            value={(selectedObject.fill as string) || '#000000'}
             onChange={(e) => updateTextStyle('fill', e.target.value)}
             className="w-8 h-8 border rounded cursor-pointer"
           />
