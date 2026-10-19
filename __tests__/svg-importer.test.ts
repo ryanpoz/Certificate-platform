@@ -6,6 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { importSVGTemplate, importTemplatesFromManifest } from '../lib/certificate-builder/svg-importer'
 import { renderCertificateV2 } from '../lib/certificate-builder/render-v2'
+import { type CertificateDesignV2 } from '../lib/certificate-builder/design-v2'
 
 // Mock puppeteer for PDF tests
 jest.mock('puppeteer-core', () => ({}))
@@ -138,8 +139,8 @@ describe('SVG Importer', () => {
 
 describe('V2 Rendering Parity', () => {
   it('should render the same HTML structure for PDF and public view', () => {
-    const design = {
-      version: 2,
+    const design: CertificateDesignV2 = {
+      version: 2 as const,
       width: 1123,
       height: 794,
       orientation: 'landscape' as const,
@@ -201,8 +202,8 @@ describe('V2 Rendering Parity', () => {
   })
 
   it('should handle all element types', () => {
-    const design = {
-      version: 2,
+    const design: CertificateDesignV2 = {
+      version: 2 as const,
       width: 1123,
       height: 794,
       orientation: 'landscape' as const,
@@ -294,8 +295,8 @@ describe('V2 Rendering Parity', () => {
   })
 
   it('should auto-shrink long recipient names', () => {
-    const design = {
-      version: 2,
+    const design: CertificateDesignV2 = {
+      version: 2 as const,
       width: 1123,
       height: 794,
       orientation: 'landscape' as const,
