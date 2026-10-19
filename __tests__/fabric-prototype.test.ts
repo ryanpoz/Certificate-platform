@@ -10,13 +10,25 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     
     // Should be a server component (async) for auth
     expect(page).toContain('async function FabricLabPage')
+    expect(page).toContain('requireAuth')
+    
+    // Should use ClientWrapper
+    expect(page).toContain('ClientWrapper')
+  })
+
+  it('should have client wrapper with dynamic import', () => {
+    const wrapper = readFileSync(
+      join(process.cwd(), 'app/dashboard/lab/fabric/client-wrapper.tsx'),
+      'utf-8'
+    )
+    
+    // Should be a client component
+    expect(wrapper).toContain("'use client'")
     
     // Should use dynamic import with ssr:false
-    expect(page).toContain('dynamic(')
-    expect(page).toContain('ssr: false')
-    
-    // Should import fabric-editor
-    expect(page).toContain('fabric-editor')
+    expect(wrapper).toContain('dynamic(')
+    expect(wrapper).toContain('ssr: false')
+    expect(wrapper).toContain('fabric-editor')
   })
 
   it('should have fabric editor component with key features', () => {
