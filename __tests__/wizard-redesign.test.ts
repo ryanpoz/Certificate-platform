@@ -37,60 +37,54 @@ describe('Wizard Bug - Regression Test', () => {
   })
 })
 
-describe('Wizard Redesign - Sidebar + Editor Layout', () => {
-  it('should merge template selection and editor into single Design step', () => {
+describe('Wizard Redesign - Horizontal Template Strip Layout', () => {
+  it('should use horizontal template strip above editor', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should NOT have separate showEditor state or fullscreen overlay
-    expect(wizard).not.toContain('showEditor')
-    expect(wizard).not.toContain('fixed inset-0 z-50')
+    // Should have horizontal layout
+    expect(wizard).toContain('flex flex-col')
+    expect(wizard).toContain('Horizontal Template')
     
-    // Should have sidebar + editor in flex layout
-    expect(wizard).toContain('flex gap-6')
-    expect(wizard).toContain('Left Sidebar')
-    expect(wizard).toContain('Main Editor Pane')
+    // Should NOT have left sidebar (no flex-shrink-0 with border-r)
+    expect(wizard).not.toContain('flex-shrink-0 flex flex-col border-r')
+    expect(wizard).not.toContain('Left Sidebar')
   })
 
-  it('should have left sidebar with templates list', () => {
+  it('should have certificate name, templates, and Next in top bar', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Sidebar should be 320px (w-80)
-    expect(wizard).toContain('w-80')
+    // Top bar should contain all elements
+    expect(wizard).toContain('Certificate name')
+    expect(wizard).toContain('Templates')
+    expect(wizard).toContain('Next: Add Recipients')
     
-    // Should be scrollable
-    expect(wizard).toContain('overflow-y-auto')
+    // Should be in same row
+    expect(wizard).toContain('flex items-center')
+  })
+
+  it('should make templates horizontally scrollable', () => {
+    const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should show templates with previews
+    // Should have horizontal scroll
+    expect(wizard).toContain('overflow-x-auto')
+    expect(wizard).toContain('flex gap-2')
+  })
+
+  it('should give editor full width', () => {
+    const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
+    
+    // Editor should be full width (no sidebar taking space)
+    expect(wizard).toContain('flex-1 overflow-hidden')
+    expect(wizard).toContain('Full-Width Editor')
+  })
+
+  it('should show template thumbnails in strip', () => {
+    const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
+    
+    // Should map templates horizontally
     expect(wizard).toContain('STARTER_TEMPLATES.map')
-    expect(wizard).toContain('/templates/')
-  })
-
-  it('should show certificate name field at top of sidebar', () => {
-    const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
-    
-    // Certificate name should be in sidebar
-    expect(wizard).toContain('Certificate name *')
-    expect(wizard).toContain('certificateName')
-    expect(wizard).toContain('setCertificateName')
-  })
-
-  it('should show Konva editor in main pane', () => {
-    const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
-    
-    // Should render VisualEditor directly (not in overlay)
-    expect(wizard).toContain('<VisualEditor')
-    expect(wizard).toContain('templateId={selectedTemplate.id}')
-    expect(wizard).toContain('initialDesign={customDesign || selectedTemplate.config}')
-  })
-
-  it('should work at 1280px width', () => {
-    const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
-    
-    // Should use flex-1 for editor to fill remaining space
-    expect(wizard).toContain('flex-1')
-    
-    // Sidebar is fixed width, editor is flexible
     expect(wizard).toContain('flex-shrink-0')
+    expect(wizard).toContain('/templates/')
   })
 })
 
@@ -203,7 +197,7 @@ describe('Wizard Redesign - Responsive Design', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
     // Should set minimum height
-    expect(wizard).toContain('min-h-[600px]')
+    expect(wizard).toContain('min-h-[700px]')
   })
 
   it('should make editor scrollable if needed', () => {

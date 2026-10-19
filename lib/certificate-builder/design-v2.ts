@@ -286,16 +286,28 @@ export const DYNAMIC_FIELD_LABELS = {
   date: 'Issue Date',
   certificate_id: 'Certificate ID',
   description: 'Description',
+  issue_date: 'Issue Date',
+  credential_id: 'Credential ID',
+  signature_1: 'Signature',
+  signer_1_name: 'Signer Name',
+  signer_1_title: 'Signer Title',
+  org_tagline: 'Organization Tagline',
 }
 
 // Get sample data for preview
 export function getSampleData() {
   return {
-    recipient_name: 'John Doe',
+    recipient_name: 'Jordan Lee',
     certificate_title: 'Advanced Web Development',
     org_name: 'Tech Academy',
-    date: new Date().toLocaleDateString(),
+    date: 'October 19, 2026',
     certificate_id: 'CERT-ABC12345',
     description: 'For outstanding achievement in completing the advanced web development program',
+    issue_date: 'October 19, 2026',
+    credential_id: 'CERT-ABC12345',
+    signature_1: 'Jordan Smith',
+    signer_1_name: 'Jordan Smith',
+    signer_1_title: 'Director of Education',
+    org_tagline: 'Excellence in Learning',
   }
 }

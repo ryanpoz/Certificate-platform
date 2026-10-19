@@ -177,13 +177,14 @@ export default function CertificateWizard({ academyId, userId, academyName, user
         </div>
       </div>
 
-      {/* Step 1: Design (Sidebar + Editor) */}
+      {/* Step 1: Design Certificate (Horizontal Template Strip + Full-Width Editor) */}
       {step === 1 && (
-        <div className="flex gap-6 h-[calc(100vh-200px)] min-h-[600px]">
-          {/* Left Sidebar */}
-          <div className="w-80 flex-shrink-0 flex flex-col border-r">
-            <div className="p-4 border-b">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="flex flex-col h-[calc(100vh-160px)] min-h-[700px]">
+          {/* Top Bar: Name + Templates + Next */}
+          <div className="flex items-center gap-4 p-4 border-b bg-white">
+            {/* Certificate Name */}
+            <div className="w-64 flex-shrink-0">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Certificate name *
               </label>
               <input
@@ -191,13 +192,16 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                 value={certificateName}
                 onChange={(e) => setCertificateName(e.target.value)}
                 placeholder="e.g. Motion Ads Certified"
-                className="w-full px-3 py-2 border rounded-lg text-sm"
+                className="w-full px-3 py-1.5 border rounded text-sm"
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Templates</h3>
-              <div className="space-y-3">
+            {/* Horizontal Template Thumbnails */}
+            <div className="flex-1 min-w-0">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Templates
+              </label>
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
                 {STARTER_TEMPLATES.map((template) => {
                   const previewPath = `/templates/${template.id}.svg`
                   return (
@@ -205,47 +209,49 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                       key={template.id}
                       onClick={() => handleTemplateSelect(template)}
                       type="button"
-                      className={`w-full p-3 border-2 rounded-lg text-left hover:border-blue-500 transition-colors ${
+                      title={template.name}
+                      className={`flex-shrink-0 w-28 p-2 border-2 rounded-lg hover:border-blue-500 transition-colors ${
                         selectedTemplate.id === template.id
                           ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200'
+                          : 'border-gray-200 bg-white'
                       }`}
                     >
-                      <div className="aspect-[1.414] rounded mb-2 overflow-hidden bg-white border border-gray-100">
+                      <div className="aspect-[1.414] rounded mb-1 overflow-hidden bg-white border border-gray-100">
                         <img
                           src={previewPath}
                           alt={template.name}
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <div className="font-medium text-sm">{template.name}</div>
-                      <div className="text-xs text-gray-500 mt-1">{template.tags[0]}</div>
+                      <div className="font-medium text-xs leading-tight truncate">{template.name}</div>
                     </button>
                   )
                 })}
               </div>
             </div>
 
-            <div className="p-4 border-t">
+            {/* Next Button */}
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium text-transparent mb-1">
+                Action
+              </label>
               <button
                 onClick={handleNextToPeople}
                 type="button"
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm whitespace-nowrap"
               >
-                Next: Add Recipients
+                Next: Add Recipients →
               </button>
             </div>
           </div>
 
-          {/* Main Editor Pane */}
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full">
-              <VisualEditor
-                templateId={selectedTemplate.id}
-                initialDesign={customDesign || selectedTemplate.config}
-                onSave={handleEditorSave}
-              />
-            </div>
+          {/* Full-Width Editor */}
+          <div className="flex-1 overflow-hidden bg-gray-50">
+            <VisualEditor
+              templateId={selectedTemplate.id}
+              initialDesign={customDesign || selectedTemplate.config}
+              onSave={handleEditorSave}
+            />
           </div>
         </div>
       )}
