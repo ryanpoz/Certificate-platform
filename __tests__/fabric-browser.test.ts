@@ -7,15 +7,11 @@ describe('Fabric.js Editor - Defensive Code Regression', () => {
 
   it('should have defensive checks for undefined background properties', () => {
     // Should use optional chaining for background access
-    expect(editorCode).toContain('template.background?.type')
-    expect(editorCode).toContain('template.background?.value')
+    expect(editorCode).toContain('template.background?.gradient')
     
     // Should have fallback values
     expect(editorCode).toContain("|| '#ffffff'")
     expect(editorCode).toContain('#667eea')
-    
-    // Should not have unsafe string manipulation without checks
-    expect(editorCode).not.toContain("template.background.value.replace('linear-gradient")
   })
 
   it('should have defensive checks for undefined element properties', () => {
@@ -42,10 +38,35 @@ describe('Fabric.js Editor - Defensive Code Regression', () => {
     expect(editorCode).toContain('template.elements?.forEach')
   })
 
-  it('should have regex-based gradient color extraction', () => {
-    // Should use regex to extract colors from gradient strings
-    expect(editorCode).toContain('gradientValue.match(')
-    expect(editorCode).toContain('colorMatch ? colorMatch[0]')
+  it('should have native Fabric gradient support', () => {
+    // Should use native Fabric Gradient objects
+    expect(editorCode).toContain('new Gradient(')
+    expect(editorCode).toContain('grad.type')
+    expect(editorCode).toContain('grad.coords')
+    expect(editorCode).toContain('grad.colorStops')
+  })
+
+  it('should have template decorations support', () => {
+    // Should support decorative elements
+    expect(editorCode).toContain('template.decorations')
+    expect(editorCode).toContain('new Rect(')
+    expect(editorCode).toContain('new Circle(')
+  })
+
+  it('should preserve user content across template switches', () => {
+    // Should track user content
+    expect(editorCode).toContain('userContentRef')
+    expect(editorCode).toContain('preserveContent')
+    
+    // Should save content before switching
+    expect(editorCode).toContain('userContentRef.current[data.id] = obj.text')
+  })
+
+  it('should have thumbnail generation', () => {
+    // Should generate thumbnails
+    expect(editorCode).toContain('generateThumbnails')
+    expect(editorCode).toContain('thumbnails')
+    expect(editorCode).toContain('toDataURL')
   })
 })
 
