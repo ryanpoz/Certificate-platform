@@ -1,15 +1,71 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Canvas, IText, Textbox, Rect, Circle } from 'fabric'
+import { Canvas, IText, Textbox, Rect, Circle, Gradient } from 'fabric'
 
-const TEMPLATES = {
+interface TemplateDecoration {
+  type: 'rect' | 'circle' | 'line'
+  fill?: string | 'native-gradient'
+  gradientDef?: { type: 'linear' | 'radial'; coords: { x1: number; y1: number; x2: number; y2: number }; colorStops: { offset: number; color: string }[] }
+  stroke?: string
+  strokeWidth?: number
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  radius?: number
+  x1?: number
+  y1?: number
+  x2?: number
+  y2?: number
+}
+
+interface Template {
+  name: string
+  width: number
+  height: number
+  orientation: 'landscape' | 'portrait'
+  background: { 
+    type: 'gradient' | 'color'
+    value?: string
+    gradient?: { type: 'linear' | 'radial'; coords: { x1: number; y1: number; x2: number; y2: number }; colorStops: { offset: number; color: string }[] }
+  }
+  decorations?: TemplateDecoration[]
+  elements: Array<{
+    id: string
+    type: 'text' | 'textbox'
+    text: string
+    x: number
+    y: number
+    fontSize: number
+    fontFamily: string
+    fill: string
+    width?: number
+    textAlign?: string
+    shrinkToFit?: boolean
+  }>
+}
+
+const TEMPLATES: Record<string, Template> = {
   'modern-saas-gradient': {
-    name: 'Modern SaaS (Landscape)',
+    name: 'Modern SaaS',
     width: 1123,
     height: 794,
     orientation: 'landscape',
-    background: { type: 'gradient', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+    background: { 
+      type: 'gradient',
+      gradient: {
+        type: 'linear',
+        coords: { x1: 0, y1: 0, x2: 1123, y2: 794 },
+        colorStops: [
+          { offset: 0, color: '#667eea' },
+          { offset: 1, color: '#764ba2' }
+        ]
+      }
+    },
+    decorations: [
+      { type: 'rect', fill: 'rgba(255,255,255,0.1)', x: 50, y: 50, width: 1023, height: 694, strokeWidth: 2, stroke: 'rgba(255,255,255,0.3)' }
+    ],
     elements: [
       { id: 'org_name', type: 'text', text: 'Tech Academy', x: 100, y: 80, fontSize: 24, fontFamily: 'Inter', fill: '#ffffff' },
       { id: 'certificate_title', type: 'text', text: 'Certificate of Completion', x: 561, y: 200, fontSize: 48, fontFamily: 'Playfair Display', fill: '#ffffff', width: 600, textAlign: 'center' },
@@ -20,12 +76,110 @@ const TEMPLATES = {
       { id: 'issue_date', type: 'text', text: 'October 19, 2026', x: 900, y: 665, fontSize: 14, fontFamily: 'Inter', fill: '#ffffff' },
     ]
   },
+  'classic-bordered': {
+    name: 'Classic Bordered',
+    width: 1123,
+    height: 794,
+    orientation: 'landscape',
+    background: { type: 'color', value: '#fdfbf7' },
+    decorations: [
+      { type: 'rect', fill: 'none', x: 40, y: 40, width: 1043, height: 714, strokeWidth: 8, stroke: '#8b6f47' },
+      { type: 'rect', fill: 'none', x: 60, y: 60, width: 1003, height: 674, strokeWidth: 2, stroke: '#d4af37' },
+      { type: 'rect', fill: 'none', x: 70, y: 70, width: 983, height: 654, strokeWidth: 1, stroke: '#8b6f47' },
+    ],
+    elements: [
+      { id: 'org_name', type: 'text', text: 'Institute of Excellence', x: 561, y: 120, fontSize: 22, fontFamily: 'Playfair Display', fill: '#8b6f47', textAlign: 'center' },
+      { id: 'certificate_title', type: 'text', text: 'Certificate of Achievement', x: 561, y: 240, fontSize: 52, fontFamily: 'Playfair Display', fill: '#2c1810', width: 700, textAlign: 'center' },
+      { id: 'recipient_name', type: 'textbox', text: 'Recipient Name', x: 361, y: 360, fontSize: 40, fontFamily: 'Playfair Display', fill: '#8b6f47', width: 400, textAlign: 'center', shrinkToFit: true },
+      { id: 'description', type: 'text', text: 'Has demonstrated exceptional skill and dedication', x: 561, y: 480, fontSize: 18, fontFamily: 'Georgia', fill: '#4a3728', width: 600, textAlign: 'center' },
+      { id: 'signer_1_name', type: 'text', text: 'Dr. James Wilson', x: 250, y: 640, fontSize: 16, fontFamily: 'Georgia', fill: '#2c1810' },
+      { id: 'signer_1_title', type: 'text', text: 'Dean of Studies', x: 250, y: 665, fontSize: 14, fontFamily: 'Georgia', fill: '#666' },
+      { id: 'issue_date', type: 'text', text: 'October 19, 2026', x: 800, y: 652, fontSize: 14, fontFamily: 'Georgia', fill: '#666' },
+    ]
+  },
+  'minimal-modern': {
+    name: 'Minimal Modern',
+    width: 1123,
+    height: 794,
+    orientation: 'landscape',
+    background: { type: 'color', value: '#ffffff' },
+    decorations: [
+      { type: 'rect', fill: '#000000', x: 0, y: 0, width: 8, height: 794 },
+      { type: 'rect', fill: '#000000', x: 0, y: 0, width: 1123, height: 8 },
+      { type: 'rect', fill: '#000000', x: 100, y: 180, width: 80, height: 4 },
+    ],
+    elements: [
+      { id: 'certificate_title', type: 'text', text: 'CERTIFICATE', x: 100, y: 100, fontSize: 64, fontFamily: 'Inter', fill: '#000000', textAlign: 'left' },
+      { id: 'org_name', type: 'text', text: 'Modern Academy', x: 100, y: 210, fontSize: 18, fontFamily: 'Inter', fill: '#666666' },
+      { id: 'recipient_name', type: 'textbox', text: 'Recipient Name', x: 100, y: 320, fontSize: 48, fontFamily: 'Inter', fill: '#000000', width: 900, textAlign: 'left', shrinkToFit: true },
+      { id: 'description', type: 'text', text: 'Has successfully completed all requirements with distinction', x: 100, y: 450, fontSize: 20, fontFamily: 'Inter', fill: '#333333', width: 800, textAlign: 'left' },
+      { id: 'signer_1_name', type: 'text', text: 'Alex Chen', x: 100, y: 650, fontSize: 16, fontFamily: 'Inter', fill: '#000000' },
+      { id: 'signer_1_title', type: 'text', text: 'Director', x: 100, y: 675, fontSize: 14, fontFamily: 'Inter', fill: '#666666' },
+      { id: 'issue_date', type: 'text', text: 'October 19, 2026', x: 900, y: 662, fontSize: 14, fontFamily: 'Inter', fill: '#666666', textAlign: 'right' },
+    ]
+  },
+  'bold-dark': {
+    name: 'Bold Dark',
+    width: 1123,
+    height: 794,
+    orientation: 'landscape',
+    background: {
+      type: 'gradient',
+      gradient: {
+        type: 'linear',
+        coords: { x1: 0, y1: 0, x2: 1123, y2: 794 },
+        colorStops: [
+          { offset: 0, color: '#1a1a2e' },
+          { offset: 1, color: '#0f0f1e' }
+        ]
+      }
+    },
+    decorations: [
+      { type: 'rect', fill: 'native-gradient', gradientDef: { type: 'linear', coords: { x1: 0, y1: 300, x2: 400, y2: 300 }, colorStops: [{ offset: 0, color: '#ff6b6b' }, { offset: 1, color: '#ee5a24' }] }, x: 0, y: 280, width: 400, height: 40 },
+      { type: 'circle', fill: 'rgba(238, 90, 36, 0.2)', x: 950, y: 100, radius: 150 },
+    ],
+    elements: [
+      { id: 'org_name', type: 'text', text: 'Innovation Institute', x: 100, y: 100, fontSize: 20, fontFamily: 'Inter', fill: '#ff6b6b' },
+      { id: 'certificate_title', type: 'text', text: 'CERTIFICATE OF EXCELLENCE', x: 100, y: 180, fontSize: 44, fontFamily: 'Inter', fill: '#ffffff', width: 800, textAlign: 'left' },
+      { id: 'recipient_name', type: 'textbox', text: 'Recipient Name', x: 100, y: 340, fontSize: 42, fontFamily: 'Inter', fill: '#ffffff', width: 900, textAlign: 'left', shrinkToFit: true },
+      { id: 'description', type: 'text', text: 'Has achieved outstanding performance and demonstrated excellence', x: 100, y: 470, fontSize: 18, fontFamily: 'Inter', fill: '#e0e0e0', width: 700, textAlign: 'left' },
+      { id: 'signer_1_name', type: 'text', text: 'Maria Rodriguez', x: 100, y: 650, fontSize: 16, fontFamily: 'Inter', fill: '#ffffff' },
+      { id: 'signer_1_title', type: 'text', text: 'Chief Executive Officer', x: 100, y: 675, fontSize: 14, fontFamily: 'Inter', fill: '#cccccc' },
+      { id: 'issue_date', type: 'text', text: 'October 19, 2026', x: 900, y: 662, fontSize: 14, fontFamily: 'Inter', fill: '#cccccc', textAlign: 'right' },
+    ]
+  },
+  'colorful-corporate': {
+    name: 'Colorful Corporate',
+    width: 1123,
+    height: 794,
+    orientation: 'landscape',
+    background: { type: 'color', value: '#f8f9fa' },
+    decorations: [
+      { type: 'rect', fill: 'native-gradient', gradientDef: { type: 'linear', coords: { x1: 0, y1: 0, x2: 1123, y2: 0 }, colorStops: [{ offset: 0, color: '#4facfe' }, { offset: 0.5, color: '#00f2fe' }, { offset: 1, color: '#4facfe' }] }, x: 0, y: 0, width: 1123, height: 120 },
+      { type: 'rect', fill: 'native-gradient', gradientDef: { type: 'linear', coords: { x1: 0, y1: 0, x2: 1123, y2: 0 }, colorStops: [{ offset: 0, color: '#fa709a' }, { offset: 1, color: '#fee140' }] }, x: 0, y: 674, width: 1123, height: 120 },
+      { type: 'circle', fill: 'rgba(79, 172, 254, 0.15)', x: 950, y: 400, radius: 200 },
+      { type: 'circle', fill: 'rgba(250, 112, 154, 0.15)', x: 150, y: 400, radius: 150 },
+    ],
+    elements: [
+      { id: 'org_name', type: 'text', text: 'Global Learning Corp', x: 561, y: 50, fontSize: 28, fontFamily: 'Inter', fill: '#ffffff', textAlign: 'center' },
+      { id: 'certificate_title', type: 'text', text: 'Certificate of Completion', x: 561, y: 200, fontSize: 48, fontFamily: 'Inter', fill: '#2c3e50', width: 700, textAlign: 'center' },
+      { id: 'recipient_name', type: 'textbox', text: 'Recipient Name', x: 361, y: 330, fontSize: 40, fontFamily: 'Inter', fill: '#4facfe', width: 400, textAlign: 'center', shrinkToFit: true },
+      { id: 'description', type: 'text', text: 'Has successfully completed the comprehensive program', x: 561, y: 460, fontSize: 20, fontFamily: 'Inter', fill: '#34495e', width: 700, textAlign: 'center' },
+      { id: 'signer_1_name', type: 'text', text: 'Jennifer Park', x: 300, y: 600, fontSize: 16, fontFamily: 'Inter', fill: '#2c3e50' },
+      { id: 'signer_1_title', type: 'text', text: 'Program Director', x: 300, y: 625, fontSize: 14, fontFamily: 'Inter', fill: '#7f8c8d' },
+      { id: 'issue_date', type: 'text', text: 'October 19, 2026', x: 750, y: 612, fontSize: 14, fontFamily: 'Inter', fill: '#7f8c8d' },
+    ]
+  },
   'portrait-academy-diploma': {
-    name: 'Portrait Academy Diploma',
+    name: 'Academy Diploma',
     width: 794,
     height: 1123,
     orientation: 'portrait',
     background: { type: 'color', value: '#ffffff' },
+    decorations: [
+      { type: 'rect', fill: 'none', x: 50, y: 50, width: 694, height: 1023, strokeWidth: 3, stroke: '#1a202c' },
+      { type: 'rect', fill: 'none', x: 60, y: 60, width: 674, height: 1003, strokeWidth: 1, stroke: '#4a5568' },
+    ],
     elements: [
       { id: 'org_name', type: 'text', text: 'Academy of Excellence', x: 397, y: 100, fontSize: 28, fontFamily: 'Playfair Display', fill: '#1a202c', textAlign: 'center' },
       { id: 'certificate_title', type: 'text', text: 'Diploma', x: 397, y: 250, fontSize: 64, fontFamily: 'Playfair Display', fill: '#2d3748', textAlign: 'center' },
@@ -52,6 +206,8 @@ export default function FabricEditor() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fabricRef = useRef<Canvas | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const thumbnailCanvasesRef = useRef<Record<string, HTMLCanvasElement>>({})
+  
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof TEMPLATES>('modern-saas-gradient')
   const [selectedObject, setSelectedObject] = useState<any>(null)
   const [selectedObjects, setSelectedObjects] = useState<any[]>([])
@@ -59,6 +215,54 @@ export default function FabricEditor() {
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [toolbarPos, setToolbarPos] = useState({ x: 0, y: 0, visible: false })
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({})
+  
+  // Track user content by field ID to preserve across template switches
+  const userContentRef = useRef<Record<string, string>>({})
+
+  // Initialize user content from sample data
+  useEffect(() => {
+    if (Object.keys(userContentRef.current).length === 0) {
+      userContentRef.current = { ...SAMPLE_DATA }
+    }
+  }, [])
+
+  // Generate thumbnails for all templates
+  const generateThumbnails = () => {
+    const thumbs: Record<string, string> = {}
+    
+    Object.keys(TEMPLATES).forEach((key) => {
+      const template = TEMPLATES[key as keyof typeof TEMPLATES]
+      const thumbCanvas = document.createElement('canvas')
+      const thumbWidth = 200
+      const thumbHeight = (template.height / template.width) * thumbWidth
+      
+      thumbCanvas.width = thumbWidth
+      thumbCanvas.height = thumbHeight
+      
+      const thumbFabric = new Canvas(thumbCanvas, {
+        width: template.width,
+        height: template.height,
+        backgroundColor: '#f5f5f5'
+      })
+      
+      // Load template into thumbnail (without user content)
+      loadTemplate(key as keyof typeof TEMPLATES, thumbFabric, false)
+      
+      // Scale to thumbnail size
+      const scale = thumbWidth / template.width
+      thumbFabric.setZoom(scale)
+      thumbFabric.setDimensions({ width: thumbWidth, height: thumbHeight })
+      
+      // Generate thumbnail image
+      thumbs[key] = thumbCanvas.toDataURL('image/png')
+      thumbFabric.dispose()
+      
+      thumbnailCanvasesRef.current[key] = thumbCanvas
+    })
+    
+    setThumbnails(thumbs)
+  }
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return
@@ -75,7 +279,10 @@ export default function FabricEditor() {
     fabricRef.current = canvas
 
     // Load initial template
-    loadTemplate(selectedTemplate, canvas)
+    loadTemplate(selectedTemplate, canvas, false)
+    
+    // Generate thumbnails
+    generateThumbnails()
 
     // Selection handling
     canvas.on('selection:created', (e) => {
@@ -141,33 +348,89 @@ export default function FabricEditor() {
 
   useEffect(() => {
     if (fabricRef.current) {
-      loadTemplate(selectedTemplate, fabricRef.current)
+      loadTemplate(selectedTemplate, fabricRef.current, true)
     }
-  }, [selectedTemplate])
+  }, [selectedTemplate, showFieldNames])
 
-  const loadTemplate = (templateKey: keyof typeof TEMPLATES, canvas: Canvas) => {
+  const loadTemplate = (templateKey: keyof typeof TEMPLATES, canvas: Canvas, preserveContent = true) => {
     const template = TEMPLATES[templateKey]
+    
+    // Save current user content before clearing
+    if (preserveContent && fabricRef.current) {
+      const objects = fabricRef.current.getObjects()
+      objects.forEach((obj: any) => {
+        const data = obj.get('data')
+        if (data?.id && obj.text) {
+          userContentRef.current[data.id] = obj.text
+        }
+      })
+    }
     
     canvas.clear()
     canvas.setDimensions({ width: template.width, height: template.height })
     
-    // Set background - defensive checks to prevent undefined access
-    if (template.background?.type === 'gradient' && template.background?.value) {
-      // Extract first color from gradient string safely
-      const gradientValue = template.background.value
-      const colorMatch = gradientValue.match(/#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgb\([^)]+\)|rgba\([^)]+\)/)
-      canvas.set('backgroundColor', colorMatch ? colorMatch[0] : '#667eea')
+    // Set background with native Fabric gradient or solid color
+    if (template.background?.gradient) {
+      const grad = template.background.gradient
+      const gradient = new Gradient({
+        type: grad.type,
+        coords: grad.coords,
+        colorStops: grad.colorStops
+      })
+      canvas.set('backgroundColor', gradient)
     } else {
       canvas.set('backgroundColor', template.background?.value || '#ffffff')
     }
 
-    // Add elements - defensive checks for undefined properties
+    // Add decorative elements (borders, shapes, accent bars)
+    template.decorations?.forEach((dec) => {
+      if (dec.type === 'rect') {
+        let fill: any = dec.fill
+        
+        // Handle gradient fills for decorations
+        if (dec.fill === 'native-gradient' && dec.gradientDef) {
+          fill = new Gradient({
+            type: dec.gradientDef.type,
+            coords: dec.gradientDef.coords,
+            colorStops: dec.gradientDef.colorStops
+          })
+        }
+        
+        const rect = new Rect({
+          left: dec.x || 0,
+          top: dec.y || 0,
+          width: dec.width || 100,
+          height: dec.height || 100,
+          fill: fill || 'transparent',
+          stroke: dec.stroke,
+          strokeWidth: dec.strokeWidth || 0,
+          selectable: false,
+          evented: false
+        })
+        canvas.add(rect)
+      } else if (dec.type === 'circle') {
+        const circle = new Circle({
+          left: (dec.x || 0) - (dec.radius || 50),
+          top: (dec.y || 0) - (dec.radius || 50),
+          radius: dec.radius || 50,
+          fill: dec.fill || 'transparent',
+          stroke: dec.stroke,
+          strokeWidth: dec.strokeWidth || 0,
+          selectable: false,
+          evented: false
+        })
+        canvas.add(circle)
+      }
+    })
+
+    // Add text elements with user content preservation
     template.elements?.forEach((el) => {
       if (!el || !el.id) return
       
+      // Use preserved user content or show field names or fallback to template default
       const displayText = showFieldNames 
-        ? el.id.replace(/_/g, ' ').toUpperCase() 
-        : (SAMPLE_DATA[el.id as keyof typeof SAMPLE_DATA] || el.text || 'Text')
+        ? el.id.replace(/_/g, ' ').toUpperCase()
+        : (userContentRef.current[el.id] || el.text || 'Text')
       
       if (el.type === 'textbox') {
         const textbox = new Textbox(displayText, {
@@ -617,6 +880,42 @@ export default function FabricEditor() {
           >
             Export JSON
           </button>
+        </div>
+      </div>
+
+      {/* Thumbnail Strip */}
+      <div className="bg-white border-b px-4 py-3">
+        <div className="flex items-center gap-3 overflow-x-auto pb-2">
+          <span className="text-xs font-medium text-gray-600 whitespace-nowrap">Quick Switch:</span>
+          {Object.keys(TEMPLATES).map((key) => (
+            <button
+              key={key}
+              onClick={() => setSelectedTemplate(key as keyof typeof TEMPLATES)}
+              className={`flex-shrink-0 border-2 rounded overflow-hidden transition-all ${
+                selectedTemplate === key
+                  ? 'border-blue-600 shadow-lg scale-105'
+                  : 'border-gray-300 hover:border-blue-400 hover:shadow'
+              }`}
+              title={TEMPLATES[key as keyof typeof TEMPLATES].name}
+            >
+              {thumbnails[key] ? (
+                <img 
+                  src={thumbnails[key]} 
+                  alt={TEMPLATES[key as keyof typeof TEMPLATES].name}
+                  className="w-32 h-auto block"
+                />
+              ) : (
+                <div className="w-32 h-24 bg-gray-100 flex items-center justify-center text-xs text-gray-400">
+                  Loading...
+                </div>
+              )}
+              <div className={`text-xs py-1 px-2 text-center ${
+                selectedTemplate === key ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-700'
+              }`}>
+                {TEMPLATES[key as keyof typeof TEMPLATES].name}
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
