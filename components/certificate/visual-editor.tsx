@@ -1,28 +1,72 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Stage, Layer, Rect, Circle, Line, Text, Image as KonvaImage, Group, Transformer } from 'react-konva'
-import { type CertificateDesignV2, type DesignElement, type TextElement, type DynamicFieldElement, type ShapeElement, GOOGLE_FONTS, DYNAMIC_FIELD_LABELS, getSampleData, migrateV1ToV2 } from '@/lib/certificate-builder/design-v2'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Stage, Layer, Rect, Circle, Line, Text, Image as KonvaImage, Transformer, Group } from 'react-konva'
+import { type CertificateDesignV2, type DesignElement, type TextElement, type DynamicFieldElement, type ShapeElement, type ImageElement, type SignatureElement, type QRCodeElement, GOOGLE_FONTS, DYNAMIC_FIELD_LABELS, getSampleData, migrateV1ToV2 } from '@/lib/certificate-builder/design-v2'
 import { STARTER_TEMPLATES } from '@/lib/certificate-builder/starter-templates'
 import Konva from 'konva'
+import ImageUpload from '@/components/dashboard/image-upload'
+import QRCode from 'qrcode'
+import useImage from 'use-image'
+
+function ImageElement({ element, isSelected, onSelect, onUpdate }: { element: ImageElement; isSelected: boolean; onSelect: () => void; onUpdate: (updates: any) => void }) {
+  const [img] = useImage(element.src || '')
+  return <KonvaImage id={element.id} image={img || undefined} x={element.x} y={element.y} width={element.width} height={element.height} draggable={!element.locked} rotation={element.rotation} onClick={(e) => { e.cancelBubble = true; onSelect() }} onDragEnd={(e) => onUpdate({ x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; onUpdate({ x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
+}
+
+function SignatureElementRenderer({ element, isSelected, onSelect, onUpdate }: { element: SignatureElement; isSelected: boolean; onSelect: () => void; onUpdate: (updates: any) => void }) {
+  const [img] = useImage((element.signatureType === 'image' && element.src) ? element.src : '')
+  
+  if (element.signatureType === 'image' && element.src) {
+    return (
+      <Group id={element.id} x={element.x} y={element.y} draggable={!element.locked} rotation={element.rotation} onClick={(e) => { e.cancelBubble = true; onSelect() }} onDragEnd={(e) => onUpdate({ x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; onUpdate({ x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }}>
+        <KonvaImage image={img || undefined} width={element.width} height={element.height} />
+        {element.title && <Text text={element.title} y={element.height + 5} width={element.width} align="center" fontSize={12} fill="#666666" />}
+      </Group>
+    )
+  }
+  
+  return (
+    <Group id={element.id} x={element.x} y={element.y} draggable={!element.locked} rotation={element.rotation} onClick={(e) => { e.cancelBubble = true; onSelect() }} onDragEnd={(e) => onUpdate({ x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; onUpdate({ x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }}>
+      <Text text={element.text || ''} width={element.width} fontFamily={element.fontFamily} fontSize={element.fontSize} fill={element.color} align="center" />
+      {element.title && <Text text={element.title} y={(element.fontSize || 32) + 5} width={element.width} align="center" fontSize={12} fill="#666666" />}
+    </Group>
+  )
+}
+
+function QRCodeElement({ element, isSelected, onSelect, onUpdate, sampleUrl }: { element: QRCodeElement; isSelected: boolean; onSelect: () => void; onUpdate: (updates: any) => void; sampleUrl: string }) {
+  const [qrData, setQrData] = useState<string>('')
+  const [img] = useImage(qrData)
+
+  useEffect(() => {
+    QRCode.toDataURL(sampleUrl, { width: 256, margin: 1 })
+      .then(setQrData)
+      .catch(console.error)
+  }, [sampleUrl])
+
+  return (
+    <Group id={element.id} x={element.x} y={element.y} draggable={!element.locked} rotation={element.rotation} onClick={(e) => { e.cancelBubble = true; onSelect() }} onDragEnd={(e) => onUpdate({ x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; onUpdate({ x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }}>
+      <KonvaImage image={img} width={element.width} height={element.height} />
+      {element.showLink && <Text text={sampleUrl} y={element.height + 5} width={element.width} fontSize={10} fill="#666666" align="center" />}
+    </Group>
+  )
+}
 
 interface VisualEditorProps {
   templateId?: string
   initialDesign?: CertificateDesignV2 | any
-  onSave: (design: CertificateDesignV2) => void
+  onSave: (design: CertificateDesignV2) => Promise<any>
 }
 
 export default function VisualEditor({ templateId, initialDesign, onSave }: VisualEditorProps) {
   const [design, setDesign] = useState<CertificateDesignV2>(() => {
     if (initialDesign) {
-      // Migrate v1 to v2 if needed
       if (!initialDesign.version || initialDesign.version === 1) {
         return migrateV1ToV2(initialDesign)
       }
       return initialDesign
     }
     
-    // Load from template
     if (templateId) {
       const template = STARTER_TEMPLATES.find(t => t.id === templateId)
       if (template?.config) {
@@ -30,7 +74,6 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
       }
     }
     
-    // Default blank
     return {
       version: 2,
       width: 1123,
@@ -41,20 +84,129 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
     }
   })
 
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [history, setHistory] = useState<CertificateDesignV2[]>([design])
+  const [historyIndex, setHistoryIndex] = useState(0)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [showPreview, setShowPreview] = useState(false)
-  const [leftPanel, setLeftPanel] = useState<'templates' | 'text' | 'fields' | 'uploads' | 'shapes' | 'background'>('templates')
+  const [leftPanel, setLeftPanel] = useState<'templates' | 'text' | 'fields' | 'uploads' | 'shapes' | 'background'>('text')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(true)
+  const [snapLines, setSnapLines] = useState<Array<{ x?: number; y?: number }>>([])
   
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
+  const layerRef = useRef<Konva.Layer>(null)
+  const selectionRectRef = useRef<Konva.Rect>(null)
+  const selection = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
 
-  // Autosave
+  // Calculate snap guides
+  function getSnapLines(skipId: string) {
+    const lines: Array<{ x?: number; y?: number }> = []
+    const SNAP_THRESHOLD = 5
+
+    // Add canvas center lines
+    lines.push({ x: design.width / 2 })
+    lines.push({ y: design.height / 2 })
+
+    // Add element edge lines
+    design.elements.forEach(el => {
+      if (el.id !== skipId) {
+        lines.push({ x: el.x })
+        lines.push({ x: el.x + el.width })
+        lines.push({ y: el.y })
+        lines.push({ y: el.y + el.height })
+      }
+    })
+
+    return lines
+  }
+
+  function snapToGuides(pos: { x: number; y: number; width: number; height: number }, skipId: string) {
+    const lines = getSnapLines(skipId)
+    const SNAP_THRESHOLD = 5
+    const snappedLines: Array<{ x?: number; y?: number }> = []
+    let snapped = { ...pos }
+
+    // Snap left edge
+    for (const line of lines) {
+      if (line.x !== undefined && Math.abs(pos.x - line.x) < SNAP_THRESHOLD) {
+        snapped.x = line.x
+        snappedLines.push({ x: line.x })
+        break
+      }
+    }
+
+    // Snap right edge
+    for (const line of lines) {
+      if (line.x !== undefined && Math.abs(pos.x + pos.width - line.x) < SNAP_THRESHOLD) {
+        snapped.x = line.x - pos.width
+        snappedLines.push({ x: line.x })
+        break
+      }
+    }
+
+    // Snap top edge
+    for (const line of lines) {
+      if (line.y !== undefined && Math.abs(pos.y - line.y) < SNAP_THRESHOLD) {
+        snapped.y = line.y
+        snappedLines.push({ y: line.y })
+        break
+      }
+    }
+
+    // Snap bottom edge
+    for (const line of lines) {
+      if (line.y !== undefined && Math.abs(pos.y + pos.height - line.y) < SNAP_THRESHOLD) {
+        snapped.y = line.y - pos.height
+        snappedLines.push({ y: line.y })
+        break
+      }
+    }
+
+    setSnapLines(snappedLines)
+    return snapped
+  }
+
+  // Undo/redo
+  const pushHistory = useCallback((newDesign: CertificateDesignV2) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1)
+      newHistory.push(newDesign)
+      return newHistory.slice(-50) // Cap at 50
+    })
+    setHistoryIndex(prev => Math.min(prev + 1, 49))
+  }, [historyIndex])
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      setHistoryIndex(prev => prev - 1)
+      setDesign(history[historyIndex - 1])
+    }
+  }, [history, historyIndex])
+
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(prev => prev + 1)
+      setDesign(history[historyIndex + 1])
+    }
+  }, [history, historyIndex])
+
+  // Server autosave (debounced)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      localStorage.setItem('certificate-design-draft', JSON.stringify(design))
-    }, 1000)
+    setSaved(false)
+    const timer = setTimeout(async () => {
+      setSaving(true)
+      try {
+        await onSave(design)
+        setSaved(true)
+      } catch (error) {
+        console.error('Autosave failed:', error)
+      } finally {
+        setSaving(false)
+      }
+    }, 2000)
     return () => clearTimeout(timer)
-  }, [design])
+  }, [design, onSave])
 
   function addElement(element: any) {
     const newElement = {
@@ -66,71 +218,155 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
       ...element,
     }
 
-    setDesign(prev => ({
-      ...prev,
-      elements: [...prev.elements, newElement],
-    } as CertificateDesignV2))
-    setSelectedId(newElement.id)
+    const newDesign = {
+      ...design,
+      elements: [...design.elements, newElement],
+    } as CertificateDesignV2
+    
+    setDesign(newDesign)
+    pushHistory(newDesign)
+    setSelectedIds([newElement.id])
   }
 
   function updateElement(id: string, updates: any) {
-    setDesign(prev => ({
-      ...prev,
-      elements: prev.elements.map(el =>
+    const newDesign = {
+      ...design,
+      elements: design.elements.map(el =>
         el.id === id ? { ...el, ...updates } : el
       ),
-    } as CertificateDesignV2))
+    } as CertificateDesignV2
+    setDesign(newDesign)
+    pushHistory(newDesign)
   }
 
-  function deleteElement(id: string) {
-    setDesign(prev => ({
-      ...prev,
-      elements: prev.elements.filter(el => el.id !== id),
+  function deleteElements(ids: string[]) {
+    const newDesign = {
+      ...design,
+      elements: design.elements.filter(el => !ids.includes(el.id)),
+    } as CertificateDesignV2
+    setDesign(newDesign)
+    pushHistory(newDesign)
+    setSelectedIds([])
+  }
+
+  function duplicateElements(ids: string[]) {
+    const elementsToDup = design.elements.filter(el => ids.includes(el.id))
+    const duplicated = elementsToDup.map(el => ({
+      ...el,
+      id: `element-${Date.now()}-${Math.random()}`,
+      x: el.x + 20,
+      y: el.y + 20,
     }))
-    setSelectedId(null)
+
+    const newDesign = {
+      ...design,
+      elements: [...design.elements, ...duplicated],
+    } as CertificateDesignV2
+    setDesign(newDesign)
+    pushHistory(newDesign)
+    setSelectedIds(duplicated.map(el => el.id))
   }
 
-  function duplicateElement(id: string) {
-    const element = design.elements.find(el => el.id === id)
-    if (element) {
-      addElement({
-        ...element,
-        x: element.x + 20,
-        y: element.y + 20,
-      })
+  function bringForward(ids: string[]) {
+    const newElements = [...design.elements]
+    ids.forEach(id => {
+      const idx = newElements.findIndex(el => el.id === id)
+      if (idx < newElements.length - 1) {
+        ;[newElements[idx], newElements[idx + 1]] = [newElements[idx + 1], newElements[idx]]
+      }
+    })
+    const newDesign = { ...design, elements: newElements } as CertificateDesignV2
+    setDesign(newDesign)
+    pushHistory(newDesign)
+  }
+
+  function sendBackward(ids: string[]) {
+    const newElements = [...design.elements]
+    ids.forEach(id => {
+      const idx = newElements.findIndex(el => el.id === id)
+      if (idx > 0) {
+        ;[newElements[idx], newElements[idx - 1]] = [newElements[idx - 1], newElements[idx]]
+      }
+    })
+    const newDesign = { ...design, elements: newElements } as CertificateDesignV2
+    setDesign(newDesign)
+    pushHistory(newDesign)
+  }
+
+  function toggleLock(ids: string[]) {
+    const newDesign = {
+      ...design,
+      elements: design.elements.map(el =>
+        ids.includes(el.id) ? { ...el, locked: !el.locked } : el
+      ),
+    } as CertificateDesignV2
+    setDesign(newDesign)
+    pushHistory(newDesign)
+  }
+
+  function toggleOrientation() {
+    const newDesign = {
+      ...design,
+      orientation: design.orientation === 'landscape' ? 'portrait' as const : 'landscape' as const,
+      width: design.height,
+      height: design.width,
     }
+    setDesign(newDesign)
+    pushHistory(newDesign)
   }
 
-  const selectedElement = design.elements.find(el => el.id === selectedId)
+  const selectedElement = selectedIds.length === 1 ? design.elements.find(el => el.id === selectedIds[0]) : null
 
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (!selectedId) return
-
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        deleteElement(selectedId)
-      } else if (e.key === 'ArrowUp') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
         e.preventDefault()
-        updateElement(selectedId, { y: selectedElement!.y - (e.shiftKey ? 10 : 1) })
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        updateElement(selectedId, { y: selectedElement!.y + (e.shiftKey ? 10 : 1) })
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault()
-        updateElement(selectedId, { x: selectedElement!.x - (e.shiftKey ? 10 : 1) })
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault()
-        updateElement(selectedId, { x: selectedElement!.x + (e.shiftKey ? 10 : 1) })
+        if (e.shiftKey) {
+          redo()
+        } else {
+          undo()
+        }
       } else if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
         e.preventDefault()
-        duplicateElement(selectedId)
+        if (selectedIds.length > 0) duplicateElements(selectedIds)
+      } else if (selectedIds.length > 0 && (e.key === 'Delete' || e.key === 'Backspace')) {
+        deleteElements(selectedIds)
+      } else if (selectedIds.length > 0 && selectedElement) {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault()
+          updateElement(selectedIds[0], { y: selectedElement.y - (e.shiftKey ? 10 : 1) })
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault()
+          updateElement(selectedIds[0], { y: selectedElement.y + (e.shiftKey ? 10 : 1) })
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault()
+          updateElement(selectedIds[0], { x: selectedElement.x - (e.shiftKey ? 10 : 1) })
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault()
+          updateElement(selectedIds[0], { x: selectedElement.x + (e.shiftKey ? 10 : 1) })
+        }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedId, selectedElement])
+  }, [selectedIds, selectedElement, undo, redo])
+
+  // Update transformer
+  useEffect(() => {
+    if (transformerRef.current && layerRef.current) {
+      const stage = stageRef.current
+      if (!stage) return
+
+      const selectedNodes = selectedIds
+        .map(id => stage.findOne(`#${id}`))
+        .filter(Boolean) as Konva.Node[]
+
+      transformerRef.current.nodes(selectedNodes)
+      transformerRef.current.getLayer()?.batchDraw()
+    }
+  }, [selectedIds])
 
   const sampleData = getSampleData()
 
@@ -138,105 +374,81 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
     <div className="flex h-screen bg-gray-100">
       {/* Left Panel */}
       <div className="w-64 bg-white border-r flex flex-col">
-        <div className="flex border-b">
-          <button
-            onClick={() => setLeftPanel('templates')}
-            className={`flex-1 px-4 py-2 text-sm ${leftPanel === 'templates' ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
-          >
-            Templates
-          </button>
-          <button
-            onClick={() => setLeftPanel('text')}
-            className={`flex-1 px-4 py-2 text-sm ${leftPanel === 'text' ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
-          >
-            Text
-          </button>
+        <div className="grid grid-cols-3 border-b">
+          <button onClick={() => setLeftPanel('text')} className={`px-2 py-2 text-xs ${leftPanel === 'text' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Text</button>
+          <button onClick={() => setLeftPanel('fields')} className={`px-2 py-2 text-xs ${leftPanel === 'fields' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Fields</button>
+          <button onClick={() => setLeftPanel('uploads')} className={`px-2 py-2 text-xs ${leftPanel === 'uploads' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Images</button>
         </div>
-        
-        <div className="flex border-b">
-          <button
-            onClick={() => setLeftPanel('fields')}
-            className={`flex-1 px-4 py-2 text-sm ${leftPanel === 'fields' ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
-          >
-            Fields
-          </button>
-          <button
-            onClick={() => setLeftPanel('shapes')}
-            className={`flex-1 px-4 py-2 text-sm ${leftPanel === 'shapes' ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
-          >
-            Shapes
-          </button>
+        <div className="grid grid-cols-2 border-b">
+          <button onClick={() => setLeftPanel('shapes')} className={`px-2 py-2 text-xs ${leftPanel === 'shapes' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Shapes</button>
+          <button onClick={() => setLeftPanel('background')} className={`px-2 py-2 text-xs ${leftPanel === 'background' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Background</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
           {leftPanel === 'text' && (
             <div className="space-y-2">
-              <button
-                onClick={() => addElement({
-                  type: 'text',
-                  text: 'New Text',
-                  fontFamily: 'Inter',
-                  fontSize: 24,
-                  fontWeight: 'normal',
-                  color: '#000000',
-                  align: 'center',
-                })}
-                className="w-full px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Add Text
-              </button>
+              <button onClick={() => addElement({ type: 'text', text: 'New Text', fontFamily: 'Inter', fontSize: 24, fontWeight: 'normal', color: '#000000', align: 'center' })} className="w-full px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">Add Text</button>
             </div>
           )}
 
           {leftPanel === 'fields' && (
             <div className="space-y-2">
               {Object.entries(DYNAMIC_FIELD_LABELS).map(([field, label]) => (
-                <button
-                  key={field}
-                  onClick={() => addElement({
-                    type: 'dynamic-field',
-                    field: field as any,
-                    fontFamily: 'Inter',
-                    fontSize: 24,
-                    fontWeight: 'normal',
-                    color: '#000000',
-                    align: 'center',
-                    autoShrink: field === 'recipient_name',
-                  })}
-                  className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm"
-                >
-                  {label}
-                </button>
+                <button key={field} onClick={() => addElement({ type: 'dynamic-field', field, fontFamily: 'Inter', fontSize: 24, fontWeight: 'normal', color: '#000000', align: 'center', autoShrink: field === 'recipient_name' })} className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm">{label}</button>
               ))}
+            </div>
+          )}
+
+          {leftPanel === 'uploads' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Logo / Image</label>
+                <ImageUpload value="" onChange={(url) => addElement({ type: 'image', src: url, width: 200, height: 100 })} label="Upload" maxWidth={2000} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Signature</label>
+                <button onClick={() => addElement({ type: 'signature', signatureType: 'text', text: 'Jane Doe', fontFamily: 'Allura', fontSize: 32, color: '#000000', title: 'Director', width: 200, height: 80 })} className="w-full px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm mb-2">Add Text Signature</button>
+                <ImageUpload value="" onChange={(url) => addElement({ type: 'signature', signatureType: 'image', src: url, title: 'Director', width: 200, height: 80 })} label="Upload Signature" maxWidth={600} />
+              </div>
+              <button onClick={() => addElement({ type: 'qr-code', width: 120, height: 120, showLink: true })} className="w-full px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm">Add QR Code</button>
             </div>
           )}
 
           {leftPanel === 'shapes' && (
             <div className="space-y-2">
-              <button
-                onClick={() => addElement({
-                  type: 'shape',
-                  shapeType: 'rect',
-                  fill: '#2563eb',
-                  width: 200,
-                  height: 100,
-                })}
-                className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm"
-              >
-                Rectangle
-              </button>
-              <button
-                onClick={() => addElement({
-                  type: 'shape',
-                  shapeType: 'circle',
-                  fill: '#2563eb',
-                  width: 100,
-                  height: 100,
-                })}
-                className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm"
-              >
-                Circle
-              </button>
+              <button onClick={() => addElement({ type: 'shape', shapeType: 'rect', fill: '#2563eb', width: 200, height: 100 })} className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm">Rectangle</button>
+              <button onClick={() => addElement({ type: 'shape', shapeType: 'circle', fill: '#2563eb', width: 100, height: 100 })} className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm">Circle</button>
+              <button onClick={() => addElement({ type: 'shape', shapeType: 'line', stroke: '#000000', strokeWidth: 2, width: 200, height: 0 })} className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm">Line</button>
+              <button onClick={() => addElement({ type: 'shape', shapeType: 'border', stroke: '#2563eb', strokeWidth: 4, fill: 'transparent', x: 20, y: 20, width: design.width - 40, height: design.height - 40 })} className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm">Border</button>
+              <button onClick={() => addElement({ type: 'shape', shapeType: 'frame', stroke: '#d97706', strokeWidth: 8, fill: 'transparent', cornerRadius: 20, x: 40, y: 40, width: design.width - 80, height: design.height - 80 })} className="w-full px-4 py-2 bg-gray-100 text-left rounded hover:bg-gray-200 text-sm">Frame</button>
+            </div>
+          )}
+
+          {leftPanel === 'background' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Type</label>
+                <select value={design.background.type} onChange={(e) => setDesign({ ...design, background: { ...design.background, type: e.target.value as any } })} className="w-full px-3 py-2 border rounded">
+                  <option value="color">Color</option>
+                  <option value="gradient">Gradient</option>
+                  <option value="image">Image</option>
+                </select>
+              </div>
+              {design.background.type === 'color' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Color</label>
+                  <input type="color" value={design.background.value} onChange={(e) => setDesign({ ...design, background: { ...design.background, value: e.target.value } })} className="w-full h-10 border rounded" />
+                </div>
+              )}
+              {design.background.type === 'gradient' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Gradient</label>
+                  <input type="text" value={design.background.value} onChange={(e) => setDesign({ ...design, background: { ...design.background, value: e.target.value } })} placeholder="linear-gradient(...)" className="w-full px-3 py-2 border rounded text-sm" />
+                </div>
+              )}
+              {design.background.type === 'image' && (
+                <ImageUpload value={design.background.value} onChange={(url) => setDesign({ ...design, background: { ...design.background, value: url } })} label="Upload Background" maxWidth={2000} />
+              )}
             </div>
           )}
         </div>
@@ -247,23 +459,13 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
         <div className="bg-white border-b px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h2 className="font-semibold">Certificate Editor</h2>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showPreview}
-                onChange={(e) => setShowPreview(e.target.checked)}
-                className="rounded"
-              />
-              Preview with sample data
-            </label>
+            <button onClick={toggleOrientation} className="text-sm text-blue-600 hover:text-blue-800">{design.orientation === 'landscape' ? 'Switch to Portrait' : 'Switch to Landscape'}</button>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showPreview} onChange={(e) => setShowPreview(e.target.checked)} className="rounded" />Preview</label>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => onSave(design)}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Save
-            </button>
+          <div className="flex gap-2 items-center">
+            <span className="text-xs text-gray-500">{saving ? 'Saving...' : saved ? 'Saved' : 'Unsaved'}</span>
+            <button disabled={historyIndex === 0} onClick={undo} className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-30">Undo</button>
+            <button disabled={historyIndex >= history.length - 1} onClick={redo} className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-30">Redo</button>
           </div>
         </div>
 
@@ -276,144 +478,129 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
               onMouseDown={(e) => {
                 const clickedOnEmpty = e.target === e.target.getStage()
                 if (clickedOnEmpty) {
-                  setSelectedId(null)
+                  if (!e.evt.shiftKey) setSelectedIds([])
+                  const stage = e.target.getStage()
+                  if (stage) {
+                    const pos = stage.getPointerPosition()
+                    if (pos) {
+                      selection.current = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y }
+                    }
+                  }
+                }
+              }}
+              onMouseMove={(e) => {
+                if (!selection.current) return
+                const stage = e.target.getStage()
+                if (stage) {
+                  const pos = stage.getPointerPosition()
+                  if (pos) {
+                    selection.current.x2 = pos.x
+                    selection.current.y2 = pos.y
+                    const rect = selectionRectRef.current
+                    if (rect) {
+                      rect.setAttrs({
+                        visible: true,
+                        x: Math.min(selection.current.x1, selection.current.x2),
+                        y: Math.min(selection.current.y1, selection.current.y2),
+                        width: Math.abs(selection.current.x2 - selection.current.x1),
+                        height: Math.abs(selection.current.y2 - selection.current.y1),
+                      })
+                      rect.getLayer()?.batchDraw()
+                    }
+                  }
+                }
+              }}
+              onMouseUp={() => {
+                if (selection.current) {
+                  const rect = selectionRectRef.current
+                  if (rect) rect.visible(false)
+                  
+                  const box = {
+                    x: Math.min(selection.current.x1, selection.current.x2),
+                    y: Math.min(selection.current.y1, selection.current.y2),
+                    width: Math.abs(selection.current.x2 - selection.current.x1),
+                    height: Math.abs(selection.current.y2 - selection.current.y1),
+                  }
+
+                  if (box.width > 5 && box.height > 5) {
+                    const selected = design.elements.filter(el =>
+                      el.x >= box.x && el.x + el.width <= box.x + box.width &&
+                      el.y >= box.y && el.y + el.height <= box.y + box.height
+                    ).map(el => el.id)
+                    setSelectedIds(selected)
+                  }
+
+                  selection.current = null
                 }
               }}
             >
-              <Layer>
-                {/* Background */}
-                <Rect
-                  x={0}
-                  y={0}
-                  width={design.width}
-                  height={design.height}
-                  fill={design.background.type === 'color' ? design.background.value : '#ffffff'}
-                />
+              <Layer ref={layerRef}>
+                <Rect x={0} y={0} width={design.width} height={design.height} fill={design.background.type === 'color' ? design.background.value : '#ffffff'} />
 
-                {/* Elements */}
                 {design.elements.map((element) => {
+                  const isSelected = selectedIds.includes(element.id)
+                  
                   if (element.type === 'text') {
-                    const textEl = element as any
-                    return (
-                      <Text
-                        key={element.id}
-                        id={element.id}
-                        x={element.x}
-                        y={element.y}
-                        width={element.width}
-                        height={element.height}
-                        text={textEl.text}
-                        fontSize={textEl.fontSize}
-                        fontFamily={textEl.fontFamily}
-                        fontStyle={textEl.fontWeight === 'bold' ? 'bold' : 'normal'}
-                        fill={textEl.color}
-                        align={textEl.align}
-                        draggable={!element.locked}
-                        onClick={() => setSelectedId(element.id)}
-                        onTap={() => setSelectedId(element.id)}
-                        onDragEnd={(e) => {
-                          updateElement(element.id, {
-                            x: e.target.x(),
-                            y: e.target.y(),
-                          })
-                        }}
-                      />
-                    )
+                    const el = element as TextElement
+                    return <Text key={element.id} id={element.id} x={el.x} y={el.y} width={el.width} height={el.height} text={el.text} fontSize={el.fontSize} fontFamily={el.fontFamily} fontStyle={el.fontWeight === 'bold' ? 'bold' : 'normal'} fill={el.color} align={el.align} draggable={!el.locked} rotation={el.rotation} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragMove={(e) => { const snapped = snapToGuides({ x: e.target.x(), y: e.target.y(), width: el.width, height: el.height }, el.id); e.target.position(snapped) }} onDragEnd={(e) => { setSnapLines([]); updateElement(el.id, { x: e.target.x(), y: e.target.y() }) }} onTransformEnd={(e) => { const node = e.target; updateElement(el.id, { x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
                   }
 
                   if (element.type === 'dynamic-field') {
-                    const fieldEl = element as DynamicFieldElement
-                    const text = showPreview ? (sampleData as any)[fieldEl.field] || fieldEl.field : `{${fieldEl.field}}`
-                    return (
-                      <Text
-                        key={element.id}
-                        id={element.id}
-                        x={element.x}
-                        y={element.y}
-                        width={element.width}
-                        height={element.height}
-                        text={text}
-                        fontSize={fieldEl.fontSize}
-                        fontFamily={fieldEl.fontFamily}
-                        fontStyle={fieldEl.fontWeight === 'bold' ? 'bold' : 'normal'}
-                        fill={fieldEl.color}
-                        align={fieldEl.align}
-                        draggable={!element.locked}
-                        onClick={() => setSelectedId(element.id)}
-                        onTap={() => setSelectedId(element.id)}
-                        onDragEnd={(e) => {
-                          updateElement(element.id, {
-                            x: e.target.x(),
-                            y: e.target.y(),
-                          })
-                        }}
-                      />
-                    )
+                    const el = element as DynamicFieldElement
+                    const text = showPreview ? (sampleData as any)[el.field] || el.field : `{${el.field}}`
+                    return <Text key={element.id} id={element.id} x={el.x} y={el.y} width={el.width} height={el.height} text={text} fontSize={el.fontSize} fontFamily={el.fontFamily} fontStyle={el.fontWeight === 'bold' ? 'bold' : 'normal'} fill={el.color} align={el.align} draggable={!el.locked} rotation={el.rotation} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragEnd={(e) => updateElement(el.id, { x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; updateElement(el.id, { x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
                   }
 
                   if (element.type === 'shape') {
-                    const shapeEl = element as any
-                    if (shapeEl.shapeType === 'rect' || shapeEl.shapeType === 'border') {
-                      return (
-                        <Rect
-                          key={element.id}
-                          id={element.id}
-                          x={element.x}
-                          y={element.y}
-                          width={element.width}
-                          height={element.height}
-                          fill={shapeEl.fill}
-                          stroke={shapeEl.stroke}
-                          strokeWidth={shapeEl.strokeWidth || 0}
-                          cornerRadius={shapeEl.cornerRadius || 0}
-                          draggable={!element.locked}
-                          onClick={() => setSelectedId(element.id)}
-                          onTap={() => setSelectedId(element.id)}
-                          onDragEnd={(e) => {
-                            updateElement(element.id, {
-                              x: e.target.x(),
-                              y: e.target.y(),
-                            })
-                          }}
-                        />
-                      )
+                    const el = element as ShapeElement
+                    if (el.shapeType === 'rect' || el.shapeType === 'border' || el.shapeType === 'frame') {
+                      return <Rect key={element.id} id={element.id} x={el.x} y={el.y} width={el.width} height={el.height} fill={el.fill} stroke={el.stroke} strokeWidth={el.strokeWidth || 0} cornerRadius={el.cornerRadius || 0} draggable={!el.locked} rotation={el.rotation} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragEnd={(e) => updateElement(el.id, { x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; updateElement(el.id, { x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
                     }
+                    if (el.shapeType === 'circle') {
+                      return <Circle key={element.id} id={element.id} x={el.x + el.width / 2} y={el.y + el.height / 2} radius={el.width / 2} fill={el.fill} stroke={el.stroke} strokeWidth={el.strokeWidth || 0} draggable={!el.locked} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragEnd={(e) => updateElement(el.id, { x: e.target.x() - el.width / 2, y: e.target.y() - el.height / 2 })} onTransformEnd={(e) => { const node = e.target; const scaleX = node.scaleX(); updateElement(el.id, { x: node.x() - (el.width * scaleX) / 2, y: node.y() - (el.width * scaleX) / 2, width: el.width * scaleX, height: el.width * scaleX }); node.scaleX(1); node.scaleY(1) }} />
+                    }
+                    if (el.shapeType === 'line') {
+                      return <Line key={element.id} id={element.id} points={[el.x, el.y, el.x + el.width, el.y + el.height]} stroke={el.stroke} strokeWidth={el.strokeWidth || 2} draggable={!el.locked} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragEnd={(e) => updateElement(el.id, { x: e.target.x(), y: e.target.y() })} />
+                    }
+                  }
 
-                    if (shapeEl.shapeType === 'circle') {
-                      return (
-                        <Circle
-                          key={element.id}
-                          id={element.id}
-                          x={element.x + element.width / 2}
-                          y={element.y + element.height / 2}
-                          radius={element.width / 2}
-                          fill={shapeEl.fill}
-                          stroke={shapeEl.stroke}
-                          strokeWidth={shapeEl.strokeWidth || 0}
-                          draggable={!element.locked}
-                          onClick={() => setSelectedId(element.id)}
-                          onTap={() => setSelectedId(element.id)}
-                          onDragEnd={(e) => {
-                            updateElement(element.id, {
-                              x: e.target.x() - element.width / 2,
-                              y: e.target.y() - element.height / 2,
-                            })
-                          }}
-                        />
-                      )
-                    }
+                  if (element.type === 'image') {
+                    const el = element as ImageElement
+                    return <ImageElement key={element.id} element={el} isSelected={isSelected} onSelect={() => setSelectedIds(e => e.includes(el.id) ? e : [el.id])} onUpdate={(updates) => updateElement(el.id, updates)} />
+                  }
+
+                  if (element.type === 'signature') {
+                    const el = element as SignatureElement
+                    return <SignatureElementRenderer key={element.id} element={el} isSelected={isSelected} onSelect={() => setSelectedIds(e => e.includes(el.id) ? e : [el.id])} onUpdate={(updates) => updateElement(el.id, updates)} />
+                  }
+
+                  if (element.type === 'qr-code') {
+                    const el = element as QRCodeElement
+                    const sampleUrl = showPreview ? 'https://example.com/c/12345' : 'https://example.com/c/12345'
+                    return <QRCodeElement key={element.id} element={el} isSelected={isSelected} onSelect={() => setSelectedIds(e => e.includes(el.id) ? e : [el.id])} onUpdate={(updates) => updateElement(el.id, updates)} sampleUrl={sampleUrl} />
                   }
 
                   return null
                 })}
 
-                {selectedId && (
+                <Rect ref={selectionRectRef} fill="rgba(0,0,255,0.1)" stroke="blue" strokeWidth={1} visible={false} />
+
+                {/* Snap guide lines */}
+                {snapLines.map((line, i) => (
+                  line.x !== undefined ? (
+                    <Line key={`snap-x-${i}`} points={[line.x, 0, line.x, design.height]} stroke="#FF00FF" strokeWidth={1} dash={[4, 4]} />
+                  ) : line.y !== undefined ? (
+                    <Line key={`snap-y-${i}`} points={[0, line.y, design.width, line.y]} stroke="#FF00FF" strokeWidth={1} dash={[4, 4]} />
+                  ) : null
+                ))}
+
+                {selectedIds.length > 0 && (
                   <Transformer
                     ref={transformerRef}
+                    rotateEnabled
+                    enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right', 'top-center', 'bottom-center']}
                     boundBoxFunc={(oldBox, newBox) => {
-                      if (newBox.width < 5 || newBox.height < 5) {
-                        return oldBox
-                      }
+                      if (newBox.width < 5 || newBox.height < 5) return oldBox
                       return newBox
                     }}
                   />
@@ -424,123 +611,162 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
         </div>
       </div>
 
-      {/* Right Panel - Properties */}
-      {selectedElement && (
+      {/* Right Panel */}
+      {selectedIds.length > 0 && (
         <div className="w-80 bg-white border-l p-4 overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Properties</h3>
-            <button
-              onClick={() => deleteElement(selectedId!)}
-              className="text-red-600 hover:text-red-800 text-sm"
-            >
-              Delete
-            </button>
+            <h3 className="font-semibold">{selectedIds.length === 1 ? 'Properties' : `${selectedIds.length} selected`}</h3>
+            <div className="flex gap-2">
+              <button onClick={() => bringForward(selectedIds)} className="text-xs text-blue-600 hover:text-blue-800" title="Bring Forward">↑</button>
+              <button onClick={() => sendBackward(selectedIds)} className="text-xs text-blue-600 hover:text-blue-800" title="Send Backward">↓</button>
+              <button onClick={() => toggleLock(selectedIds)} className="text-xs text-blue-600 hover:text-blue-800" title="Lock/Unlock">🔒</button>
+              <button onClick={() => duplicateElements(selectedIds)} className="text-xs text-blue-600 hover:text-blue-800" title="Duplicate">⎘</button>
+              <button onClick={() => deleteElements(selectedIds)} className="text-xs text-red-600 hover:text-red-800" title="Delete">×</button>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">X Position</label>
-              <input
-                type="number"
-                value={Math.round(selectedElement.x)}
-                onChange={(e) => updateElement(selectedId!, { x: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border rounded text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Y Position</label>
-              <input
-                type="number"
-                value={Math.round(selectedElement.y)}
-                onChange={(e) => updateElement(selectedId!, { y: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border rounded text-sm"
-              />
-            </div>
-
-            {(selectedElement.type === 'text' || selectedElement.type === 'dynamic-field') && (
-              <>
-                {selectedElement.type === 'text' && (
+          {selectedElement && (
+            <div className="space-y-4">
+              {/* Position and Size */}
+              <div className="border-b pb-3">
+                <h4 className="text-xs font-semibold mb-2 text-gray-700">Position & Size</h4>
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Text</label>
-                    <textarea
-                      value={(selectedElement as any).text}
-                      onChange={(e) => updateElement(selectedId!, { text: e.target.value } as any)}
-                      className="w-full px-3 py-2 border rounded text-sm"
-                      rows={3}
-                    />
+                    <label className="block text-xs mb-1">X</label>
+                    <input type="number" value={Math.round(selectedElement.x)} onChange={(e) => updateElement(selectedIds[0], { x: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 border rounded text-sm" />
                   </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Font</label>
-                  <select
-                    value={(selectedElement as any).fontFamily}
-                    onChange={(e) => updateElement(selectedId!, { fontFamily: e.target.value } as any)}
-                    className="w-full px-3 py-2 border rounded text-sm"
-                  >
-                    {GOOGLE_FONTS.map(font => (
-                      <option key={font} value={font}>{font}</option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="block text-xs mb-1">Y</label>
+                    <input type="number" value={Math.round(selectedElement.y)} onChange={(e) => updateElement(selectedIds[0], { y: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 border rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">W</label>
+                    <input type="number" value={Math.round(selectedElement.width)} onChange={(e) => updateElement(selectedIds[0], { width: parseInt(e.target.value) || 10 })} className="w-full px-2 py-1 border rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">H</label>
+                    <input type="number" value={Math.round(selectedElement.height)} onChange={(e) => updateElement(selectedIds[0], { height: parseInt(e.target.value) || 10 })} className="w-full px-2 py-1 border rounded text-sm" />
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Font Size</label>
-                  <input
-                    type="number"
-                    value={(selectedElement as any).fontSize}
-                    onChange={(e) => updateElement(selectedId!, { fontSize: parseInt(e.target.value) } as any)}
-                    className="w-full px-3 py-2 border rounded text-sm"
-                  />
-                </div>
+              {/* Text & Dynamic Field */}
+              {(selectedElement.type === 'text' || selectedElement.type === 'dynamic-field') && (
+                <>
+                  {selectedElement.type === 'text' && (
+                    <div>
+                      <label className="block text-xs font-medium mb-1">Text</label>
+                      <textarea value={(selectedElement as any).text} onChange={(e) => updateElement(selectedIds[0], { text: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" rows={3} />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Font</label>
+                    <select value={(selectedElement as any).fontFamily} onChange={(e) => updateElement(selectedIds[0], { fontFamily: e.target.value })} className="w-full px-3 py-2 border rounded text-sm">
+                      {GOOGLE_FONTS.map(font => <option key={font} value={font}>{font}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Size</label>
+                    <input type="number" value={(selectedElement as any).fontSize} onChange={(e) => updateElement(selectedIds[0], { fontSize: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Color</label>
+                    <input type="color" value={(selectedElement as any).color} onChange={(e) => updateElement(selectedIds[0], { color: e.target.value })} className="w-full h-10 border rounded" />
+                  </div>
+                </>
+              )}
 
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Color</label>
-                  <input
-                    type="color"
-                    value={(selectedElement as any).color}
-                    onChange={(e) => updateElement(selectedId!, { color: e.target.value } as any)}
-                    className="w-full h-10 border rounded"
-                  />
-                </div>
-              </>
-            )}
+              {/* Shape */}
+              {selectedElement.type === 'shape' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Fill Color</label>
+                    <input type="color" value={(selectedElement as any).fill || '#000000'} onChange={(e) => updateElement(selectedIds[0], { fill: e.target.value })} className="w-full h-10 border rounded" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Stroke Color</label>
+                    <input type="color" value={(selectedElement as any).stroke || '#000000'} onChange={(e) => updateElement(selectedIds[0], { stroke: e.target.value })} className="w-full h-10 border rounded" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Stroke Width</label>
+                    <input type="number" value={(selectedElement as any).strokeWidth || 0} onChange={(e) => updateElement(selectedIds[0], { strokeWidth: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded text-sm" min="0" />
+                  </div>
+                </>
+              )}
 
-            {selectedElement.type === 'shape' && (
-              <>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Fill Color</label>
-                  <input
-                    type="color"
-                    value={(selectedElement as any).fill || '#000000'}
-                    onChange={(e) => updateElement(selectedId!, { fill: e.target.value } as any)}
-                    className="w-full h-10 border rounded"
-                  />
-                </div>
+              {/* Image */}
+              {selectedElement.type === 'image' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Image URL</label>
+                    <input type="text" value={(selectedElement as any).src} onChange={(e) => updateElement(selectedIds[0], { src: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Opacity</label>
+                    <input type="range" min="0" max="1" step="0.1" value={(selectedElement as any).opacity || 1} onChange={(e) => updateElement(selectedIds[0], { opacity: parseFloat(e.target.value) })} className="w-full" />
+                    <span className="text-xs text-gray-500">{Math.round(((selectedElement as any).opacity || 1) * 100)}%</span>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-2">Upload New</label>
+                    <ImageUpload value={(selectedElement as any).src} onChange={(url) => updateElement(selectedIds[0], { src: url })} label="Replace Image" maxWidth={2000} />
+                  </div>
+                </>
+              )}
 
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Stroke Color</label>
-                  <input
-                    type="color"
-                    value={(selectedElement as any).stroke || '#000000'}
-                    onChange={(e) => updateElement(selectedId!, { stroke: e.target.value } as any)}
-                    className="w-full h-10 border rounded"
-                  />
-                </div>
+              {/* Signature */}
+              {selectedElement.type === 'signature' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Type</label>
+                    <select value={(selectedElement as any).signatureType} onChange={(e) => updateElement(selectedIds[0], { signatureType: e.target.value })} className="w-full px-3 py-2 border rounded text-sm">
+                      <option value="text">Script Text</option>
+                      <option value="image">Image</option>
+                    </select>
+                  </div>
+                  {(selectedElement as any).signatureType === 'text' ? (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Name</label>
+                        <input type="text" value={(selectedElement as any).text} onChange={(e) => updateElement(selectedIds[0], { text: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Script Font</label>
+                        <select value={(selectedElement as any).fontFamily} onChange={(e) => updateElement(selectedIds[0], { fontFamily: e.target.value })} className="w-full px-3 py-2 border rounded text-sm">
+                          <option value="Allura">Allura</option>
+                          <option value="Dancing Script">Dancing Script</option>
+                          <option value="Great Vibes">Great Vibes</option>
+                          <option value="Pacifico">Pacifico</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Font Size</label>
+                        <input type="number" value={(selectedElement as any).fontSize || 32} onChange={(e) => updateElement(selectedIds[0], { fontSize: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded text-sm" />
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-medium mb-2">Signature Image</label>
+                      <ImageUpload value={(selectedElement as any).src || ''} onChange={(url) => updateElement(selectedIds[0], { src: url })} label="Upload Signature" maxWidth={600} />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Title</label>
+                    <input type="text" value={(selectedElement as any).title || ''} onChange={(e) => updateElement(selectedIds[0], { title: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" placeholder="e.g. Director" />
+                  </div>
+                </>
+              )}
 
+              {/* QR Code */}
+              {selectedElement.type === 'qr-code' && (
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Stroke Width</label>
-                  <input
-                    type="number"
-                    value={(selectedElement as any).strokeWidth || 0}
-                    onChange={(e) => updateElement(selectedId!, { strokeWidth: parseInt(e.target.value) } as any)}
-                    className="w-full px-3 py-2 border rounded text-sm"
-                  />
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={(selectedElement as any).showLink || false} onChange={(e) => updateElement(selectedIds[0], { showLink: e.target.checked })} className="rounded" />
+                    <span className="text-sm">Show verification link below QR</span>
+                  </label>
                 </div>
-              </>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

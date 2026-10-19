@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="794" height="1123" viewBox="0 0 794 1123">
+<title>Gradient Hex Badge</title>
+<defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700;800&amp;family=Dancing+Script:wght@500;600;700&amp;display=swap');</style>
+<linearGradient id="grad_hero" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0284C7"/><stop offset="1" stop-color="#6D28D9"/></linearGradient>
+<linearGradient id="grad_badge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0EA5E9"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+</defs>
+<g id="deco_background">
+<rect x="0" y="0" width="794" height="1123" fill="#FFFFFF"/>
+</g>
+<g id="deco_hero">
+<path d="M0 0 H794 V370 L0 440 Z" fill="url(#grad_hero)"/>
+<circle cx="720" cy="40" r="170" fill="#FFFFFF" fill-opacity="0.08"/>
+<circle cx="60" cy="330" r="110" fill="#FFFFFF" fill-opacity="0.06"/>
+<line x1="560" y1="300" x2="620" y2="240" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
+<line x1="578" y1="300" x2="638" y2="240" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
+<line x1="596" y1="300" x2="656" y2="240" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
+<line x1="614" y1="300" x2="674" y2="240" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
+<line x1="632" y1="300" x2="692" y2="240" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
+</g>
+<g id="deco_badge">
+<polygon points="397.0,328.0 476.7,374.0 476.7,466.0 397.0,512.0 317.3,466.0 317.3,374.0" fill="#FFFFFF"/>
+<polygon points="397.0,340.0 466.3,380.0 466.3,460.0 397.0,500.0 327.7,460.0 327.7,380.0" fill="url(#grad_badge)"/>
+<polygon points="397.0,352.0 455.9,386.0 455.9,454.0 397.0,488.0 338.1,454.0 338.1,386.0" fill="none" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="1.5"/>
+<path d="M371.0 418 L389.0 436 L425.0 400" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="logo">
+<rect x="56" y="56" width="130" height="46" rx="8" fill="none" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="121.0" y="84.0" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="600" fill="#E0F2FE" text-anchor="middle" letter-spacing="3">LOGO</text>
+</g>
+<text id="org_name" x="738" y="86" font-family="'Poppins', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="600" fill="#FFFFFF" text-anchor="end">Acme Academy</text>
+<text id="eyebrow" x="397.0" y="180" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#E0F2FE" text-anchor="middle" letter-spacing="4">OFFICIAL CREDENTIAL</text>
+<text id="certificate_title" x="397" y="244" font-family="'Poppins', 'Helvetica Neue', Arial, sans-serif" font-size="44" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="-0.5"><tspan x="397" y="244">Certificate of</tspan><tspan x="397" y="296">Completion</tspan></text>
+<text id="presented_label" x="397.0" y="572" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" fill="#64748B" text-anchor="middle">Awarded to</text>
+<text id="recipient_name" x="397.0" y="646" font-family="'Poppins', 'Helvetica Neue', Arial, sans-serif" font-size="56" font-weight="700" fill="#0F172A" text-anchor="middle" letter-spacing="-1">{Recipient name}</text>
+<text id="description" x="397.0" y="702" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="18.5" font-weight="400" fill="#475569" text-anchor="middle">has successfully completed Advanced Product Training</text>
+<g id="deco_divider">
+<line x1="96" y1="768" x2="698" y2="768" stroke="#E2E8F0" stroke-width="1.5"/>
+</g>
+<text id="label_issue_date" x="250" y="818" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" fill="#94A3B8" text-anchor="middle" letter-spacing="2">DATE ISSUED</text>
+<text id="issue_date" x="250" y="846" font-family="'Poppins', 'Helvetica Neue', Arial, sans-serif" font-size="19" font-weight="600" fill="#0F172A" text-anchor="middle">{Date}</text>
+<g id="deco_column_rule">
+<line x1="397" y1="800" x2="397" y2="856" stroke="#E2E8F0" stroke-width="1.5"/>
+</g>
+<text id="label_credential_id" x="544" y="818" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" fill="#94A3B8" text-anchor="middle" letter-spacing="2">CREDENTIAL ID</text>
+<text id="credential_id" x="544" y="846" font-family="'Poppins', 'Helvetica Neue', Arial, sans-serif" font-size="19" font-weight="600" fill="#0F172A" text-anchor="middle">{Certificate ID}</text>
+<text id="signature_1" x="100" y="976" font-family="'Dancing Script', 'Brush Script MT', cursive" font-size="44" font-weight="600" fill="#1E1B4B" text-anchor="start">Jordan Lee</text>
+<g id="deco_signature_line">
+<line x1="96" y1="992" x2="340" y2="992" stroke="#CBD5E1" stroke-width="1.5"/>
+</g>
+<text id="signer_1_name" x="96" y="1020" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="600" fill="#0F172A" text-anchor="start">Jordan Lee</text>
+<text id="signer_1_title" x="96" y="1043" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="400" fill="#64748B" text-anchor="start">Head of Education</text>
+<g id="qr_code">
+<rect x="578" y="924" width="120" height="120" rx="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="592.4" y="938.4" width="28.8" height="28.8" rx="2" fill="none" stroke="#111827" stroke-width="4.8"/>
+<rect x="601.0" y="947.0" width="11.5" height="11.5" fill="#111827"/>
+<rect x="654.8" y="938.4" width="28.8" height="28.8" rx="2" fill="none" stroke="#111827" stroke-width="4.8"/>
+<rect x="663.4" y="947.0" width="11.5" height="11.5" fill="#111827"/>
+<rect x="592.4" y="1000.8" width="28.8" height="28.8" rx="2" fill="none" stroke="#111827" stroke-width="4.8"/>
+<rect x="601.0" y="1009.4" width="11.5" height="11.5" fill="#111827"/>
+<text x="659.6" y="1012.8" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="19.2" font-weight="700" fill="#6B7280" text-anchor="middle" letter-spacing="1">QR</text>
+</g>
+<g id="deco_footer">
+<rect x="0" y="1111" width="794" height="12" fill="url(#grad_hero)"/>
+</g>
+</svg>

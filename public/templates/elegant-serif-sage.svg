@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794" viewBox="0 0 1123 794">
+<title>Elegant Serif</title>
+<defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&amp;family=Great+Vibes&amp;family=Montserrat:wght@400;500;600;700;800&amp;display=swap');</style>
+</defs>
+<g id="deco_background">
+<rect x="0" y="0" width="1123" height="794" fill="#F6F2EA"/>
+</g>
+<g id="deco_border">
+<rect x="56" y="56" width="1011" height="682" fill="none" stroke="#5E7461" stroke-width="1"/>
+<rect x="66" y="66" width="991" height="662" fill="none" stroke="#5E7461" stroke-width="0.5" stroke-opacity="0.6"/>
+</g>
+<g id="deco_laurel">
+<path d="M569.8 155.1 A40 40 0 0 0 580.3 80.7" fill="none" stroke="#5E7461" stroke-width="1.4" stroke-linecap="round"/>
+<ellipse cx="588.1" cy="154.6" rx="10.7" ry="3.8" transform="rotate(10.3 588.1 154.6)" fill="#5E7461"/>
+<ellipse cx="583.3" cy="143.6" rx="10.7" ry="3.8" transform="rotate(-57.7 583.3 143.6)" fill="#5E7461"/>
+<ellipse cx="600.5" cy="141.0" rx="10.0" ry="3.6" transform="rotate(-13.0 600.5 141.0)" fill="#5E7461"/>
+<ellipse cx="592.3" cy="133.4" rx="10.0" ry="3.6" transform="rotate(-81.0 592.3 133.4)" fill="#5E7461"/>
+<ellipse cx="606.7" cy="123.9" rx="9.4" ry="3.4" transform="rotate(-36.3 606.7 123.9)" fill="#5E7461"/>
+<ellipse cx="596.8" cy="120.4" rx="9.4" ry="3.4" transform="rotate(-104.3 596.8 120.4)" fill="#5E7461"/>
+<ellipse cx="605.8" cy="105.9" rx="8.8" ry="3.2" transform="rotate(-59.7 605.8 105.9)" fill="#5E7461"/>
+<ellipse cx="596.1" cy="106.5" rx="8.8" ry="3.2" transform="rotate(-127.7 596.1 106.5)" fill="#5E7461"/>
+<ellipse cx="598.1" cy="89.8" rx="8.1" ry="2.9" transform="rotate(-83.0 598.1 89.8)" fill="#5E7461"/>
+<ellipse cx="590.0" cy="93.9" rx="8.1" ry="2.9" transform="rotate(-151.0 590.0 93.9)" fill="#5E7461"/>
+<ellipse cx="584.9" cy="78.0" rx="7.5" ry="2.7" transform="rotate(-106.3 584.9 78.0)" fill="#5E7461"/>
+<ellipse cx="579.6" cy="84.5" rx="7.5" ry="2.7" transform="rotate(-174.3 579.6 84.5)" fill="#5E7461"/>
+<ellipse cx="575.0" cy="77.9" rx="5.9" ry="2.9" transform="rotate(-152.0 575.0 77.9)" fill="#5E7461"/>
+<path d="M553.2 155.1 A40 40 0 0 1 542.7 80.7" fill="none" stroke="#5E7461" stroke-width="1.4" stroke-linecap="round"/>
+<ellipse cx="539.7" cy="143.6" rx="10.7" ry="3.8" transform="rotate(237.7 539.7 143.6)" fill="#5E7461"/>
+<ellipse cx="534.9" cy="154.6" rx="10.7" ry="3.8" transform="rotate(169.7 534.9 154.6)" fill="#5E7461"/>
+<ellipse cx="530.7" cy="133.4" rx="10.0" ry="3.6" transform="rotate(261.0 530.7 133.4)" fill="#5E7461"/>
+<ellipse cx="522.5" cy="141.0" rx="10.0" ry="3.6" transform="rotate(193.0 522.5 141.0)" fill="#5E7461"/>
+<ellipse cx="526.2" cy="120.4" rx="9.4" ry="3.4" transform="rotate(284.3 526.2 120.4)" fill="#5E7461"/>
+<ellipse cx="516.3" cy="123.9" rx="9.4" ry="3.4" transform="rotate(216.3 516.3 123.9)" fill="#5E7461"/>
+<ellipse cx="526.9" cy="106.5" rx="8.8" ry="3.2" transform="rotate(307.7 526.9 106.5)" fill="#5E7461"/>
+<ellipse cx="517.2" cy="105.9" rx="8.8" ry="3.2" transform="rotate(239.7 517.2 105.9)" fill="#5E7461"/>
+<ellipse cx="533.0" cy="93.9" rx="8.1" ry="2.9" transform="rotate(331.0 533.0 93.9)" fill="#5E7461"/>
+<ellipse cx="524.9" cy="89.8" rx="8.1" ry="2.9" transform="rotate(263.0 524.9 89.8)" fill="#5E7461"/>
+<ellipse cx="543.4" cy="84.5" rx="7.5" ry="2.7" transform="rotate(354.3 543.4 84.5)" fill="#5E7461"/>
+<ellipse cx="538.1" cy="78.0" rx="7.5" ry="2.7" transform="rotate(286.3 538.1 78.0)" fill="#5E7461"/>
+<ellipse cx="548.0" cy="77.9" rx="5.9" ry="2.9" transform="rotate(332.0 548.0 77.9)" fill="#5E7461"/>
+</g>
+<text id="org_name" x="561.5" y="202" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="600" fill="#5E7461" text-anchor="middle" letter-spacing="6">Acme Academy</text>
+<text id="certificate_title" x="561.5" y="260" font-family="'Cormorant Garamond', Garamond, Georgia, serif" font-size="36" font-weight="500" fill="#1F2A22" text-anchor="middle" letter-spacing="0.5" font-style="italic">Certificate of Completion</text>
+<text id="recipient_name" x="561.5" y="384" font-family="'Cormorant Garamond', Garamond, Georgia, serif" font-size="98" font-weight="600" fill="#1F2A22" text-anchor="middle" letter-spacing="-0.5">{Recipient name}</text>
+<g id="deco_divider">
+<line x1="461.5" y1="424" x2="546.5" y2="424" stroke="#5E7461" stroke-width="1"/>
+<circle cx="561.5" cy="424" r="3.5" fill="#5E7461"/>
+<line x1="576.5" y1="424" x2="661.5" y2="424" stroke="#5E7461" stroke-width="1"/>
+</g>
+<text id="description" x="561.5" y="476" font-family="'Cormorant Garamond', Garamond, Georgia, serif" font-size="27" font-weight="500" fill="#3E4A40" text-anchor="middle" font-style="italic">has successfully completed Advanced Product Training</text>
+<text id="signature_1" x="290" y="618" font-family="'Great Vibes', 'Brush Script MT', cursive" font-size="50" font-weight="400" fill="#1F2A22" text-anchor="middle">Jordan Lee</text>
+<g id="deco_signature_line">
+<line x1="190" y1="636" x2="390" y2="636" stroke="#5E7461" stroke-width="1"/>
+</g>
+<text id="signer_1_name" x="290" y="664" font-family="'Cormorant Garamond', Garamond, Georgia, serif" font-size="20" font-weight="700" fill="#1F2A22" text-anchor="middle">Jordan Lee</text>
+<text id="signer_1_title" x="290" y="686" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#5E7461" text-anchor="middle" letter-spacing="2.5">HEAD OF EDUCATION</text>
+<g id="logo">
+<rect x="511.5" y="598" width="100" height="40" rx="4" fill="none" stroke="#A3B2A4" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="561.5" y="623.0" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="600" fill="#7D8E7F" text-anchor="middle" letter-spacing="3">LOGO</text>
+</g>
+<text id="label_issue_date" x="833" y="600" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#5E7461" text-anchor="middle" letter-spacing="2.5">ISSUED</text>
+<text id="issue_date" x="833" y="628" font-family="'Cormorant Garamond', Garamond, Georgia, serif" font-size="22" font-weight="600" fill="#1F2A22" text-anchor="middle">{Date}</text>
+<text id="label_credential_id" x="833" y="664" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" fill="#5E7461" text-anchor="middle" letter-spacing="2.5">CREDENTIAL ID</text>
+<text id="credential_id" x="833" y="690" font-family="'Cormorant Garamond', Garamond, Georgia, serif" font-size="20" font-weight="600" fill="#1F2A22" text-anchor="middle">{Certificate ID}</text>
+</svg>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794" viewBox="0 0 1123 794">
+<title>Modern SaaS Gradient</title>
+<defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Dancing+Script:wght@500;600;700&amp;display=swap');</style>
+<linearGradient id="grad_main" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#4338CA"/><stop offset="0.55" stop-color="#7C3AED"/><stop offset="1" stop-color="#DB2777"/></linearGradient>
+<linearGradient id="grad_bar" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#4F46E5"/><stop offset="1" stop-color="#DB2777"/></linearGradient>
+</defs>
+<g id="deco_background">
+<rect x="0" y="0" width="1123" height="794" fill="url(#grad_main)"/>
+<circle cx="1060" cy="40" r="220" fill="#FFFFFF" fill-opacity="0.08"/>
+<circle cx="1060" cy="40" r="130" fill="#FFFFFF" fill-opacity="0.08"/>
+<circle cx="40" cy="770" r="180" fill="#FFFFFF" fill-opacity="0.07"/>
+</g>
+<g id="deco_card">
+<rect x="48" y="48" width="1027" height="698" rx="28" fill="#FFFFFF"/>
+</g>
+<g id="deco_pill">
+<rect x="853" y="100" width="170" height="40" rx="20" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1"/>
+<circle cx="877" cy="120" r="7" fill="url(#grad_bar)"/>
+<text id="badge_label" x="946" y="125" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#5B21B6" text-anchor="middle" letter-spacing="2.5">VERIFIED</text>
+</g>
+<g id="logo">
+<rect x="100" y="96" width="140" height="48" rx="8" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="170.0" y="125.0" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="600" fill="#6B7280" text-anchor="middle" letter-spacing="3">LOGO</text>
+</g>
+<text id="org_name" x="258" y="127" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" fill="#111827" text-anchor="start">Acme Academy</text>
+<text id="certificate_title" x="561.5" y="262" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="700" fill="#6D28D9" text-anchor="middle" letter-spacing="6">CERTIFICATE OF COMPLETION</text>
+<text id="presented_label" x="561.5" y="304" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="400" fill="#64748B" text-anchor="middle">This certifies that</text>
+<text id="recipient_name" x="561.5" y="390" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="76" font-weight="800" fill="#0F172A" text-anchor="middle" letter-spacing="-1.5">{Recipient name}</text>
+<g id="deco_underline">
+<rect x="491.5" y="420" width="140" height="6" rx="3" fill="url(#grad_bar)"/>
+</g>
+<text id="description" x="561.5" y="476" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#475569" text-anchor="middle">has successfully completed Advanced Product Training</text>
+<g id="deco_divider">
+<line x1="100" y1="560" x2="1023" y2="560" stroke="#E2E8F0" stroke-width="1"/>
+</g>
+<text id="signature_1" x="108" y="640" font-family="'Dancing Script', 'Brush Script MT', cursive" font-size="42" font-weight="600" fill="#1E1B4B" text-anchor="start">Jordan Lee</text>
+<g id="deco_signature_line">
+<line x1="100" y1="656" x2="340" y2="656" stroke="#CBD5E1" stroke-width="1.5"/>
+</g>
+<text id="signer_1_name" x="100" y="684" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="600" fill="#0F172A" text-anchor="start">Jordan Lee</text>
+<text id="signer_1_title" x="100" y="707" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="400" fill="#64748B" text-anchor="start">Head of Education</text>
+<text id="label_issue_date" x="520" y="640" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" fill="#94A3B8" text-anchor="start" letter-spacing="2">DATE ISSUED</text>
+<text id="issue_date" x="520" y="668" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="600" fill="#0F172A" text-anchor="start">{Date}</text>
+<text id="label_credential_id" x="690" y="640" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" fill="#94A3B8" text-anchor="start" letter-spacing="2">CREDENTIAL ID</text>
+<text id="credential_id" x="690" y="668" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="600" fill="#0F172A" text-anchor="start">{Certificate ID}</text>
+<g id="qr_code">
+<rect x="923" y="596" width="100" height="100" rx="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="935.0" y="608.0" width="24.0" height="24.0" rx="2" fill="none" stroke="#111827" stroke-width="4.0"/>
+<rect x="942.2" y="615.2" width="9.6" height="9.6" fill="#111827"/>
+<rect x="987.0" y="608.0" width="24.0" height="24.0" rx="2" fill="none" stroke="#111827" stroke-width="4.0"/>
+<rect x="994.2" y="615.2" width="9.6" height="9.6" fill="#111827"/>
+<rect x="935.0" y="660.0" width="24.0" height="24.0" rx="2" fill="none" stroke="#111827" stroke-width="4.0"/>
+<rect x="942.2" y="667.2" width="9.6" height="9.6" fill="#111827"/>
+<text x="991.0" y="670.0" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16.0" font-weight="700" fill="#6B7280" text-anchor="middle" letter-spacing="1">QR</text>
+</g>
+</svg>

@@ -1,0 +1,337 @@
+[
+  {
+    "id": "modern-saas-gradient",
+    "name": "Modern SaaS Gradient",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "modern-saas-gradient.svg",
+    "preview": "modern-saas-gradient.png",
+    "fonts": [
+      "Inter",
+      "Dancing Script"
+    ],
+    "palette": [
+      "#4338CA",
+      "#7C3AED",
+      "#DB2777",
+      "#0F172A",
+      "#FFFFFF"
+    ],
+    "tags": [
+      "modern",
+      "saas",
+      "gradient",
+      "card",
+      "customer-education"
+    ]
+  },
+  {
+    "id": "split-panel-navy",
+    "name": "Split Panel Navy",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "split-panel-navy.svg",
+    "preview": "split-panel-navy.png",
+    "fonts": [
+      "Space Grotesk",
+      "Inter",
+      "Dancing Script"
+    ],
+    "palette": [
+      "#0B1B3F",
+      "#14B8A6",
+      "#5EEAD4",
+      "#475569",
+      "#FFFFFF"
+    ],
+    "tags": [
+      "modern",
+      "saas",
+      "split-panel",
+      "partner-enablement"
+    ]
+  },
+  {
+    "id": "minimal-swiss",
+    "name": "Minimal Swiss",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "minimal-swiss.svg",
+    "preview": "minimal-swiss.png",
+    "fonts": [
+      "DM Sans",
+      "Great Vibes"
+    ],
+    "palette": [
+      "#FAFAF7",
+      "#111111",
+      "#E63946",
+      "#6B6B6B"
+    ],
+    "tags": [
+      "minimal",
+      "swiss",
+      "typographic",
+      "clean"
+    ]
+  },
+  {
+    "id": "bold-pop-blocks",
+    "name": "Bold Pop Blocks",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "bold-pop-blocks.svg",
+    "preview": "bold-pop-blocks.png",
+    "fonts": [
+      "Poppins",
+      "Dancing Script"
+    ],
+    "palette": [
+      "#FFD23F",
+      "#FF5A5F",
+      "#2541B2",
+      "#111111",
+      "#FFFFFF"
+    ],
+    "tags": [
+      "bold",
+      "colourful",
+      "playful",
+      "neo-brutalist",
+      "academy"
+    ]
+  },
+  {
+    "id": "classic-formal",
+    "name": "Classic Formal",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "classic-formal.svg",
+    "preview": "classic-formal.png",
+    "fonts": [
+      "Cinzel",
+      "Playfair Display",
+      "Libre Baskerville",
+      "Great Vibes"
+    ],
+    "palette": [
+      "#FBF6EA",
+      "#1F2A44",
+      "#B08D57",
+      "#3A3A3A"
+    ],
+    "tags": [
+      "classic",
+      "formal",
+      "traditional",
+      "seal",
+      "border"
+    ]
+  },
+  {
+    "id": "elegant-serif-sage",
+    "name": "Elegant Serif Sage",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "elegant-serif-sage.svg",
+    "preview": "elegant-serif-sage.png",
+    "fonts": [
+      "Cormorant Garamond",
+      "Great Vibes",
+      "Montserrat"
+    ],
+    "palette": [
+      "#F6F2EA",
+      "#1F2A22",
+      "#5E7461",
+      "#3E4A40"
+    ],
+    "tags": [
+      "elegant",
+      "serif",
+      "refined",
+      "laurel",
+      "minimal"
+    ]
+  },
+  {
+    "id": "rosette-badge-ribbon",
+    "name": "Rosette Badge & Ribbon",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "rosette-badge-ribbon.svg",
+    "preview": "rosette-badge-ribbon.png",
+    "fonts": [
+      "Playfair Display",
+      "Montserrat",
+      "Dancing Script"
+    ],
+    "palette": [
+      "#13294B",
+      "#C9A227",
+      "#E4C766",
+      "#F3F5F9",
+      "#FFFFFF"
+    ],
+    "tags": [
+      "badge",
+      "seal",
+      "ribbon",
+      "rosette",
+      "achievement",
+      "professional"
+    ]
+  },
+  {
+    "id": "dark-mode-tech",
+    "name": "Dark Mode Tech",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "dark-mode-tech.svg",
+    "preview": "dark-mode-tech.png",
+    "fonts": [
+      "Space Grotesk",
+      "Inter",
+      "JetBrains Mono",
+      "Dancing Script"
+    ],
+    "palette": [
+      "#0A0E1A",
+      "#111729",
+      "#22D3EE",
+      "#A78BFA",
+      "#F8FAFC"
+    ],
+    "tags": [
+      "dark",
+      "dark-mode",
+      "tech",
+      "developer",
+      "saas",
+      "glow"
+    ]
+  },
+  {
+    "id": "geometric-bauhaus",
+    "name": "Geometric Bauhaus",
+    "orientation": "landscape",
+    "width": 1123,
+    "height": 794,
+    "file": "geometric-bauhaus.svg",
+    "preview": "geometric-bauhaus.png",
+    "fonts": [
+      "Montserrat",
+      "DM Sans",
+      "Dancing Script"
+    ],
+    "palette": [
+      "#F5F1E8",
+      "#264653",
+      "#2A9D8F",
+      "#E9C46A",
+      "#F4A261",
+      "#E76F51"
+    ],
+    "tags": [
+      "illustrated",
+      "geometric",
+      "bauhaus",
+      "colourful",
+      "academy"
+    ]
+  },
+  {
+    "id": "portrait-academy-diploma",
+    "name": "Academy Diploma (Portrait)",
+    "orientation": "portrait",
+    "width": 794,
+    "height": 1123,
+    "file": "portrait-academy-diploma.svg",
+    "preview": "portrait-academy-diploma.png",
+    "fonts": [
+      "Cinzel",
+      "Playfair Display",
+      "Libre Baskerville",
+      "Great Vibes"
+    ],
+    "palette": [
+      "#FFFDF8",
+      "#14213D",
+      "#C29B4F",
+      "#3A3A3A"
+    ],
+    "tags": [
+      "classic",
+      "formal",
+      "diploma",
+      "portrait",
+      "seal",
+      "academy"
+    ]
+  },
+  {
+    "id": "portrait-gradient-hex-badge",
+    "name": "Gradient Hex Badge (Portrait)",
+    "orientation": "portrait",
+    "width": 794,
+    "height": 1123,
+    "file": "portrait-gradient-hex-badge.svg",
+    "preview": "portrait-gradient-hex-badge.png",
+    "fonts": [
+      "Poppins",
+      "Inter",
+      "Dancing Script"
+    ],
+    "palette": [
+      "#0284C7",
+      "#6D28D9",
+      "#0EA5E9",
+      "#0F172A",
+      "#FFFFFF"
+    ],
+    "tags": [
+      "modern",
+      "saas",
+      "gradient",
+      "badge",
+      "portrait",
+      "customer-education"
+    ]
+  },
+  {
+    "id": "portrait-emerald-art-deco",
+    "name": "Emerald Art Deco (Portrait)",
+    "orientation": "portrait",
+    "width": 794,
+    "height": 1123,
+    "file": "portrait-emerald-art-deco.svg",
+    "preview": "portrait-emerald-art-deco.png",
+    "fonts": [
+      "Cormorant Garamond",
+      "Montserrat",
+      "Great Vibes"
+    ],
+    "palette": [
+      "#0E2A23",
+      "#D4AF6A",
+      "#F3E9D2",
+      "#FFFFFF"
+    ],
+    "tags": [
+      "dark",
+      "elegant",
+      "art-deco",
+      "luxury",
+      "portrait",
+      "gold"
+    ]
+  }
+]

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794" viewBox="0 0 1123 794">
+<title>Rosette Badge</title>
+<defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&amp;family=Montserrat:wght@400;500;600;700;800&amp;family=Dancing+Script:wght@500;600;700&amp;display=swap');</style>
+</defs>
+<g id="deco_background">
+<rect x="0" y="0" width="1123" height="794" fill="#FFFFFF"/>
+<rect x="0" y="0" width="390" height="794" fill="#F3F5F9"/>
+</g>
+<g id="deco_band">
+<rect x="0" y="0" width="1123" height="14" fill="#13294B"/>
+<rect x="0" y="14" width="1123" height="4" fill="#C9A227"/>
+<rect x="0" y="776" width="1123" height="4" fill="#C9A227"/>
+<rect x="0" y="780" width="1123" height="14" fill="#13294B"/>
+</g>
+<g id="deco_seal">
+<path d="M137 400 L103 550 L133 530 L151 562 L185 420 Z" fill="#13294B"/>
+<path d="M253 400 L287 550 L257 530 L239 562 L205 420 Z" fill="#22406E"/>
+<polygon points="195.0,222.0 203.2,236.3 213.5,223.5 219.3,238.9 231.5,227.8 234.8,243.9 248.6,234.9 249.3,251.3 264.4,244.5 262.5,260.9 278.4,256.6 274.1,272.5 290.5,270.6 283.7,285.7 300.1,286.4 291.1,300.2 307.2,303.5 296.1,315.7 311.5,321.5 298.7,331.8 313.0,340.0 298.7,348.2 311.5,358.5 296.1,364.3 307.2,376.5 291.1,379.8 300.1,393.6 283.7,394.3 290.5,409.4 274.1,407.5 278.4,423.4 262.5,419.1 264.4,435.5 249.3,428.7 248.6,445.1 234.8,436.1 231.5,452.2 219.3,441.1 213.5,456.5 203.2,443.7 195.0,458.0 186.8,443.7 176.5,456.5 170.7,441.1 158.5,452.2 155.2,436.1 141.4,445.1 140.7,428.7 125.6,435.5 127.5,419.1 111.6,423.4 115.9,407.5 99.5,409.4 106.3,394.3 89.9,393.6 98.9,379.8 82.8,376.5 93.9,364.3 78.5,358.5 91.3,348.2 77.0,340.0 91.3,331.8 78.5,321.5 93.9,315.7 82.8,303.5 98.9,300.2 89.9,286.4 106.3,285.7 99.5,270.6 115.9,272.5 111.6,256.6 127.5,260.9 125.6,244.5 140.7,251.3 141.4,234.9 155.2,243.9 158.5,227.8 170.7,238.9 176.5,223.5 186.8,236.3" fill="#C9A227"/>
+<circle cx="195" cy="340" r="98" fill="#E4C766"/>
+<circle cx="195" cy="340" r="86" fill="#13294B"/>
+<circle cx="195" cy="340" r="78" fill="none" stroke="#C9A227" stroke-width="1.5"/>
+<circle cx="195" cy="340" r="72" fill="none" stroke="#C9A227" stroke-width="0.75" stroke-dasharray="1.5 3"/>
+<polygon points="195.0,296.0 198.5,305.1 208.3,305.7 200.7,311.9 203.2,321.3 195.0,316.0 186.8,321.3 189.3,311.9 181.7,305.7 191.5,305.1" fill="#C9A227"/>
+<text x="195" y="348" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="2.5">CERTIFIED</text>
+<line x1="155" y1="362" x2="235" y2="362" stroke="#C9A227" stroke-width="1"/>
+<text x="195" y="382" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="700" fill="#E8D7A3" text-anchor="middle" letter-spacing="2.5">PROFESSIONAL</text>
+</g>
+<g id="logo">
+<rect x="125" y="640" width="140" height="48" rx="8" fill="none" stroke="#9AA6BA" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="195.0" y="669.0" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="600" fill="#6B778C" text-anchor="middle" letter-spacing="3">LOGO</text>
+</g>
+<text id="org_name" x="450" y="112" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="700" fill="#13294B" text-anchor="start" letter-spacing="1">Acme Academy</text>
+<text id="certificate_title" x="450" y="226" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="700" fill="#8A6D0F" text-anchor="start" letter-spacing="4">CERTIFICATE OF ACHIEVEMENT</text>
+<text id="presented_label" x="450" y="268" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="400" fill="#6B7280" text-anchor="start">Proudly awarded to</text>
+<text id="recipient_name" x="448" y="344" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-size="64" font-weight="700" fill="#13294B" text-anchor="start">{Recipient name}</text>
+<text id="description" x="450" y="400" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="400" fill="#4B5563" text-anchor="start">has successfully completed Advanced Product Training</text>
+<g id="deco_divider">
+<line x1="450" y1="448" x2="1063" y2="448" stroke="#E5E7EB" stroke-width="1.5"/>
+<rect x="450" y="446" width="56" height="4" fill="#C9A227"/>
+</g>
+<text id="label_issue_date" x="450" y="496" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#9CA3AF" text-anchor="start" letter-spacing="2.5">DATE ISSUED</text>
+<text id="issue_date" x="450" y="522" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="600" fill="#13294B" text-anchor="start">{Date}</text>
+<text id="label_credential_id" x="660" y="496" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#9CA3AF" text-anchor="start" letter-spacing="2.5">CREDENTIAL ID</text>
+<text id="credential_id" x="660" y="522" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="600" fill="#13294B" text-anchor="start">{Certificate ID}</text>
+<text id="signature_1" x="454" y="646" font-family="'Dancing Script', 'Brush Script MT', cursive" font-size="44" font-weight="600" fill="#13294B" text-anchor="start">Jordan Lee</text>
+<g id="deco_signature_line">
+<line x1="450" y1="662" x2="700" y2="662" stroke="#13294B" stroke-width="1.2"/>
+</g>
+<text id="signer_1_name" x="450" y="690" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#13294B" text-anchor="start">Jordan Lee</text>
+<text id="signer_1_title" x="450" y="712" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="400" fill="#6B7280" text-anchor="start">Head of Education</text>
+<g id="qr_code">
+<rect x="953" y="602" width="110" height="110" rx="6" fill="#FFFFFF" stroke="#9AA6BA" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="966.2" y="615.2" width="26.4" height="26.4" rx="2" fill="none" stroke="#13294B" stroke-width="4.4"/>
+<rect x="974.1" y="623.1" width="10.6" height="10.6" fill="#13294B"/>
+<rect x="1023.4" y="615.2" width="26.4" height="26.4" rx="2" fill="none" stroke="#13294B" stroke-width="4.4"/>
+<rect x="1031.3" y="623.1" width="10.6" height="10.6" fill="#13294B"/>
+<rect x="966.2" y="672.4" width="26.4" height="26.4" rx="2" fill="none" stroke="#13294B" stroke-width="4.4"/>
+<rect x="974.1" y="680.3" width="10.6" height="10.6" fill="#13294B"/>
+<text x="1027.8" y="683.4" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-size="17.6" font-weight="700" fill="#6B7280" text-anchor="middle" letter-spacing="1">QR</text>
+</g>
+</svg>

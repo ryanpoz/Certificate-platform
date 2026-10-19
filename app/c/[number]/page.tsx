@@ -73,6 +73,7 @@ export default async function CertificatePage({
         }}
         template={{
           bodyText: template?.bodyText || '',
+          designConfig: template?.designConfig as any,
         }}
         certificateUrl={certificateUrl}
         isPreviewMode={preview === 'true'}

@@ -1,6 +1,8 @@
 import puppeteer from 'puppeteer-core'
 import chromium from '@sparticuz/chromium'
 import { formatDate, renderMergeFields } from '../utils/helpers'
+import { renderCertificateV2 } from '../certificate-builder/render-v2'
+import { type CertificateDesignV2 } from '../certificate-builder/design-v2'
 
 // @ts-ignore
 import QRCode from 'qrcode'
@@ -20,6 +22,12 @@ export interface GeneratePDFParams {
 }
 
 export async function generateCertificatePDF(params: GeneratePDFParams): Promise<Buffer> {
+  // Check if using v2 design
+  if (params.designConfig && params.designConfig.version === 2) {
+    return generateV2PDF(params)
+  }
+
+  // Fall back to v1 PDF generation
   const qrCodeDataUrl = await QRCode.toDataURL(params.certificateUrl, {
     width: 200,
     margin: 2,
@@ -212,6 +220,65 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
     const pdfBuffer = await page.pdf({
       format: 'letter',
       printBackground: true,
+    })
+
+    return Buffer.from(pdfBuffer)
+  } finally {
+    await browser.close()
+  }
+}
+
+async function generateV2PDF(params: GeneratePDFParams): Promise<Buffer> {
+  const design = params.designConfig as CertificateDesignV2
+
+  // Generate QR code
+  const qrCodeDataUrl = await QRCode.toDataURL(params.certificateUrl, {
+    width: 256,
+    margin: 1,
+  })
+
+  const html = renderCertificateV2(design, {
+    recipientName: params.learnerName,
+    certificateTitle: params.courseName,
+    orgName: params.academyName,
+    issueDate: formatDate(params.issueDate),
+    certificateId: params.certificateNumber,
+    description: params.bodyText,
+  })
+
+  // Inject QR code into QR code elements
+  const htmlWithQR = html.replace(
+    /<div style="[^"]*"[^>]*>QR Code<\/div>/g,
+    `<img src="${qrCodeDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />`
+  )
+
+  // Wrap in @page styles for PDF
+  const pdfHtml = htmlWithQR.replace(
+    '<head>',
+    `<head>
+    <style>
+      @page {
+        size: ${design.orientation === 'landscape' ? `${design.width / 96}in ${design.height / 96}in` : `${design.width / 96}in ${design.height / 96}in`};
+        margin: 0;
+      }
+    </style>`
+  )
+
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
+    headless: true,
+  })
+
+  try {
+    const page = await browser.newPage()
+    await page.setContent(pdfHtml, { waitUntil: 'load' })
+    
+    const pdfBuffer = await page.pdf({
+      width: `${design.width}px`,
+      height: `${design.height}px`,
+      printBackground: true,
+      preferCSSPageSize: false,
     })
 
     return Buffer.from(pdfBuffer)

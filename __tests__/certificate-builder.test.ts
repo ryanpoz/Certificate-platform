@@ -109,8 +109,9 @@ describe('Template Builder', () => {
   it('should have edit page with builder UI', () => {
     const page = readFileSync(join(process.cwd(), 'app/dashboard/templates/[id]/page.tsx'), 'utf-8')
     
-    expect(page).toContain('TemplateBuilder')
-    expect(page).toContain('template')
+    // Now redirects to visual editor
+    expect(page).toContain('redirect')
+    expect(page).toContain('/editor')
   })
 
   it('should have builder component with live preview', () => {
