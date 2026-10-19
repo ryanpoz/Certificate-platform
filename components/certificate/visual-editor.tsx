@@ -92,12 +92,15 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(true)
   const [snapLines, setSnapLines] = useState<Array<{ x?: number; y?: number }>>([])
+  const [zoom, setZoom] = useState(1)
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
   const layerRef = useRef<Konva.Layer>(null)
   const selectionRectRef = useRef<Konva.Rect>(null)
   const selection = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Calculate snap guides
   function getSnapLines(skipId: string) {
@@ -370,18 +373,82 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
 
   const sampleData = getSampleData()
 
+  // Auto-fit zoom calculation
+  useEffect(() => {
+    const updateZoom = () => {
+      if (containerRef.current) {
+        const container = containerRef.current
+        const padding = 80
+        const availableWidth = container.clientWidth - padding
+        const availableHeight = container.clientHeight - padding
+        
+        const scaleX = availableWidth / design.width
+        const scaleY = availableHeight / design.height
+        const autoFitScale = Math.min(scaleX, scaleY, 1)
+        
+        setZoom(autoFitScale)
+        setContainerSize({ width: container.clientWidth, height: container.clientHeight })
+      }
+    }
+    
+    updateZoom()
+    window.addEventListener('resize', updateZoom)
+    return () => window.removeEventListener('resize', updateZoom)
+  }, [design.width, design.height])
+
+  const zoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3))
+  const zoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.1))
+  const zoomFit = () => {
+    if (containerRef.current) {
+      const container = containerRef.current
+      const padding = 80
+      const availableWidth = container.clientWidth - padding
+      const availableHeight = container.clientHeight - padding
+      const scaleX = availableWidth / design.width
+      const scaleY = availableHeight / design.height
+      setZoom(Math.min(scaleX, scaleY, 1))
+    }
+  }
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Left Panel */}
       <div className="w-64 bg-white border-r flex flex-col">
-        <div className="grid grid-cols-3 border-b">
-          <button onClick={() => setLeftPanel('text')} className={`px-2 py-2 text-xs ${leftPanel === 'text' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Text</button>
-          <button onClick={() => setLeftPanel('fields')} className={`px-2 py-2 text-xs ${leftPanel === 'fields' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Fields</button>
-          <button onClick={() => setLeftPanel('uploads')} className={`px-2 py-2 text-xs ${leftPanel === 'uploads' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Images</button>
-        </div>
-        <div className="grid grid-cols-2 border-b">
-          <button onClick={() => setLeftPanel('shapes')} className={`px-2 py-2 text-xs ${leftPanel === 'shapes' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Shapes</button>
-          <button onClick={() => setLeftPanel('background')} className={`px-2 py-2 text-xs ${leftPanel === 'background' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}>Background</button>
+        <div className="border-b">
+          <div className="grid grid-cols-3 gap-px bg-gray-200">
+            <button onClick={() => setLeftPanel('text')} className={`px-2 py-3 text-xs font-medium ${leftPanel === 'text' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`} title="Text">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-base">T</span>
+                <span>Text</span>
+              </div>
+            </button>
+            <button onClick={() => setLeftPanel('fields')} className={`px-2 py-3 text-xs font-medium ${leftPanel === 'fields' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`} title="Dynamic Fields">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-base">{ }</span>
+                <span>Fields</span>
+              </div>
+            </button>
+            <button onClick={() => setLeftPanel('uploads')} className={`px-2 py-3 text-xs font-medium ${leftPanel === 'uploads' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`} title="Images">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-base">🖼</span>
+                <span>Images</span>
+              </div>
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-px bg-gray-200">
+            <button onClick={() => setLeftPanel('shapes')} className={`px-2 py-3 text-xs font-medium ${leftPanel === 'shapes' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`} title="Shapes">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-base">◼</span>
+                <span>Shapes</span>
+              </div>
+            </button>
+            <button onClick={() => setLeftPanel('background')} className={`px-2 py-3 text-xs font-medium ${leftPanel === 'background' ? 'bg-blue-50 text-blue-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`} title="Background">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-base">🎨</span>
+                <span>Background</span>
+              </div>
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
@@ -456,25 +523,35 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
 
       {/* Canvas */}
       <div className="flex-1 flex flex-col">
-        <div className="bg-white border-b px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="font-semibold">Certificate Editor</h2>
-            <button onClick={toggleOrientation} className="text-sm text-blue-600 hover:text-blue-800">{design.orientation === 'landscape' ? 'Switch to Portrait' : 'Switch to Landscape'}</button>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showPreview} onChange={(e) => setShowPreview(e.target.checked)} className="rounded" />Preview</label>
-          </div>
-          <div className="flex gap-2 items-center">
-            <span className="text-xs text-gray-500">{saving ? 'Saving...' : saved ? 'Saved' : 'Unsaved'}</span>
-            <button disabled={historyIndex === 0} onClick={undo} className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-30">Undo</button>
-            <button disabled={historyIndex >= history.length - 1} onClick={redo} className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-30">Redo</button>
+        <div className="bg-white border-b px-4 py-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-4">
+              <h2 className="font-semibold">Certificate Editor</h2>
+              <button onClick={toggleOrientation} className="text-sm text-blue-600 hover:text-blue-800">{design.orientation === 'landscape' ? 'Switch to Portrait' : 'Switch to Landscape'}</button>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showPreview} onChange={(e) => setShowPreview(e.target.checked)} className="rounded" />Preview</label>
+            </div>
+            <div className="flex gap-2 items-center flex-wrap">
+              <span className="text-xs text-gray-500">{saving ? 'Saving...' : saved ? 'Saved' : 'Unsaved'}</span>
+              <button disabled={historyIndex === 0} onClick={undo} className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-30" title="Undo">Undo</button>
+              <button disabled={historyIndex >= history.length - 1} onClick={redo} className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-30" title="Redo">Redo</button>
+              <div className="border-l pl-2 ml-2 flex items-center gap-2">
+                <button onClick={zoomOut} className="px-2 py-1 text-sm border rounded hover:bg-gray-50" title="Zoom out">−</button>
+                <span className="text-xs text-gray-600 min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
+                <button onClick={zoomIn} className="px-2 py-1 text-sm border rounded hover:bg-gray-50" title="Zoom in">+</button>
+                <button onClick={zoomFit} className="px-2 py-1 text-sm border rounded hover:bg-gray-50" title="Fit to window">Fit</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-8 flex items-center justify-center">
-          <div className="bg-white shadow-lg" style={{ width: design.width, height: design.height }}>
+        <div ref={containerRef} className="flex-1 overflow-hidden p-8 flex items-center justify-center">
+          <div className="bg-white shadow-lg" style={{ width: design.width * zoom, height: design.height * zoom }}>
             <Stage
               ref={stageRef}
               width={design.width}
               height={design.height}
+              scaleX={zoom}
+              scaleY={zoom}
               onMouseDown={(e) => {
                 const clickedOnEmpty = e.target === e.target.getStage()
                 if (clickedOnEmpty) {
@@ -547,7 +624,7 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
 
                   if (element.type === 'dynamic-field') {
                     const el = element as DynamicFieldElement
-                    const text = showPreview ? (sampleData as any)[el.field] || el.field : `{${el.field}}`
+                    const text = (sampleData as any)[el.field] || DYNAMIC_FIELD_LABELS[el.field] || el.field
                     return <Text key={element.id} id={element.id} x={el.x} y={el.y} width={el.width} height={el.height} text={text} fontSize={el.fontSize} fontFamily={el.fontFamily} fontStyle={el.fontWeight === 'bold' ? 'bold' : 'normal'} fill={el.color} align={el.align} draggable={!el.locked} rotation={el.rotation} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragEnd={(e) => updateElement(el.id, { x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; updateElement(el.id, { x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
                   }
 
