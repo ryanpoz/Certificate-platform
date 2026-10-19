@@ -137,23 +137,24 @@ describe('Visual Editor Component', () => {
     expect(content).toContain('Layer')
   })
 
-  it('should have left and right panels', () => {
+  it('should have left panel and floating toolbar', () => {
     const content = fs.readFileSync(
       path.join(process.cwd(), 'components/certificate/visual-editor.tsx'),
       'utf-8'
     )
     expect(content).toContain('Left Panel')
-    expect(content).toContain('Properties')
+    expect(content).toContain('Floating Toolbar')
+    expect(content).toContain('FloatingToolbar')
   })
 
-  it('should support preview mode', () => {
+  it('should render dynamic fields as chips', () => {
     const content = fs.readFileSync(
       path.join(process.cwd(), 'components/certificate/visual-editor.tsx'),
       'utf-8'
     )
-    expect(content).toContain('showPreview')
-    expect(content).toContain('Preview')
-    expect(content).toContain('checkbox')
+    expect(content).toContain('dynamic-field')
+    expect(content).toContain('DYNAMIC_FIELD_LABELS')
+    expect(content).toContain('fieldLabel')
   })
 
   it('should have keyboard shortcuts', () => {

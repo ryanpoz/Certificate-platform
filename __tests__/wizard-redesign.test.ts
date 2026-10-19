@@ -97,17 +97,16 @@ describe('Wizard Redesign - Template Switching', () => {
     expect(wizard).toContain('onClick={() => handleTemplateSelect(template)}')
   })
 
-  it('should confirm before replacing if user has edits', () => {
+  it('should confirm before replacing if custom elements would be lost', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
     // Should track if user has made edits
     expect(wizard).toContain('hasEdits')
     expect(wizard).toContain('setHasEdits')
     
-    // Should confirm before switching
-    expect(wizard).toContain('if (hasEdits')
+    // Should confirm before switching if custom elements exist
+    expect(wizard).toContain('customElements')
     expect(wizard).toContain('confirm(')
-    expect(wizard).toContain('lose your edits')
   })
 
   it('should reset customDesign when switching templates', () => {
