@@ -48,12 +48,13 @@ describe('Certificate Wizard - Template Previews', () => {
     })
   })
 
-  it('should show customize button to open editor', () => {
+  it('should show editor integrated with template selection', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should have customize button
-    expect(wizard).toContain('Customize')
-    expect(wizard).toContain('setShowEditor')
+    // Should have VisualEditor component integrated (not a separate button)
+    expect(wizard).toContain('VisualEditor')
+    expect(wizard).toContain('Left Sidebar')
+    expect(wizard).toContain('Main Editor Pane')
   })
 
   it('should maintain wizard state when customizing', () => {
