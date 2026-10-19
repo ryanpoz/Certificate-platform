@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { STARTER_TEMPLATES } from '@/lib/certificate-builder/starter-templates'
 import { createCertificateFromWizard, parseCsvRecipients, saveDraft, loadDraft } from './actions'
 import VisualEditor from '@/components/certificate/visual-editor'
-import { type CertificateDesignV2 } from '@/lib/certificate-builder/design-v2'
+import { type CertificateDesignV2, migrateV1ToV2 } from '@/lib/certificate-builder/design-v2'
 
 interface WizardProps {
   academyId: string
@@ -155,14 +155,86 @@ export default function CertificateWizard({ academyId, userId, academyName, user
   }
 
   function handleTemplateSelect(template: typeof STARTER_TEMPLATES[0]) {
-    if (hasEdits && customDesign) {
-      if (!confirm('You have unsaved changes. Switch template and lose your edits?')) {
+    if (!hasEdits && !customDesign) {
+      // No edits, just switch template
+      setSelectedTemplate(template)
+      setCustomDesign(null)
+      return
+    }
+
+    const currentDesign = customDesign || migrateV1ToV2(selectedTemplate.config)
+    const newTemplateDesign = migrateV1ToV2(template.config)
+
+    // Build content map from current design by field/type
+    const contentMap: Record<string, any> = {}
+    
+    currentDesign.elements.forEach((el: any) => {
+      if (el.type === 'dynamic-field') {
+        // Map by field name (certificate_title, org_name, etc.)
+        contentMap[`field:${el.field}`] = {
+          text: el.text, // for static overrides
+          // Don't copy position/style - use new template's
+        }
+      } else if (el.type === 'text') {
+        // Map custom text elements (non-template)
+        contentMap[`text:${el.id}`] = el
+      } else if (el.type === 'image') {
+        // Map images by semantic meaning if possible, otherwise by position
+        if (el.src) {
+          if (el.y < 200) {
+            contentMap['image:logo'] = el.src
+          } else {
+            contentMap['image:other'] = el.src
+          }
+        }
+      } else if (el.type === 'signature' && el.src) {
+        contentMap['signature:image'] = el.src
+      }
+    })
+
+    // Count custom elements that would be lost
+    const customElements = currentDesign.elements.filter((el: any) => {
+      // Elements not in standard templates
+      const elId = parseInt(el.id.replace('element-', ''))
+      return isNaN(elId) || elId > 20 // User-added elements typically have high IDs or custom IDs
+    })
+
+    // Apply content to new template
+    const mergedElements = newTemplateDesign.elements.map((el: any) => {
+      if (el.type === 'dynamic-field') {
+        const savedContent = contentMap[`field:${el.field}`]
+        if (savedContent) {
+          return { ...el, ...savedContent }
+        }
+      } else if (el.type === 'image') {
+        const logoSrc = contentMap['image:logo']
+        if (logoSrc && el.y < 200) {
+          return { ...el, src: logoSrc }
+        }
+      } else if (el.type === 'signature') {
+        const sigSrc = contentMap['signature:image']
+        if (sigSrc) {
+          return { ...el, src: sigSrc }
+        }
+      }
+      return el
+    })
+
+    const mergedDesign = {
+      ...newTemplateDesign,
+      elements: mergedElements,
+    }
+
+    // Only confirm if custom elements would be lost
+    if (customElements.length > 0) {
+      if (!confirm(`Switching templates will remove ${customElements.length} custom element(s) you added. Your content (text, images) will be preserved. Continue?`)) {
         return
       }
     }
+
     setSelectedTemplate(template)
-    setCustomDesign(null)
-    setHasEdits(false)
+    setCustomDesign(mergedDesign)
+    setHasEdits(true)
   }
 
   async function handleEditorSave(design: CertificateDesignV2) {
