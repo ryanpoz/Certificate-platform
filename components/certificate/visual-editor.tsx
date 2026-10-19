@@ -6,6 +6,7 @@ import { type CertificateDesignV2, type DesignElement, type TextElement, type Dy
 import { STARTER_TEMPLATES } from '@/lib/certificate-builder/starter-templates'
 import Konva from 'konva'
 import ImageUpload from '@/components/dashboard/image-upload'
+import { FloatingToolbar } from './floating-toolbar'
 import QRCode from 'qrcode'
 import useImage from 'use-image'
 
@@ -87,7 +88,6 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
   const [history, setHistory] = useState<CertificateDesignV2[]>([design])
   const [historyIndex, setHistoryIndex] = useState(0)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [showPreview, setShowPreview] = useState(false)
   const [leftPanel, setLeftPanel] = useState<'templates' | 'text' | 'fields' | 'uploads' | 'shapes' | 'background'>('text')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(true)
@@ -528,7 +528,6 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
             <div className="flex items-center gap-4">
               <h2 className="font-semibold">Certificate Editor</h2>
               <button onClick={toggleOrientation} className="text-sm text-blue-600 hover:text-blue-800">{design.orientation === 'landscape' ? 'Switch to Portrait' : 'Switch to Landscape'}</button>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showPreview} onChange={(e) => setShowPreview(e.target.checked)} className="rounded" />Preview</label>
             </div>
             <div className="flex gap-2 items-center flex-wrap">
               <span className="text-xs text-gray-500">{saving ? 'Saving...' : saved ? 'Saved' : 'Unsaved'}</span>
@@ -659,7 +658,7 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
 
                   if (element.type === 'qr-code') {
                     const el = element as QRCodeElement
-                    const sampleUrl = showPreview ? 'https://example.com/c/12345' : 'https://example.com/c/12345'
+                    const sampleUrl = 'https://example.com/c/12345'
                     return <QRCodeElement key={element.id} element={el} isSelected={isSelected} onSelect={() => setSelectedIds(e => e.includes(el.id) ? e : [el.id])} onUpdate={(updates) => updateElement(el.id, updates)} sampleUrl={sampleUrl} />
                   }
 
@@ -694,163 +693,14 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
         </div>
       </div>
 
-      {/* Right Panel */}
-      {selectedIds.length > 0 && (
-        <div className="w-80 bg-white border-l p-4 overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">{selectedIds.length === 1 ? 'Properties' : `${selectedIds.length} selected`}</h3>
-            <div className="flex gap-2">
-              <button onClick={() => bringForward(selectedIds)} className="text-xs text-blue-600 hover:text-blue-800" title="Bring Forward">↑</button>
-              <button onClick={() => sendBackward(selectedIds)} className="text-xs text-blue-600 hover:text-blue-800" title="Send Backward">↓</button>
-              <button onClick={() => toggleLock(selectedIds)} className="text-xs text-blue-600 hover:text-blue-800" title="Lock/Unlock">🔒</button>
-              <button onClick={() => duplicateElements(selectedIds)} className="text-xs text-blue-600 hover:text-blue-800" title="Duplicate">⎘</button>
-              <button onClick={() => deleteElements(selectedIds)} className="text-xs text-red-600 hover:text-red-800" title="Delete">×</button>
-            </div>
-          </div>
-
-          {selectedElement && (
-            <div className="space-y-4">
-              {/* Position and Size */}
-              <div className="border-b pb-3">
-                <h4 className="text-xs font-semibold mb-2 text-gray-700">Position & Size</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs mb-1">X</label>
-                    <input type="number" value={Math.round(selectedElement.x)} onChange={(e) => updateElement(selectedIds[0], { x: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 border rounded text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">Y</label>
-                    <input type="number" value={Math.round(selectedElement.y)} onChange={(e) => updateElement(selectedIds[0], { y: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 border rounded text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">W</label>
-                    <input type="number" value={Math.round(selectedElement.width)} onChange={(e) => updateElement(selectedIds[0], { width: parseInt(e.target.value) || 10 })} className="w-full px-2 py-1 border rounded text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">H</label>
-                    <input type="number" value={Math.round(selectedElement.height)} onChange={(e) => updateElement(selectedIds[0], { height: parseInt(e.target.value) || 10 })} className="w-full px-2 py-1 border rounded text-sm" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Text & Dynamic Field */}
-              {(selectedElement.type === 'text' || selectedElement.type === 'dynamic-field') && (
-                <>
-                  {selectedElement.type === 'text' && (
-                    <div>
-                      <label className="block text-xs font-medium mb-1">Text</label>
-                      <textarea value={(selectedElement as any).text} onChange={(e) => updateElement(selectedIds[0], { text: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" rows={3} />
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Font</label>
-                    <select value={(selectedElement as any).fontFamily} onChange={(e) => updateElement(selectedIds[0], { fontFamily: e.target.value })} className="w-full px-3 py-2 border rounded text-sm">
-                      {GOOGLE_FONTS.map(font => <option key={font} value={font}>{font}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Size</label>
-                    <input type="number" value={(selectedElement as any).fontSize} onChange={(e) => updateElement(selectedIds[0], { fontSize: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Color</label>
-                    <input type="color" value={(selectedElement as any).color} onChange={(e) => updateElement(selectedIds[0], { color: e.target.value })} className="w-full h-10 border rounded" />
-                  </div>
-                </>
-              )}
-
-              {/* Shape */}
-              {selectedElement.type === 'shape' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Fill Color</label>
-                    <input type="color" value={(selectedElement as any).fill || '#000000'} onChange={(e) => updateElement(selectedIds[0], { fill: e.target.value })} className="w-full h-10 border rounded" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Stroke Color</label>
-                    <input type="color" value={(selectedElement as any).stroke || '#000000'} onChange={(e) => updateElement(selectedIds[0], { stroke: e.target.value })} className="w-full h-10 border rounded" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Stroke Width</label>
-                    <input type="number" value={(selectedElement as any).strokeWidth || 0} onChange={(e) => updateElement(selectedIds[0], { strokeWidth: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded text-sm" min="0" />
-                  </div>
-                </>
-              )}
-
-              {/* Image */}
-              {selectedElement.type === 'image' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Image URL</label>
-                    <input type="text" value={(selectedElement as any).src} onChange={(e) => updateElement(selectedIds[0], { src: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" placeholder="https://..." />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Opacity</label>
-                    <input type="range" min="0" max="1" step="0.1" value={(selectedElement as any).opacity || 1} onChange={(e) => updateElement(selectedIds[0], { opacity: parseFloat(e.target.value) })} className="w-full" />
-                    <span className="text-xs text-gray-500">{Math.round(((selectedElement as any).opacity || 1) * 100)}%</span>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-2">Upload New</label>
-                    <ImageUpload value={(selectedElement as any).src} onChange={(url) => updateElement(selectedIds[0], { src: url })} label="Replace Image" maxWidth={2000} />
-                  </div>
-                </>
-              )}
-
-              {/* Signature */}
-              {selectedElement.type === 'signature' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Type</label>
-                    <select value={(selectedElement as any).signatureType} onChange={(e) => updateElement(selectedIds[0], { signatureType: e.target.value })} className="w-full px-3 py-2 border rounded text-sm">
-                      <option value="text">Script Text</option>
-                      <option value="image">Image</option>
-                    </select>
-                  </div>
-                  {(selectedElement as any).signatureType === 'text' ? (
-                    <>
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Name</label>
-                        <input type="text" value={(selectedElement as any).text} onChange={(e) => updateElement(selectedIds[0], { text: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Script Font</label>
-                        <select value={(selectedElement as any).fontFamily} onChange={(e) => updateElement(selectedIds[0], { fontFamily: e.target.value })} className="w-full px-3 py-2 border rounded text-sm">
-                          <option value="Allura">Allura</option>
-                          <option value="Dancing Script">Dancing Script</option>
-                          <option value="Great Vibes">Great Vibes</option>
-                          <option value="Pacifico">Pacifico</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium mb-1">Font Size</label>
-                        <input type="number" value={(selectedElement as any).fontSize || 32} onChange={(e) => updateElement(selectedIds[0], { fontSize: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded text-sm" />
-                      </div>
-                    </>
-                  ) : (
-                    <div>
-                      <label className="block text-xs font-medium mb-2">Signature Image</label>
-                      <ImageUpload value={(selectedElement as any).src || ''} onChange={(url) => updateElement(selectedIds[0], { src: url })} label="Upload Signature" maxWidth={600} />
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-xs font-medium mb-1">Title</label>
-                    <input type="text" value={(selectedElement as any).title || ''} onChange={(e) => updateElement(selectedIds[0], { title: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" placeholder="e.g. Director" />
-                  </div>
-                </>
-              )}
-
-              {/* QR Code */}
-              {selectedElement.type === 'qr-code' && (
-                <div>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={(selectedElement as any).showLink || false} onChange={(e) => updateElement(selectedIds[0], { showLink: e.target.checked })} className="rounded" />
-                    <span className="text-sm">Show verification link below QR</span>
-                  </label>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+      {/* Floating Toolbar */}
+      {selectedIds.length === 1 && selectedElement && (
+        <FloatingToolbar
+          element={selectedElement}
+          stageRef={stageRef}
+          onUpdate={(updates) => updateElement(selectedIds[0], updates)}
+          onDelete={() => deleteElements(selectedIds)}
+        />
       )}
     </div>
   )
