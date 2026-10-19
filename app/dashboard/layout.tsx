@@ -32,19 +32,13 @@ export default async function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
-              <Link href="/dashboard" className="flex items-center px-2 text-xl font-bold text-gray-900">
+              <Link href="/dashboard/certificates" className="flex items-center px-2 text-xl font-bold text-gray-900">
                 {academy?.name || 'Certificate Platform'}
               </Link>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <Link
-                  href="/dashboard"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
-                >
-                  Dashboard
-                </Link>
-                <Link
                   href="/dashboard/certificates"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
                 >
                   Certificates
                 </Link>
@@ -53,12 +47,6 @@ export default async function DashboardLayout({
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
                 >
                   Results
-                </Link>
-                <Link
-                  href="/dashboard/templates"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
-                >
-                  Templates
                 </Link>
                 <Link
                   href="/dashboard/settings"

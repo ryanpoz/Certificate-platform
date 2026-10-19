@@ -79,20 +79,22 @@ describe('Certificate Builder Types', () => {
 })
 
 describe('Template Library Page', () => {
-  it('should exist at /dashboard/templates', () => {
+  it('templates page now redirects to certificates (simplified navigation)', () => {
     const page = readFileSync(join(process.cwd(), 'app/dashboard/templates/page.tsx'), 'utf-8')
     
-    expect(page).toContain('Certificate Templates')
-    expect(page).toContain('Create Template')
-    expect(page).toContain('TemplateActions')
+    // Templates page redirects to certificates in certificate-first UX
+    expect(page).toContain('redirect')
+    expect(page).toContain('/dashboard/certificates')
   })
 
-  it('should show template usage counts', () => {
-    const page = readFileSync(join(process.cwd(), 'app/dashboard/templates/page.tsx'), 'utf-8')
+  it('templates and editor still accessible via direct routes', () => {
+    // Templates can still be created via /dashboard/templates/new
+    const newPage = readFileSync(join(process.cwd(), 'app/dashboard/templates/new/page.tsx'), 'utf-8')
+    expect(newPage).toContain('Create Certificate Template')
     
-    expect(page).toContain('usageMap')
-    expect(page).toContain('Used by')
-    expect(page).toContain('program')
+    // Templates can be edited via /dashboard/templates/[id]/editor
+    const editorPage = readFileSync(join(process.cwd(), 'app/dashboard/templates/[id]/editor/page.tsx'), 'utf-8')
+    expect(editorPage).toBeDefined()
   })
 })
 

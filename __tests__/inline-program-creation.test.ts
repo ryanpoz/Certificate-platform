@@ -80,12 +80,22 @@ describe('Per-Program Metrics', () => {
     expect(programsPage).toContain('/dashboard/certificates')
   })
 
-  it.skip('should filter events by program certificates', () => {
-    // Programs page now redirects - feature moved to certificates view
+  it('should show per-program metrics on certificates page', () => {
+    const certificatesPage = readFileSync(join(process.cwd(), 'app/dashboard/certificates/page.tsx'), 'utf-8')
+    
+    // Should show metrics per program
+    expect(certificatesPage).toContain('allPrograms')
+    expect(certificatesPage).toContain('issued')
+    expect(certificatesPage).toContain('views')
+    expect(certificatesPage).toContain('linkedinClicks')
   })
 
-  it.skip('should exclude bot traffic', () => {
-    // Programs page now redirects - feature moved to certificates view
+  it('should exclude bot traffic from metrics', () => {
+    const resultsPage = readFileSync(join(process.cwd(), 'app/dashboard/results/page.tsx'), 'utf-8')
+    
+    // Results page filters out bot traffic
+    expect(resultsPage).toContain('isBot')
+    expect(resultsPage).toContain('false')
   })
 })
 

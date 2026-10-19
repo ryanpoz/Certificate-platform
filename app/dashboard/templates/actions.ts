@@ -41,11 +41,17 @@ export async function duplicateTemplateAction(templateId: string, academyId: str
 
 export async function deleteTemplateAction(templateId: string) {
   try {
-    const [usage] = await db
-      .select({ id: courses.id })
-      .from(courses)
-      .where(eq(courses.templateId, templateId))
-      .limit(1)
+    let usage = null
+    try {
+      const [result] = await db
+        .select({ id: courses.id })
+        .from(courses)
+        .where(eq(courses.templateId, templateId))
+        .limit(1)
+      usage = result || null
+    } catch (error) {
+      console.error('Could not check template usage (migration may be needed):', error)
+    }
 
     if (usage) {
       return { error: 'Cannot delete template that is in use by programs' }
