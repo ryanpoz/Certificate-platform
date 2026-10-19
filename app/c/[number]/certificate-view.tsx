@@ -51,6 +51,10 @@ export default function CertificateView(props: CertificateViewProps) {
 
   useEffect(() => {
     if (!isPreviewMode && !certificate.isPreview) {
+      // Check if this is the recipient viewing (email link has recipient=true param)
+      const urlParams = new URLSearchParams(window.location.search)
+      const isRecipient = urlParams.get('recipient') === 'true'
+      
       fetch('/api/events/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,6 +62,7 @@ export default function CertificateView(props: CertificateViewProps) {
           certificateNumber: certificate.number,
           type: 'page_view',
           referrer: document.referrer,
+          isRecipient,
         }),
       })
     }
