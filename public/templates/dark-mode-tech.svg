@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794" viewBox="0 0 1123 794">
+<title>Dark Mode Tech</title>
+<defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Dancing+Script:wght@500;600;700&amp;display=swap');</style>
+<radialGradient id="glow_violet" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#7C3AED" stop-opacity="0.55"/><stop offset="1" stop-color="#7C3AED" stop-opacity="0"/></radialGradient>
+<radialGradient id="glow_cyan" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#06B6D4" stop-opacity="0.35"/><stop offset="1" stop-color="#06B6D4" stop-opacity="0"/></radialGradient>
+<linearGradient id="grad_line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+</defs>
+<g id="deco_background">
+<rect x="0" y="0" width="1123" height="794" fill="#0A0E1A"/>
+</g>
+<g id="deco_grid">
+<line x1="0" y1="0" x2="0" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="48" y1="0" x2="48" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="96" y1="0" x2="96" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="144" y1="0" x2="144" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="192" y1="0" x2="192" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="240" y1="0" x2="240" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="288" y1="0" x2="288" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="336" y1="0" x2="336" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="384" y1="0" x2="384" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="432" y1="0" x2="432" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="480" y1="0" x2="480" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="528" y1="0" x2="528" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="576" y1="0" x2="576" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="624" y1="0" x2="624" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="672" y1="0" x2="672" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="720" y1="0" x2="720" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="768" y1="0" x2="768" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="816" y1="0" x2="816" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="864" y1="0" x2="864" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="912" y1="0" x2="912" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="960" y1="0" x2="960" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="1008" y1="0" x2="1008" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="1056" y1="0" x2="1056" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="1104" y1="0" x2="1104" y2="794" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="0" x2="1123" y2="0" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="48" x2="1123" y2="48" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="96" x2="1123" y2="96" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="144" x2="1123" y2="144" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="192" x2="1123" y2="192" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="240" x2="1123" y2="240" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="288" x2="1123" y2="288" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="336" x2="1123" y2="336" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="384" x2="1123" y2="384" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="432" x2="1123" y2="432" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="480" x2="1123" y2="480" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="528" x2="1123" y2="528" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="576" x2="1123" y2="576" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="624" x2="1123" y2="624" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="672" x2="1123" y2="672" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="720" x2="1123" y2="720" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+<line x1="0" y1="768" x2="1123" y2="768" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+</g>
+<g id="deco_glow">
+<circle cx="980" cy="120" r="420" fill="url(#glow_violet)"/>
+<circle cx="120" cy="760" r="320" fill="url(#glow_cyan)"/>
+</g>
+<g id="deco_frame">
+<rect x="32" y="32" width="1059" height="730" rx="20" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="1"/>
+</g>
+<g id="logo">
+<rect x="96" y="80" width="140" height="48" rx="8" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="166.0" y="109.0" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="600" fill="#94A3B8" text-anchor="middle" letter-spacing="3">LOGO</text>
+</g>
+<text id="org_name" x="1027" y="111" font-family="'Space Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="600" fill="#E2E8F0" text-anchor="end">Acme Academy</text>
+<g id="deco_status">
+<rect x="96" y="214" width="12" height="12" rx="6" fill="#22D3EE"/>
+<circle cx="102" cy="220" r="11" fill="none" stroke="#22D3EE" stroke-opacity="0.35" stroke-width="2"/>
+</g>
+<text id="certificate_title" x="124" y="226" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="17" font-weight="500" fill="#67E8F9" text-anchor="start" letter-spacing="3">CERTIFICATE OF COMPLETION</text>
+<text id="recipient_name" x="91" y="336" font-family="'Space Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="88" font-weight="700" fill="#F8FAFC" text-anchor="start" letter-spacing="-2.5">{Recipient name}</text>
+<g id="deco_accent_line">
+<rect x="96" y="370" width="140" height="5" rx="2.5" fill="url(#grad_line)"/>
+</g>
+<text id="description" x="96" y="428" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="23" font-weight="400" fill="#CBD5E1" text-anchor="start">has successfully completed Advanced Product Training</text>
+<g id="deco_panel">
+<rect x="96" y="548" width="931" height="166" rx="16" fill="#111729" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"/>
+</g>
+<text id="signature_1" x="132" y="626" font-family="'Dancing Script', 'Brush Script MT', cursive" font-size="42" font-weight="600" fill="#F1F5F9" text-anchor="start">Jordan Lee</text>
+<g id="deco_signature_line">
+<line x1="128" y1="642" x2="360" y2="642" stroke="#334155" stroke-width="1.2"/>
+</g>
+<text id="signer_1_name" x="128" y="670" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#F1F5F9" text-anchor="start">Jordan Lee</text>
+<text id="signer_1_title" x="128" y="692" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="400" fill="#94A3B8" text-anchor="start">Head of Education</text>
+<text id="label_issue_date" x="450" y="612" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="12" font-weight="500" fill="#64748B" text-anchor="start" letter-spacing="2">ISSUED</text>
+<text id="issue_date" x="450" y="642" font-family="'Space Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="19" font-weight="600" fill="#F1F5F9" text-anchor="start">{Date}</text>
+<text id="label_credential_id" x="630" y="612" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="12" font-weight="500" fill="#64748B" text-anchor="start" letter-spacing="2">CREDENTIAL ID</text>
+<text id="credential_id" x="630" y="642" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="17" font-weight="500" fill="#F1F5F9" text-anchor="start">{Certificate ID}</text>
+<g id="qr_code">
+<rect x="889" y="570" width="120" height="120" rx="6" fill="#F8FAFC" stroke="#475569" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="903.4" y="584.4" width="28.8" height="28.8" rx="2" fill="none" stroke="#0A0E1A" stroke-width="4.8"/>
+<rect x="912.0" y="593.0" width="11.5" height="11.5" fill="#0A0E1A"/>
+<rect x="965.8" y="584.4" width="28.8" height="28.8" rx="2" fill="none" stroke="#0A0E1A" stroke-width="4.8"/>
+<rect x="974.4" y="593.0" width="11.5" height="11.5" fill="#0A0E1A"/>
+<rect x="903.4" y="646.8" width="28.8" height="28.8" rx="2" fill="none" stroke="#0A0E1A" stroke-width="4.8"/>
+<rect x="912.0" y="655.4" width="11.5" height="11.5" fill="#0A0E1A"/>
+<text x="970.6" y="658.8" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="19.2" font-weight="700" fill="#475569" text-anchor="middle" letter-spacing="1">QR</text>
+</g>
+</svg>

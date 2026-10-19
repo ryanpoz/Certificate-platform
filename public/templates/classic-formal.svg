@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794" viewBox="0 0 1123 794">
+<title>Classic Formal</title>
+<defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&amp;family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&amp;family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&amp;family=Great+Vibes&amp;display=swap');</style>
+</defs>
+<g id="deco_background">
+<rect x="0" y="0" width="1123" height="794" fill="#FBF6EA"/>
+</g>
+<g id="deco_border">
+<rect x="26" y="26" width="1071" height="742" fill="none" stroke="#1F2A44" stroke-width="8"/>
+<rect x="44" y="44" width="1035" height="706" fill="none" stroke="#B08D57" stroke-width="1.5"/>
+<rect x="52" y="52" width="1019" height="690" fill="none" stroke="#B08D57" stroke-width="0.75"/>
+<path d="M64 98 L64 64 L98 64" fill="none" stroke="#B08D57" stroke-width="3"/>
+<path d="M72 87.8 L72 72 L87.8 72" fill="none" stroke="#B08D57" stroke-width="1.2"/>
+<rect x="74" y="74" width="8" height="8" fill="#B08D57" transform="rotate(45 78 78)"/>
+<path d="M1059 98 L1059 64 L1025 64" fill="none" stroke="#B08D57" stroke-width="3"/>
+<path d="M1051 87.8 L1051 72 L1035.2 72" fill="none" stroke="#B08D57" stroke-width="1.2"/>
+<rect x="1041" y="74" width="8" height="8" fill="#B08D57" transform="rotate(45 1045 78)"/>
+<path d="M64 696 L64 730 L98 730" fill="none" stroke="#B08D57" stroke-width="3"/>
+<path d="M72 706.2 L72 722 L87.8 722" fill="none" stroke="#B08D57" stroke-width="1.2"/>
+<rect x="74" y="712" width="8" height="8" fill="#B08D57" transform="rotate(45 78 716)"/>
+<path d="M1059 696 L1059 730 L1025 730" fill="none" stroke="#B08D57" stroke-width="3"/>
+<path d="M1051 706.2 L1051 722 L1035.2 722" fill="none" stroke="#B08D57" stroke-width="1.2"/>
+<rect x="1041" y="712" width="8" height="8" fill="#B08D57" transform="rotate(45 1045 716)"/>
+</g>
+<g id="logo">
+<rect x="491.5" y="78" width="140" height="46" rx="8" fill="none" stroke="#B08D57" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="561.5" y="106.0" font-family="'Cinzel', 'Trajan Pro', Georgia, serif" font-size="14" font-weight="600" fill="#8C7247" text-anchor="middle" letter-spacing="3">LOGO</text>
+</g>
+<text id="org_name" x="561.5" y="162" font-family="'Cinzel', 'Trajan Pro', Georgia, serif" font-size="18" font-weight="600" fill="#1F2A44" text-anchor="middle" letter-spacing="6">Acme Academy</text>
+<text id="certificate_title" x="561.5" y="232" font-family="'Cinzel', 'Trajan Pro', Georgia, serif" font-size="46" font-weight="700" fill="#1F2A44" text-anchor="middle" letter-spacing="1">Certificate of Completion</text>
+<g id="deco_divider">
+<line x1="411.5" y1="264" x2="547.5" y2="264" stroke="#B08D57" stroke-width="1.2"/>
+<line x1="575.5" y1="264" x2="711.5" y2="264" stroke="#B08D57" stroke-width="1.2"/>
+<rect x="556.5" y="259" width="10" height="10" fill="#B08D57" transform="rotate(45 561.5 264)"/>
+</g>
+<text id="presented_label" x="561.5" y="310" font-family="'Libre Baskerville', Baskerville, Georgia, serif" font-size="16" font-weight="400" fill="#5B5346" text-anchor="middle" font-style="italic">This certificate is proudly presented to</text>
+<text id="recipient_name" x="561.5" y="398" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-size="70" font-weight="700" fill="#1F2A44" text-anchor="middle" font-style="italic">{Recipient name}</text>
+<g id="deco_name_rule">
+<line x1="301.5" y1="428" x2="821.5" y2="428" stroke="#B08D57" stroke-width="1.5"/>
+</g>
+<text id="description" x="561.5" y="474" font-family="'Libre Baskerville', Baskerville, Georgia, serif" font-size="18" font-weight="400" fill="#3A3A3A" text-anchor="middle">has successfully completed Advanced Product Training</text>
+<text id="signature_1" x="290" y="618" font-family="'Great Vibes', 'Brush Script MT', cursive" font-size="48" font-weight="400" fill="#1F2A44" text-anchor="middle">Jordan Lee</text>
+<g id="deco_signature_line">
+<line x1="180" y1="636" x2="400" y2="636" stroke="#1F2A44" stroke-width="1"/>
+</g>
+<text id="signer_1_name" x="290" y="662" font-family="'Libre Baskerville', Baskerville, Georgia, serif" font-size="15" font-weight="700" fill="#1F2A44" text-anchor="middle">Jordan Lee</text>
+<text id="signer_1_title" x="290" y="684" font-family="'Libre Baskerville', Baskerville, Georgia, serif" font-size="14" font-weight="400" fill="#5B5346" text-anchor="middle" font-style="italic">Head of Education</text>
+<text id="issue_date" x="833" y="618" font-family="'Libre Baskerville', Baskerville, Georgia, serif" font-size="18" font-weight="400" fill="#1F2A44" text-anchor="middle">{Date}</text>
+<g id="deco_date_line">
+<line x1="723" y1="636" x2="943" y2="636" stroke="#1F2A44" stroke-width="1"/>
+</g>
+<text id="label_issue_date" x="833" y="662" font-family="'Libre Baskerville', Baskerville, Georgia, serif" font-size="15" font-weight="700" fill="#1F2A44" text-anchor="middle">Date of Issue</text>
+<g id="deco_seal">
+<polygon points="561.5,546.0 567.1,556.2 574.3,547.1 578.1,558.2 586.8,550.5 588.5,562.0 598.5,555.9 598.2,567.6 609.1,563.3 606.8,574.7 618.2,572.4 613.9,583.3 625.6,583.0 619.5,593.0 631.0,594.7 623.3,603.4 634.4,607.2 625.3,614.4 635.5,620.0 625.3,625.6 634.4,632.8 623.3,636.6 631.0,645.3 619.5,647.0 625.6,657.0 613.9,656.7 618.2,667.6 606.8,665.3 609.1,676.7 598.2,672.4 598.5,684.1 588.5,678.0 586.8,689.5 578.1,681.8 574.3,692.9 567.1,683.8 561.5,694.0 555.9,683.8 548.7,692.9 544.9,681.8 536.2,689.5 534.5,678.0 524.5,684.1 524.8,672.4 513.9,676.7 516.2,665.3 504.8,667.6 509.1,656.7 497.4,657.0 503.5,647.0 492.0,645.3 499.7,636.6 488.6,632.8 497.7,625.6 487.5,620.0 497.7,614.4 488.6,607.2 499.7,603.4 492.0,594.7 503.5,593.0 497.4,583.0 509.1,583.3 504.8,572.4 516.2,574.7 513.9,563.3 524.8,567.6 524.5,555.9 534.5,562.0 536.2,550.5 544.9,558.2 548.7,547.1 555.9,556.2" fill="#B08D57"/>
+<circle cx="561.5" cy="620" r="58" fill="#1F2A44"/>
+<circle cx="561.5" cy="620" r="51" fill="none" stroke="#B08D57" stroke-width="1.5"/>
+<circle cx="561.5" cy="620" r="45" fill="none" stroke="#B08D57" stroke-width="0.75" stroke-dasharray="2 3"/>
+<polygon points="561.5,593.0 564.7,601.6 573.9,602.0 566.7,607.7 569.1,616.5 561.5,611.5 553.9,616.5 556.3,607.7 549.1,602.0 558.3,601.6" fill="#B08D57"/>
+<text x="561.5" y="638" font-family="'Cinzel', 'Trajan Pro', Georgia, serif" font-size="11" font-weight="700" fill="#F3E3C3" text-anchor="middle" letter-spacing="2">CERTIFIED</text>
+</g>
+<text id="credential_id" x="561.5" y="724" font-family="'Libre Baskerville', Baskerville, Georgia, serif" font-size="12" font-weight="400" fill="#7A6A4F" text-anchor="middle" letter-spacing="1">{Certificate ID}</text>
+<text id="label_credential_id" x="561.5" y="710" font-family="'Cinzel', 'Trajan Pro', Georgia, serif" font-size="9" font-weight="700" fill="#9A8665" text-anchor="middle" letter-spacing="2.5">CERTIFICATE NO.</text>
+</svg>

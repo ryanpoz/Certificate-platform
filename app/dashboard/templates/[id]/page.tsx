@@ -2,8 +2,7 @@ import { requireAuth } from '@/lib/utils/session'
 import { db } from '@/lib/db'
 import { templates } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { notFound } from 'next/navigation'
-import TemplateBuilder from './builder'
+import { notFound, redirect } from 'next/navigation'
 
 export default async function EditTemplatePage({
   params,
@@ -23,7 +22,6 @@ export default async function EditTemplatePage({
     notFound()
   }
 
-  return (
-    <TemplateBuilder template={template} academyId={user.academyId} />
-  )
+  // Redirect to visual editor
+  redirect(`/dashboard/templates/${id}/editor`)
 }

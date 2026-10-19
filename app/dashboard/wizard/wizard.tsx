@@ -172,26 +172,46 @@ export default function CertificateWizard({ academyId, userId, academyName, user
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {STARTER_TEMPLATES.map((template) => (
-              <button
-                key={template.id}
-                onClick={() => setSelectedTemplate(template)}
-                className={`p-4 border-2 rounded-lg text-left hover:border-blue-500 transition-colors ${
-                  selectedTemplate.id === template.id
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200'
-                }`}
-              >
-                <div
-                  className="aspect-[1.414] rounded mb-2 flex items-center justify-center text-white text-xs font-medium"
-                  style={{ backgroundColor: template.config.colors.primary }}
+            {STARTER_TEMPLATES.map((template) => {
+              const bgColor = template.config.background.type === 'color' 
+                ? template.config.background.value 
+                : template.config.background.type === 'gradient'
+                ? '#4F46E5'
+                : '#6B7280'
+              
+              return (
+                <button
+                  key={template.id}
+                  onClick={() => setSelectedTemplate(template)}
+                  className={`p-4 border-2 rounded-lg text-left hover:border-blue-500 transition-colors ${
+                    selectedTemplate.id === template.id
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200'
+                  }`}
                 >
-                  {template.name}
-                </div>
-                <div className="font-medium text-sm">{template.name}</div>
-                <div className="text-xs text-gray-500">{template.description}</div>
-              </button>
-            ))}
+                  <div
+                    className="aspect-[1.414] rounded mb-2 flex items-center justify-center text-white text-xs font-medium"
+                    style={{ backgroundColor: bgColor }}
+                  >
+                    {template.name}
+                  </div>
+                  <div className="font-medium text-sm">{template.name}</div>
+                  <div className="text-xs text-gray-500 mt-1">{template.tags.slice(0, 2).join(', ')}</div>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="border-t pt-4">
+            <button
+              onClick={() => {
+                // TODO: Save template as draft and redirect to editor
+                router.push(`/dashboard/templates/${selectedTemplate.id}/editor`)
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              ✏️ Customize this template before issuing
+            </button>
           </div>
 
           <details className="border rounded-lg p-4">
