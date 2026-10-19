@@ -20,13 +20,13 @@ export default function CertificateWizard({ academyId, userId, academyName, user
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  // Step 1: Design
+  // Step 1: Design (merged template selection + editing)
   const [selectedTemplate, setSelectedTemplate] = useState(STARTER_TEMPLATES[0])
   const [certificateName, setCertificateName] = useState('')
   const [description, setDescription] = useState('')
   const [programName, setProgramName] = useState('')
-  const [showEditor, setShowEditor] = useState(false)
-  const [customDesign, setCustomDesign] = useState<any>(null)
+  const [customDesign, setCustomDesign] = useState<CertificateDesignV2 | null>(null)
+  const [hasEdits, setHasEdits] = useState(false)
 
   // Step 2: People
   const [recipients, setRecipients] = useState([{ name: userName, email: userEmail }])
@@ -79,36 +79,44 @@ export default function CertificateWizard({ academyId, userId, academyName, user
     a.click()
   }
 
-  async function handleNext() {
-    if (step === 1) {
-      if (!certificateName.trim()) {
-        alert('Please enter a certificate name')
+  function handleTemplateSelect(template: typeof STARTER_TEMPLATES[0]) {
+    if (hasEdits && customDesign) {
+      if (!confirm('You have unsaved changes. Switch template and lose your edits?')) {
         return
       }
-      // Open editor for customization
-      setShowEditor(true)
-    } else if (step === 2) {
-      const valid = recipients.every(r => r.name.trim() && r.email.trim() && r.email.includes('@'))
-      if (!valid) {
-        alert('Please fill in all recipient names and valid emails')
-        return
-      }
-      setStep(3)
     }
+    setSelectedTemplate(template)
+    setCustomDesign(null)
+    setHasEdits(false)
   }
 
   async function handleEditorSave(design: CertificateDesignV2) {
-    // Save the customized design and proceed to People step
     setCustomDesign(design)
-    setShowEditor(false)
-    setStep(2)
+    setHasEdits(false)
     return { success: true }
   }
 
-  function skipCustomization() {
-    // Skip editor and go straight to People with default template
-    setShowEditor(false)
+  function handleEditorChange() {
+    setHasEdits(true)
+  }
+
+  function handleNextToPeople(e: React.FormEvent) {
+    e.preventDefault() // Prevent form submission
+    if (!certificateName.trim()) {
+      alert('Please enter a certificate name')
+      return
+    }
     setStep(2)
+  }
+
+  function handleNextToReview(e: React.FormEvent) {
+    e.preventDefault()
+    const valid = recipients.every(r => r.name.trim() && r.email.trim() && r.email.includes('@'))
+    if (!valid) {
+      alert('Please fill in all recipient names and valid emails')
+      return
+    }
+    setStep(3)
   }
 
   async function handleIssue() {
@@ -139,161 +147,114 @@ export default function CertificateWizard({ academyId, userId, academyName, user
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Visual Editor Overlay */}
-      {showEditor && (
-        <div className="fixed inset-0 bg-white z-50 overflow-auto">
-          <div className="max-w-7xl mx-auto p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Customize your certificate</h2>
-                <p className="text-gray-600 mt-1">
-                  Design: {selectedTemplate.name} · Certificate: {certificateName}
-                </p>
-              </div>
-              <button
-                onClick={skipCustomization}
-                className="text-sm text-gray-600 hover:text-gray-900"
+    <div className="max-w-full mx-auto px-4 py-8">
+      {/* Stepper */}
+      <div className="mb-8">
+        <div className="flex items-center justify-center">
+          {[1, 2, 3].map((s) => (
+            <div key={s} className="flex items-center">
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                  step >= s
+                    ? 'border-blue-600 bg-blue-600 text-white'
+                    : 'border-gray-300 text-gray-500'
+                }`}
               >
-                Skip customization →
+                {s}
+              </div>
+              {s < 3 && (
+                <div
+                  className={`w-24 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300'}`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-center mt-2 text-sm text-gray-600">
+          <div className="w-40 text-center">Design Certificate</div>
+          <div className="w-40 text-center">Add Recipients</div>
+          <div className="w-40 text-center">Test and Send</div>
+        </div>
+      </div>
+
+      {/* Step 1: Design (Sidebar + Editor) */}
+      {step === 1 && (
+        <div className="flex gap-6 h-[calc(100vh-200px)] min-h-[600px]">
+          {/* Left Sidebar */}
+          <div className="w-80 flex-shrink-0 flex flex-col border-r">
+            <div className="p-4 border-b">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Certificate name *
+              </label>
+              <input
+                type="text"
+                value={certificateName}
+                onChange={(e) => setCertificateName(e.target.value)}
+                placeholder="e.g. Motion Ads Certified"
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Templates</h3>
+              <div className="space-y-3">
+                {STARTER_TEMPLATES.map((template) => {
+                  const previewPath = `/templates/${template.id}.svg`
+                  return (
+                    <button
+                      key={template.id}
+                      onClick={() => handleTemplateSelect(template)}
+                      type="button"
+                      className={`w-full p-3 border-2 rounded-lg text-left hover:border-blue-500 transition-colors ${
+                        selectedTemplate.id === template.id
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="aspect-[1.414] rounded mb-2 overflow-hidden bg-white border border-gray-100">
+                        <img
+                          src={previewPath}
+                          alt={template.name}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="font-medium text-sm">{template.name}</div>
+                      <div className="text-xs text-gray-500 mt-1">{template.tags[0]}</div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="p-4 border-t">
+              <button
+                onClick={handleNextToPeople}
+                type="button"
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              >
+                Next: Add Recipients
               </button>
             </div>
-            <VisualEditor
-              templateId={selectedTemplate.id}
-              initialDesign={customDesign || selectedTemplate.config}
-              onSave={handleEditorSave}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Stepper */}
-      {!showEditor && (
-        <div className="mb-8">
-          <div className="flex items-center justify-center">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center">
-                <div
-                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                    step >= s
-                      ? 'border-blue-600 bg-blue-600 text-white'
-                      : 'border-gray-300 text-gray-500'
-                  }`}
-                >
-                  {s}
-                </div>
-                {s < 3 && (
-                  <div
-                    className={`w-24 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300'}`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-center mt-2 text-sm text-gray-600">
-            <div className="w-40 text-center">Design</div>
-            <div className="w-40 text-center">People</div>
-            <div className="w-40 text-center">Send</div>
-          </div>
-        </div>
-      )}
-
-      {/* Step 1: Design */}
-      {step === 1 && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Choose a design</h2>
-            <p className="text-gray-600">Pick a template to get started</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Certificate name *
-            </label>
-            <input
-              type="text"
-              value={certificateName}
-              onChange={(e) => setCertificateName(e.target.value)}
-              placeholder="e.g. Motion Ads Certified"
-              className="w-full px-4 py-2 border rounded-lg"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {STARTER_TEMPLATES.map((template) => {
-              // Use SVG preview from public/templates/
-              const previewPath = `/templates/${template.id}.svg`
-              
-              return (
-                <button
-                  key={template.id}
-                  onClick={() => setSelectedTemplate(template)}
-                  className={`p-4 border-2 rounded-lg text-left hover:border-blue-500 transition-colors ${
-                    selectedTemplate.id === template.id
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="aspect-[1.414] rounded mb-2 overflow-hidden bg-white border border-gray-200">
-                    <img
-                      src={previewPath}
-                      alt={template.name}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div className="font-medium text-sm">{template.name}</div>
-                  <div className="text-xs text-gray-500 mt-1">{template.tags.slice(0, 2).join(', ')}</div>
-                </button>
-              )
-            })}
-          </div>
-
-          <details className="border rounded-lg p-4">
-            <summary className="cursor-pointer font-medium">Optional details</summary>
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Program name (if different)
-                </label>
-                <input
-                  type="text"
-                  value={programName}
-                  onChange={(e) => setProgramName(e.target.value)}
-                  placeholder="Leave blank to use certificate name"
-                  className="w-full px-4 py-2 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Optional description of this certificate"
-                  rows={3}
-                  className="w-full px-4 py-2 border rounded-lg"
-                />
-              </div>
+          {/* Main Editor Pane */}
+          <div className="flex-1 overflow-hidden">
+            <div className="h-full">
+              <VisualEditor
+                templateId={selectedTemplate.id}
+                initialDesign={customDesign || selectedTemplate.config}
+                onSave={handleEditorSave}
+              />
             </div>
-          </details>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={handleNext}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Next: Customize design
-            </button>
           </div>
         </div>
       )}
 
-      {/* Step 2: People */}
+      {/* Step 2: Add Recipients */}
       {step === 2 && (
-        <div className="space-y-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           <div>
-            <h2 className="text-2xl font-bold mb-2">Add recipients</h2>
+            <h2 className="text-2xl font-bold mb-2">Add Recipients</h2>
             <p className="text-gray-600">Who should receive this certificate?</p>
           </div>
 
@@ -303,6 +264,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
               <div className="flex gap-2">
                 <button
                   onClick={downloadSampleCsv}
+                  type="button"
                   className="text-sm text-blue-600 hover:text-blue-800"
                 >
                   Download sample CSV
@@ -342,6 +304,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                 {recipients.length > 1 && (
                   <button
                     onClick={() => removeRecipient(index)}
+                    type="button"
                     className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
                   >
                     Remove
@@ -352,6 +315,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
 
             <button
               onClick={addRecipient}
+              type="button"
               className="text-sm text-blue-600 hover:text-blue-800"
             >
               + Add another recipient
@@ -361,12 +325,14 @@ export default function CertificateWizard({ academyId, userId, academyName, user
           <div className="flex justify-between">
             <button
               onClick={() => setStep(1)}
+              type="button"
               className="px-6 py-2 border rounded-lg hover:bg-gray-50"
             >
               Back
             </button>
             <button
-              onClick={handleNext}
+              onClick={handleNextToReview}
+              type="button"
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Next
@@ -375,11 +341,11 @@ export default function CertificateWizard({ academyId, userId, academyName, user
         </div>
       )}
 
-      {/* Step 3: Preview & Send */}
+      {/* Step 3: Test and Send */}
       {step === 3 && (
-        <div className="space-y-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           <div>
-            <h2 className="text-2xl font-bold mb-2">Review and send</h2>
+            <h2 className="text-2xl font-bold mb-2">Test and Send</h2>
             <p className="text-gray-600">Ready to issue these certificates?</p>
           </div>
 
@@ -390,7 +356,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
             </div>
             <div>
               <div className="text-sm text-gray-600">Design</div>
-              <div className="font-medium">{selectedTemplate.name}</div>
+              <div className="font-medium">{selectedTemplate.name}{customDesign && ' (customized)'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Recipients</div>
@@ -414,6 +380,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
             <button
               onClick={() => setStep(2)}
               disabled={loading}
+              type="button"
               className="px-6 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
             >
               Back
@@ -421,6 +388,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
             <button
               onClick={handleIssue}
               disabled={loading}
+              type="button"
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {loading ? 'Issuing...' : 'Issue & Send'}
@@ -431,7 +399,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
 
       {/* Step 4: Success */}
       {step === 4 && result && (
-        <div className="text-center space-y-6">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -483,6 +451,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
           <div className="space-y-3">
             <button
               onClick={() => router.push('/dashboard/certificates')}
+              type="button"
               className="w-full px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
             >
               Go to certificates
@@ -494,8 +463,11 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                 setDescription('')
                 setProgramName('')
                 setRecipients([{ name: userName, email: userEmail }])
+                setCustomDesign(null)
+                setHasEdits(false)
                 setResult(null)
               }}
+              type="button"
               className="w-full px-6 py-3 border rounded-lg hover:bg-gray-50"
             >
               Create another certificate
