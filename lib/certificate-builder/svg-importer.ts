@@ -30,27 +30,35 @@ export function importSVGTemplate(svgContent: string, meta: TemplateMeta): Certi
   const doc = parser.parseFromString(svgContent, 'text/xml')
   const svg = doc.documentElement
 
+  if (!svg) {
+    throw new Error('Invalid SVG: no root element')
+  }
+
   const elements: DesignElement[] = []
   let elementCounter = 1
 
   // Parse background
   let background: CertificateDesignV2['background'] = { type: 'color', value: '#ffffff' }
-  const bgRect = doc.getElementById('deco_background')?.getElementsByTagName('rect')[0]
-  if (bgRect) {
-    const fill = bgRect.getAttribute('fill') || '#ffffff'
-    if (fill.startsWith('url(#')) {
-      const gradId = fill.slice(5, -1)
-      const gradient = doc.getElementById(gradId)
-      if (gradient) {
-        background = { type: 'gradient', value: serializeGradient(gradient) }
+  const bgGroup = doc.getElementById('deco_background')
+  if (bgGroup) {
+    const rects = bgGroup.getElementsByTagName('rect')
+    const bgRect = rects.length > 0 ? rects[0] : null
+    if (bgRect) {
+      const fill = bgRect.getAttribute('fill') || '#ffffff'
+      if (fill.startsWith('url(#')) {
+        const gradId = fill.slice(5, -1)
+        const gradient = doc.getElementById(gradId)
+        if (gradient) {
+          background = { type: 'gradient', value: serializeGradient(gradient) }
+        }
+      } else {
+        background = { type: 'color', value: fill }
       }
-    } else {
-      background = { type: 'color', value: fill }
     }
   }
 
   // Helper to get transform translate values
-  function getTransform(element: Element): { x: number; y: number } {
+  function getTransform(element: any): { x: number; y: number } {
     const transform = element.getAttribute('transform')
     if (transform) {
       const match = transform.match(/translate\(([^,]+),([^)]+)\)/)
@@ -64,7 +72,7 @@ export function importSVGTemplate(svgContent: string, meta: TemplateMeta): Certi
   // Parse all text elements
   const textElements = svg.getElementsByTagName('text')
   for (let i = 0; i < textElements.length; i++) {
-    const textEl = textElements[i]
+    const textEl = textElements[i] as any
     const id = textEl.getAttribute('id') || ''
     
     // Skip labels - we'll convert them to static text
@@ -124,10 +132,6 @@ export function importSVGTemplate(svgContent: string, meta: TemplateMeta): Certi
       // Handle multi-line (tspan)
       const tspans = textEl.getElementsByTagName('tspan')
       if (tspans.length > 1) {
-        const lines: string[] = []
-        for (let j = 0; j < tspans.length; j++) {
-          lines.push(tspans[j].textContent || '')
-        }
         element.height = fontSize * tspans.length * 1.3
       }
 
@@ -161,7 +165,8 @@ export function importSVGTemplate(svgContent: string, meta: TemplateMeta): Certi
   // Parse QR code if present
   const qrGroup = doc.getElementById('qr_code')
   if (qrGroup) {
-    const rect = qrGroup.getElementsByTagName('rect')[0]
+    const rects = qrGroup.getElementsByTagName('rect')
+    const rect = rects.length > 0 ? rects[0] : null
     if (rect) {
       const x = parseFloat(rect.getAttribute('x') || '0')
       const y = parseFloat(rect.getAttribute('y') || '0')
@@ -183,7 +188,8 @@ export function importSVGTemplate(svgContent: string, meta: TemplateMeta): Certi
   // Parse logo placeholder
   const logoGroup = doc.getElementById('logo')
   if (logoGroup) {
-    const rect = logoGroup.getElementsByTagName('rect')[0]
+    const rects = logoGroup.getElementsByTagName('rect')
+    const rect = rects.length > 0 ? rects[0] : null
     if (rect) {
       const x = parseFloat(rect.getAttribute('x') || '0')
       const y = parseFloat(rect.getAttribute('y') || '0')
@@ -203,7 +209,7 @@ export function importSVGTemplate(svgContent: string, meta: TemplateMeta): Certi
   }
 
   // Parse decorative shapes (borders, frames, accents)
-  parseDecoShapes(doc, elements, elementCounter)
+  parseDecoShapes(doc as any, elements, elementCounter)
 
   return {
     version: 2,
@@ -215,7 +221,7 @@ export function importSVGTemplate(svgContent: string, meta: TemplateMeta): Certi
   }
 }
 
-function serializeGradient(gradient: Element): string {
+function serializeGradient(gradient: any): string {
   const type = gradient.tagName
   if (type === 'linearGradient') {
     const x1 = gradient.getAttribute('x1') || '0'
@@ -247,7 +253,7 @@ function extractFontFamily(fontFamilyAttr: string): string {
   return parts[0].trim().replace(/'/g, '')
 }
 
-function getTextContent(element: Element): string {
+function getTextContent(element: any): string {
   const tspans = element.getElementsByTagName('tspan')
   if (tspans.length > 0) {
     const lines: string[] = []
@@ -275,7 +281,7 @@ function estimateWidth(id: string, fontSize: number): number {
   return widthMap[id] || fontSize * 10
 }
 
-function parseDecoShapes(doc: Document, elements: DesignElement[], startCounter: number) {
+function parseDecoShapes(doc: any, elements: DesignElement[], startCounter: number) {
   let counter = startCounter
 
   // Parse accent bars, dividers, underlines
@@ -286,7 +292,8 @@ function parseDecoShapes(doc: Document, elements: DesignElement[], startCounter:
     if (!group) return
 
     // Check for rect
-    const rect = group.getElementsByTagName('rect')[0]
+    const rects = group.getElementsByTagName('rect')
+    const rect = rects.length > 0 ? rects[0] : null
     if (rect) {
       const x = parseFloat(rect.getAttribute('x') || '0')
       const y = parseFloat(rect.getAttribute('y') || '0')
@@ -309,7 +316,8 @@ function parseDecoShapes(doc: Document, elements: DesignElement[], startCounter:
     }
 
     // Check for line
-    const line = group.getElementsByTagName('line')[0]
+    const lines = group.getElementsByTagName('line')
+    const line = lines.length > 0 ? lines[0] : null
     if (line) {
       const x1 = parseFloat(line.getAttribute('x1') || '0')
       const y1 = parseFloat(line.getAttribute('y1') || '0')

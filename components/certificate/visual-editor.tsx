@@ -10,17 +10,17 @@ import QRCode from 'qrcode'
 import useImage from 'use-image'
 
 function ImageElement({ element, isSelected, onSelect, onUpdate }: { element: ImageElement; isSelected: boolean; onSelect: () => void; onUpdate: (updates: any) => void }) {
-  const [img] = useImage(element.src)
-  return <KonvaImage id={element.id} image={img} x={element.x} y={element.y} width={element.width} height={element.height} draggable={!element.locked} rotation={element.rotation} onClick={(e) => { e.cancelBubble = true; onSelect() }} onDragEnd={(e) => onUpdate({ x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; onUpdate({ x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
+  const [img] = useImage(element.src || '')
+  return <KonvaImage id={element.id} image={img || undefined} x={element.x} y={element.y} width={element.width} height={element.height} draggable={!element.locked} rotation={element.rotation} onClick={(e) => { e.cancelBubble = true; onSelect() }} onDragEnd={(e) => onUpdate({ x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; onUpdate({ x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
 }
 
 function SignatureElementRenderer({ element, isSelected, onSelect, onUpdate }: { element: SignatureElement; isSelected: boolean; onSelect: () => void; onUpdate: (updates: any) => void }) {
-  const [img] = useImage(element.signatureType === 'image' ? element.src : '')
+  const [img] = useImage((element.signatureType === 'image' && element.src) ? element.src : '')
   
   if (element.signatureType === 'image' && element.src) {
     return (
       <Group id={element.id} x={element.x} y={element.y} draggable={!element.locked} rotation={element.rotation} onClick={(e) => { e.cancelBubble = true; onSelect() }} onDragEnd={(e) => onUpdate({ x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; onUpdate({ x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }}>
-        <KonvaImage image={img} width={element.width} height={element.height} />
+        <KonvaImage image={img || undefined} width={element.width} height={element.height} />
         {element.title && <Text text={element.title} y={element.height + 5} width={element.width} align="center" fontSize={12} fill="#666666" />}
       </Group>
     )
@@ -467,7 +467,6 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
             >
               <Layer ref={layerRef}>
                 <Rect x={0} y={0} width={design.width} height={design.height} fill={design.background.type === 'color' ? design.background.value : '#ffffff'} />
-                {design.background.type === 'image' && design.background.value && <KonvaImage x={0} y={0} width={design.width} height={design.height} image={null} />}
 
                 {design.elements.map((element) => {
                   const isSelected = selectedIds.includes(element.id)

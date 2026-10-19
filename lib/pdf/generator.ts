@@ -272,7 +272,7 @@ async function generateV2PDF(params: GeneratePDFParams): Promise<Buffer> {
 
   try {
     const page = await browser.newPage()
-    await page.setContent(pdfHtml, { waitUntil: 'networkidle0' })
+    await page.setContent(pdfHtml, { waitUntil: 'load' })
     
     const pdfBuffer = await page.pdf({
       width: `${design.width}px`,

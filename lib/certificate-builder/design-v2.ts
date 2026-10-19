@@ -54,7 +54,7 @@ export interface TextElement extends BaseElement {
 
 export interface DynamicFieldElement extends BaseElement {
   type: 'dynamic-field'
-  field: 'recipient_name' | 'certificate_title' | 'org_name' | 'date' | 'certificate_id' | 'description'
+  field: 'recipient_name' | 'certificate_title' | 'org_name' | 'date' | 'certificate_id' | 'description' | 'issue_date' | 'credential_id' | 'signature_1' | 'signer_1_name' | 'signer_1_title' | 'org_tagline'
   fontFamily: string
   fontSize: number
   fontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900'
