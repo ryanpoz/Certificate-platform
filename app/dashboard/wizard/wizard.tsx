@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { STARTER_TEMPLATES } from '@/lib/certificate-builder/starter-templates'
 import { createCertificateFromWizard, parseCsvRecipients } from './actions'
+import VisualEditor from '@/components/certificate/visual-editor'
+import { type CertificateDesignV2 } from '@/lib/certificate-builder/design-v2'
 
 interface WizardProps {
   academyId: string
@@ -83,7 +85,8 @@ export default function CertificateWizard({ academyId, userId, academyName, user
         alert('Please enter a certificate name')
         return
       }
-      setStep(2)
+      // Open editor for customization
+      setShowEditor(true)
     } else if (step === 2) {
       const valid = recipients.every(r => r.name.trim() && r.email.trim() && r.email.includes('@'))
       if (!valid) {
@@ -94,6 +97,20 @@ export default function CertificateWizard({ academyId, userId, academyName, user
     }
   }
 
+  async function handleEditorSave(design: CertificateDesignV2) {
+    // Save the customized design and proceed to People step
+    setCustomDesign(design)
+    setShowEditor(false)
+    setStep(2)
+    return { success: true }
+  }
+
+  function skipCustomization() {
+    // Skip editor and go straight to People with default template
+    setShowEditor(false)
+    setStep(2)
+  }
+
   async function handleIssue() {
     setLoading(true)
     try {
@@ -101,7 +118,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
         academyId,
         userId,
         certificateName,
-        templateConfig: selectedTemplate.config,
+        templateConfig: customDesign || selectedTemplate.config,
         recipients,
         description,
         programName,
@@ -123,34 +140,63 @@ export default function CertificateWizard({ academyId, userId, academyName, user
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Stepper */}
-      <div className="mb-8">
-        <div className="flex items-center justify-center">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center">
-              <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                  step >= s
-                    ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-gray-300 text-gray-500'
-                }`}
-              >
-                {s}
+      {/* Visual Editor Overlay */}
+      {showEditor && (
+        <div className="fixed inset-0 bg-white z-50 overflow-auto">
+          <div className="max-w-7xl mx-auto p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Customize your certificate</h2>
+                <p className="text-gray-600 mt-1">
+                  Design: {selectedTemplate.name} · Certificate: {certificateName}
+                </p>
               </div>
-              {s < 3 && (
-                <div
-                  className={`w-24 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300'}`}
-                />
-              )}
+              <button
+                onClick={skipCustomization}
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Skip customization →
+              </button>
             </div>
-          ))}
+            <VisualEditor
+              templateId={selectedTemplate.id}
+              initialDesign={customDesign || selectedTemplate.config}
+              onSave={handleEditorSave}
+            />
+          </div>
         </div>
-        <div className="flex justify-center mt-2 text-sm text-gray-600">
-          <div className="w-40 text-center">Design</div>
-          <div className="w-40 text-center">People</div>
-          <div className="w-40 text-center">Send</div>
+      )}
+
+      {/* Stepper */}
+      {!showEditor && (
+        <div className="mb-8">
+          <div className="flex items-center justify-center">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center">
+                <div
+                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                    step >= s
+                      ? 'border-blue-600 bg-blue-600 text-white'
+                      : 'border-gray-300 text-gray-500'
+                  }`}
+                >
+                  {s}
+                </div>
+                {s < 3 && (
+                  <div
+                    className={`w-24 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300'}`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-center mt-2 text-sm text-gray-600">
+            <div className="w-40 text-center">Design</div>
+            <div className="w-40 text-center">People</div>
+            <div className="w-40 text-center">Send</div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Step 1: Design */}
       {step === 1 && (
@@ -202,21 +248,6 @@ export default function CertificateWizard({ academyId, userId, academyName, user
             })}
           </div>
 
-          <div className="border-t pt-4">
-            <button
-              onClick={() => {
-                if (!certificateName.trim()) {
-                  alert('Please enter a certificate name first')
-                  return
-                }
-                setShowEditor(true)
-              }}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              ✏️ Customize this template before adding recipients
-            </button>
-          </div>
-
           <details className="border rounded-lg p-4">
             <summary className="cursor-pointer font-medium">Optional details</summary>
             <div className="mt-4 space-y-4">
@@ -252,7 +283,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
               onClick={handleNext}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Next
+              Next: Customize design
             </button>
           </div>
         </div>
