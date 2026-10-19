@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 import { createMagicLinkToken } from '@/lib/utils/auth'
 import { sendMagicLink } from '@/lib/email/magic-link'
 import { normalizeEmail } from '@/lib/utils/helpers'
+import { createSampleCertificate } from '@/app/dashboard/wizard/actions'
 
 export async function signupAction(data: {
   name: string
@@ -64,11 +65,42 @@ export async function signupAction(data: {
     .set({ magicLinkToken: actualToken })
     .where(eq(users.id, user.id))
 
-  // Send magic link
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL!
-  const magicLink = `${appUrl}/auth/verify?token=${actualToken}`
-  
-  await sendMagicLink(emailNorm, magicLink)
+  // Create sample certificate
+  try {
+    await createSampleCertificate(academy.id, user.id)
+  } catch (sampleError) {
+    console.error('Failed to create sample certificate:', sampleError)
+    // Don't fail signup if sample creation fails
+  }
+
+  // Try to send magic link - handle Resend limitations gracefully
+  let emailSent = true
+  let emailError = null
+
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+    const magicLink = `${appUrl}/auth/verify?token=${actualToken}`
+    await sendMagicLink(emailNorm, magicLink)
+  } catch (error) {
+    console.error('Magic link email failed:', error)
+    emailSent = false
+    emailError = error instanceof Error ? error.message : 'Unknown error'
+    
+    // Check if it's a Resend domain verification error
+    if (emailError.includes('domain') || emailError.includes('verify') || emailError.includes('not authorized')) {
+      return {
+        error: 'Email delivery is not available yet. Please use "Continue with Google" instead, or contact support if you need email login.',
+        suggestion: 'google',
+      }
+    }
+  }
+
+  if (!emailSent) {
+    return {
+      error: 'Failed to send verification email. Please try "Continue with Google" instead.',
+      suggestion: 'google',
+    }
+  }
 
   return { success: true, email: emailNorm }
 }

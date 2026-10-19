@@ -75,7 +75,15 @@ export default function SignupForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
-            {error}
+            <p>{error}</p>
+            {error.includes('Google') && hasGoogleOAuth && (
+              <button
+                onClick={() => window.location.href = '/api/auth/google'}
+                className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+              >
+                Try Google sign-in →
+              </button>
+            )}
           </div>
         )}
 
