@@ -37,6 +37,7 @@ export const courses = pgTable('courses', {
   ctaLabel: text('cta_label'),
   ctaUrl: text('cta_url'),
   templateId: uuid('template_id'),
+  draftData: jsonb('draft_data'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   uniqueCode: unique().on(table.academyId, table.code),
