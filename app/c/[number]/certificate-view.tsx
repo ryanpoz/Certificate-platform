@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { formatDate, renderMergeFields } from '@/lib/utils/helpers'
 import { generateLinkedInUrl } from '@/lib/email/resend'
 import QRCodeDisplay from './qr-code'
+import { type CertificateDesignV2 } from '@/lib/certificate-builder/design-v2'
+import QRCode from 'qrcode'
+import V2CertificateRenderer from '@/components/certificate/v2-renderer'
 
 interface CertificateViewProps {
   certificate: {
@@ -33,6 +36,7 @@ interface CertificateViewProps {
   }
   template: {
     bodyText: string
+    designConfig?: any
   }
   certificateUrl: string
   isPreviewMode: boolean
@@ -41,6 +45,9 @@ interface CertificateViewProps {
 export default function CertificateView(props: CertificateViewProps) {
   const { certificate, learner, course, academy, template, certificateUrl, isPreviewMode } = props
   const [copied, setCopied] = useState(false)
+
+  // Check if using v2 design
+  const isV2 = template.designConfig && template.designConfig.version === 2
 
   useEffect(() => {
     if (!isPreviewMode && !certificate.isPreview) {
@@ -148,11 +155,28 @@ export default function CertificateView(props: CertificateViewProps) {
               </div>
             </div>
 
-            <div className="border-2 border-gray-200 rounded-lg p-8 mb-8 bg-gray-50">
-              <div className="text-center whitespace-pre-wrap text-lg leading-relaxed">
-                {renderedText}
+            {isV2 && template.designConfig ? (
+              <div className="mb-8 flex justify-center">
+                <V2CertificateRenderer
+                  design={template.designConfig as CertificateDesignV2}
+                  data={{
+                    recipientName: learner.fullName,
+                    certificateTitle: course.name,
+                    orgName: academy.name,
+                    issueDate: formatDate(certificate.issueDate),
+                    certificateId: certificate.number,
+                    description: template.bodyText || '',
+                  }}
+                  certificateUrl={certificateUrl}
+                />
               </div>
-            </div>
+            ) : (
+              <div className="border-2 border-gray-200 rounded-lg p-8 mb-8 bg-gray-50">
+                <div className="text-center whitespace-pre-wrap text-lg leading-relaxed">
+                  {renderedText}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
               <div>
