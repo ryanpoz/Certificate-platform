@@ -24,13 +24,19 @@ export default async function CourseDetailPage({
     notFound()
   }
 
-  const [template] = course.templateId
-    ? await db
+  let template = null
+  try {
+    if ('templateId' in course && course.templateId) {
+      const [tmpl] = await db
         .select()
         .from(templates)
         .where(eq(templates.id, course.templateId))
         .limit(1)
-    : [null]
+      template = tmpl || null
+    }
+  } catch (error) {
+    console.error('Failed to load template:', error)
+  }
 
   const unpublishedCerts = await db
     .select({ count: certificates.id })

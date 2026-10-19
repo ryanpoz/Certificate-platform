@@ -55,9 +55,19 @@ export async function issueSingleCertificateAction(data: {
       return { error: 'Program not found' }
     }
 
-    const [template] = course.templateId
-      ? await db.select().from(templates).where(eq(templates.id, course.templateId)).limit(1)
-      : await db.select().from(templates).where(eq(templates.academyId, data.academyId)).limit(1)
+    let template = null
+    try {
+      if ('templateId' in course && course.templateId) {
+        const [tmpl] = await db.select().from(templates).where(eq(templates.id, course.templateId)).limit(1)
+        template = tmpl || null
+      }
+      if (!template) {
+        const [fallback] = await db.select().from(templates).where(eq(templates.academyId, data.academyId)).limit(1)
+        template = fallback || null
+      }
+    } catch (error) {
+      console.error('Failed to load template:', error)
+    }
 
     if (!template) {
       return { error: 'No template found' }
