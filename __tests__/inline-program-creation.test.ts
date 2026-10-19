@@ -72,43 +72,20 @@ describe('Inline Program Creation', () => {
 })
 
 describe('Per-Program Metrics', () => {
-  it('should show views and LinkedIn clicks on programs page', () => {
+  it('programs page now redirects to certificates (certificate-first UX)', () => {
     const programsPage = readFileSync(join(process.cwd(), 'app/dashboard/programs/page.tsx'), 'utf-8')
     
-    // Should import events table
-    expect(programsPage).toContain('from \'@/lib/db/schema\'')
-    expect(programsPage).toContain('events')
-    
-    // Should query events for engagement
-    expect(programsPage).toContain('engagementData')
-    expect(programsPage).toContain('page_view')
-    expect(programsPage).toContain('linkedin_add_click')
-    expect(programsPage).toContain('isBot')
-    
-    // Should display metrics
-    expect(programsPage).toContain('views')
-    expect(programsPage).toContain('linkedinClicks')
-    expect(programsPage).toContain('Views:')
-    expect(programsPage).toContain('LinkedIn clicks:')
+    // Programs merged with certificates in certificate-first UX
+    expect(programsPage).toContain('redirect')
+    expect(programsPage).toContain('/dashboard/certificates')
   })
 
-  it('should filter events by program certificates', () => {
-    const programsPage = readFileSync(join(process.cwd(), 'app/dashboard/programs/page.tsx'), 'utf-8')
-    
-    // Should get certificate IDs per program
-    expect(programsPage).toContain('certIds')
-    expect(programsPage).toContain('eq(certificates.courseId, course.id)')
-    expect(programsPage).toContain('eq(certificates.isPreview, false)')
-    
-    // Should use ANY array syntax for postgres-js
-    expect(programsPage).toContain('ANY(ARRAY[')
-    expect(programsPage).toContain('sql.join')
+  it.skip('should filter events by program certificates', () => {
+    // Programs page now redirects - feature moved to certificates view
   })
 
-  it('should exclude bot traffic', () => {
-    const programsPage = readFileSync(join(process.cwd(), 'app/dashboard/programs/page.tsx'), 'utf-8')
-    
-    expect(programsPage).toContain('eq(events.isBot, false)')
+  it.skip('should exclude bot traffic', () => {
+    // Programs page now redirects - feature moved to certificates view
   })
 })
 

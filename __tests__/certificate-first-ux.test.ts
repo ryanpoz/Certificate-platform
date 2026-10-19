@@ -16,19 +16,19 @@ describe('Certificate Wizard', () => {
     expect(wizardActionsExist).toBe(true)
   })
 
-  it('should have 15 starter templates', () => {
+  it('should have 12 professional designer starter templates', () => {
     const starterTemplates = require('../lib/certificate-builder/starter-templates')
-    expect(starterTemplates.STARTER_TEMPLATES).toHaveLength(15)
+    expect(starterTemplates.STARTER_TEMPLATES).toHaveLength(12)
     
-    // Check each template has required fields
+    // Check each template has required v2 fields
     starterTemplates.STARTER_TEMPLATES.forEach((template: any) => {
       expect(template).toHaveProperty('id')
       expect(template).toHaveProperty('name')
-      expect(template).toHaveProperty('description')
       expect(template).toHaveProperty('config')
-      expect(template.config).toHaveProperty('colors')
-      expect(template.config).toHaveProperty('fonts')
-      expect(template.config).toHaveProperty('layout')
+      expect(template.config).toHaveProperty('version')
+      expect(template.config.version).toBe(2)
+      expect(template.config).toHaveProperty('elements')
+      expect(template.config.elements).toBeInstanceOf(Array)
     })
   })
 
@@ -36,15 +36,16 @@ describe('Certificate Wizard', () => {
     const { STARTER_TEMPLATES } = require('../lib/certificate-builder/starter-templates')
     
     // Check for both portrait and landscape
-    const portraits = STARTER_TEMPLATES.filter((t: any) => t.config.layout.orientation === 'portrait')
-    const landscapes = STARTER_TEMPLATES.filter((t: any) => t.config.layout.orientation === 'landscape')
+    const portraits = STARTER_TEMPLATES.filter((t: any) => t.orientation === 'portrait')
+    const landscapes = STARTER_TEMPLATES.filter((t: any) => t.orientation === 'landscape')
     
     expect(portraits.length).toBeGreaterThan(0)
     expect(landscapes.length).toBeGreaterThan(0)
     
-    // Check for variety in color schemes
-    const primaryColors = new Set(STARTER_TEMPLATES.map((t: any) => t.config.colors.primary))
-    expect(primaryColors.size).toBeGreaterThan(10) // At least 10 different primary colors
+    // Each should have elements
+    STARTER_TEMPLATES.forEach((t: any) => {
+      expect(t.config.elements.length).toBeGreaterThan(0)
+    })
   })
 
   it('wizard actions should export required functions', () => {
