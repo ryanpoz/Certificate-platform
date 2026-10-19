@@ -17,9 +17,98 @@ interface CreateCertificateWizardData {
   programName?: string
 }
 
-export async function createCertificateFromWizard(data: CreateCertificateWizardData) {
+interface SaveDraftData {
+  academyId: string
+  userId: string
+  draftId?: string
+  certificateName: string
+  templateConfig: any
+  currentStep: number
+  recipients: Array<{ name: string; email: string }>
+  description?: string
+  programName?: string
+  selectedTemplateId?: string
+}
+
+export async function saveDraft(data: SaveDraftData) {
   try {
-    const { academyId, userId, certificateName, templateConfig, recipients, description, programName } = data
+    const { academyId, userId, draftId, certificateName, templateConfig, currentStep, recipients, description, programName, selectedTemplateId } = data
+
+    const draftData = {
+      certificateName,
+      templateConfig,
+      currentStep,
+      recipients,
+      description,
+      programName,
+      selectedTemplateId,
+      lastSaved: new Date().toISOString(),
+    }
+
+    if (draftId) {
+      // Update existing draft
+      await db
+        .update(courses)
+        .set({ draftData, name: certificateName || 'Untitled Certificate' })
+        .where(eq(courses.id, draftId))
+
+      return { success: true, draftId }
+    } else {
+      // Create new draft
+      const courseCode = `DRAFT-${nanoid(6).toUpperCase()}`
+      const [course] = await db
+        .insert(courses)
+        .values({
+          academyId,
+          name: certificateName || 'Untitled Certificate',
+          code: courseCode,
+          description: description || '',
+          draftData,
+        })
+        .returning()
+
+      return { success: true, draftId: course.id }
+    }
+  } catch (error) {
+    console.error('Failed to save draft:', error)
+    return { error: 'Failed to save draft' }
+  }
+}
+
+export async function loadDraft(draftId: string) {
+  try {
+    const [course] = await db
+      .select()
+      .from(courses)
+      .where(eq(courses.id, draftId))
+      .limit(1)
+
+    if (!course || !course.draftData) {
+      return { error: 'Draft not found' }
+    }
+
+    return { success: true, draft: course.draftData, courseName: course.name }
+  } catch (error) {
+    console.error('Failed to load draft:', error)
+    return { error: 'Failed to load draft' }
+  }
+}
+
+export async function deleteDraft(draftId: string) {
+  try {
+    await db.delete(courses).where(eq(courses.id, draftId))
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/certificates')
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to delete draft:', error)
+    return { error: 'Failed to delete draft' }
+  }
+}
+
+export async function createCertificateFromWizard(data: CreateCertificateWizardData & { draftId?: string }) {
+  try {
+    const { academyId, userId, certificateName, templateConfig, recipients, description, programName, draftId } = data
 
     // Get academy details for email
     const [academy] = await db
@@ -53,17 +142,35 @@ Certificate #{{certificateNumber}}`
       .returning()
 
     // Auto-create a program (course) for this certificate
-    const courseCode = `CERT-${nanoid(6).toUpperCase()}`
-    const [course] = await db
-      .insert(courses)
-      .values({
-        academyId,
-        name: programName || certificateName,
-        code: courseCode,
-        description: description || `Certificate program for ${certificateName}`,
-        templateId: template.id,
-      })
-      .returning()
+    // Or update existing draft course
+    let course
+    if (draftId) {
+      // Update draft to published state
+      const [updated] = await db
+        .update(courses)
+        .set({
+          name: programName || certificateName,
+          description: description || `Certificate program for ${certificateName}`,
+          templateId: template.id,
+          draftData: null, // Clear draft data on publish
+        })
+        .where(eq(courses.id, draftId))
+        .returning()
+      course = updated
+    } else {
+      const courseCode = `CERT-${nanoid(6).toUpperCase()}`
+      const [created] = await db
+        .insert(courses)
+        .values({
+          academyId,
+          name: programName || certificateName,
+          code: courseCode,
+          description: description || `Certificate program for ${certificateName}`,
+          templateId: template.id,
+        })
+        .returning()
+      course = created
+    }
 
     // Process recipients
     const issuedCertificates = []
@@ -97,7 +204,7 @@ Certificate #{{certificateNumber}}`
         }
 
         // Create certificate
-        const certificateNumber = `${courseCode}-${nanoid(8).toUpperCase()}`
+        const certificateNumber = `${course.code}-${nanoid(8).toUpperCase()}`
         const issueDate = new Date()
 
         const [certificate] = await db

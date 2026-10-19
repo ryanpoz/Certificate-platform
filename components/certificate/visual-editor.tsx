@@ -624,8 +624,14 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
 
                   if (element.type === 'dynamic-field') {
                     const el = element as DynamicFieldElement
-                    const text = (sampleData as any)[el.field] || DYNAMIC_FIELD_LABELS[el.field] || el.field
-                    return <Text key={element.id} id={element.id} x={el.x} y={el.y} width={el.width} height={el.height} text={text} fontSize={el.fontSize} fontFamily={el.fontFamily} fontStyle={el.fontWeight === 'bold' ? 'bold' : 'normal'} fill={el.color} align={el.align} draggable={!el.locked} rotation={el.rotation} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragEnd={(e) => updateElement(el.id, { x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; updateElement(el.id, { x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
+                    const fieldLabel = DYNAMIC_FIELD_LABELS[el.field] || el.field
+                    // Render dynamic fields as styled chips/badges showing the field label
+                    return (
+                      <Group key={element.id} id={element.id} x={el.x} y={el.y} draggable={!el.locked} rotation={el.rotation} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragEnd={(e) => updateElement(el.id, { x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; updateElement(el.id, { x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }}>
+                        <Rect width={el.width} height={el.height} fill="#EFF6FF" stroke="#3B82F6" strokeWidth={2} cornerRadius={6} dash={[5, 3]} />
+                        <Text text={fieldLabel} width={el.width} height={el.height} fontSize={el.fontSize * 0.7} fontFamily={el.fontFamily} fill="#2563EB" align="center" verticalAlign="middle" fontStyle="bold" />
+                      </Group>
+                    )
                   }
 
                   if (element.type === 'shape') {

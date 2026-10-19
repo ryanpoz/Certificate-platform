@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { STARTER_TEMPLATES } from '@/lib/certificate-builder/starter-templates'
-import { createCertificateFromWizard, parseCsvRecipients } from './actions'
+import { createCertificateFromWizard, parseCsvRecipients, saveDraft, loadDraft } from './actions'
 import VisualEditor from '@/components/certificate/visual-editor'
 import { type CertificateDesignV2 } from '@/lib/certificate-builder/design-v2'
 
@@ -13,12 +13,16 @@ interface WizardProps {
   academyName: string
   userEmail: string
   userName: string
+  draftId?: string
 }
 
-export default function CertificateWizard({ academyId, userId, academyName, userEmail, userName }: WizardProps) {
+export default function CertificateWizard({ academyId, userId, academyName, userEmail, userName, draftId: initialDraftId }: WizardProps) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [draftId, setDraftId] = useState(initialDraftId)
+  const [savingDraft, setSavingDraft] = useState(false)
+  const [draftSaved, setDraftSaved] = useState(false)
 
   // Step 1: Design (merged template selection + editing)
   const [selectedTemplate, setSelectedTemplate] = useState(STARTER_TEMPLATES[0])
@@ -34,6 +38,77 @@ export default function CertificateWizard({ academyId, userId, academyName, user
 
   // Step 3: Result
   const [result, setResult] = useState<any>(null)
+
+  // Load draft on mount
+  useEffect(() => {
+    if (initialDraftId) {
+      loadDraft(initialDraftId).then((res) => {
+        if (res.success && res.draft) {
+          const draft = res.draft as any
+          setCertificateName(draft.certificateName || '')
+          setDescription(draft.description || '')
+          setProgramName(draft.programName || '')
+          setStep(draft.currentStep || 1)
+          setRecipients(draft.recipients || [{ name: userName, email: userEmail }])
+          if (draft.templateConfig) {
+            setCustomDesign(draft.templateConfig)
+          }
+          if (draft.selectedTemplateId) {
+            const template = STARTER_TEMPLATES.find(t => t.id === draft.selectedTemplateId)
+            if (template) setSelectedTemplate(template)
+          }
+        }
+      })
+    }
+  }, [initialDraftId, userName, userEmail])
+
+  // Autosave draft every 10 seconds if there are changes
+  useEffect(() => {
+    if (!certificateName) return // Don't autosave until name is set
+    
+    const timer = setTimeout(async () => {
+      if (hasEdits || certificateName) {
+        await handleSaveDraft(true)
+      }
+    }, 10000)
+
+    return () => clearTimeout(timer)
+  }, [certificateName, customDesign, description, programName, recipients, step, hasEdits])
+
+  async function handleSaveDraft(isAutosave = false) {
+    if (!isAutosave) setSavingDraft(true)
+    setDraftSaved(false)
+
+    const result = await saveDraft({
+      academyId,
+      userId,
+      draftId,
+      certificateName: certificateName || 'Untitled Certificate',
+      templateConfig: customDesign || selectedTemplate.config,
+      currentStep: step,
+      recipients,
+      description,
+      programName,
+      selectedTemplateId: selectedTemplate.id,
+    })
+
+    if (result.success && result.draftId) {
+      setDraftId(result.draftId)
+      setDraftSaved(true)
+      setHasEdits(false)
+      
+      // Update URL to include draft ID if not already there
+      if (!initialDraftId && result.draftId) {
+        window.history.replaceState({}, '', `/dashboard/wizard?draft=${result.draftId}`)
+      }
+
+      if (!isAutosave) {
+        setTimeout(() => setDraftSaved(false), 3000)
+      }
+    }
+
+    if (!isAutosave) setSavingDraft(false)
+  }
 
   function addRecipient() {
     setRecipients([...recipients, { name: '', email: '' }])
@@ -130,6 +205,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
         recipients,
         description,
         programName,
+        draftId,
       })
 
       if (res.error) {
@@ -180,7 +256,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
       {/* Step 1: Design Certificate (Horizontal Template Strip + Full-Width Editor) */}
       {step === 1 && (
         <div className="flex flex-col h-[calc(100vh-160px)] min-h-[700px]">
-          {/* Top Bar: Name + Templates + Next */}
+          {/* Top Bar: Name + Templates + Next + Save Draft */}
           <div className="flex items-center gap-4 p-4 border-b bg-white">
             {/* Certificate Name */}
             <div className="w-64 flex-shrink-0">
@@ -190,7 +266,10 @@ export default function CertificateWizard({ academyId, userId, academyName, user
               <input
                 type="text"
                 value={certificateName}
-                onChange={(e) => setCertificateName(e.target.value)}
+                onChange={(e) => {
+                  setCertificateName(e.target.value)
+                  setHasEdits(true)
+                }}
                 placeholder="e.g. Motion Ads Certified"
                 className="w-full px-3 py-1.5 border rounded text-sm"
               />
@@ -228,6 +307,21 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                   )
                 })}
               </div>
+            </div>
+
+            {/* Save Draft Button */}
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium text-transparent mb-1">
+                Save
+              </label>
+              <button
+                onClick={() => handleSaveDraft(false)}
+                disabled={savingDraft || !certificateName}
+                type="button"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingDraft ? 'Saving...' : draftSaved ? '✓ Saved' : 'Save Draft'}
+              </button>
             </div>
 
             {/* Next Button */}
