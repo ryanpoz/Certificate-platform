@@ -91,12 +91,81 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
   const [leftPanel, setLeftPanel] = useState<'templates' | 'text' | 'fields' | 'uploads' | 'shapes' | 'background'>('text')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(true)
+  const [snapLines, setSnapLines] = useState<Array<{ x?: number; y?: number }>>([])
   
   const stageRef = useRef<Konva.Stage>(null)
   const transformerRef = useRef<Konva.Transformer>(null)
   const layerRef = useRef<Konva.Layer>(null)
   const selectionRectRef = useRef<Konva.Rect>(null)
   const selection = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
+
+  // Calculate snap guides
+  function getSnapLines(skipId: string) {
+    const lines: Array<{ x?: number; y?: number }> = []
+    const SNAP_THRESHOLD = 5
+
+    // Add canvas center lines
+    lines.push({ x: design.width / 2 })
+    lines.push({ y: design.height / 2 })
+
+    // Add element edge lines
+    design.elements.forEach(el => {
+      if (el.id !== skipId) {
+        lines.push({ x: el.x })
+        lines.push({ x: el.x + el.width })
+        lines.push({ y: el.y })
+        lines.push({ y: el.y + el.height })
+      }
+    })
+
+    return lines
+  }
+
+  function snapToGuides(pos: { x: number; y: number; width: number; height: number }, skipId: string) {
+    const lines = getSnapLines(skipId)
+    const SNAP_THRESHOLD = 5
+    const snappedLines: Array<{ x?: number; y?: number }> = []
+    let snapped = { ...pos }
+
+    // Snap left edge
+    for (const line of lines) {
+      if (line.x !== undefined && Math.abs(pos.x - line.x) < SNAP_THRESHOLD) {
+        snapped.x = line.x
+        snappedLines.push({ x: line.x })
+        break
+      }
+    }
+
+    // Snap right edge
+    for (const line of lines) {
+      if (line.x !== undefined && Math.abs(pos.x + pos.width - line.x) < SNAP_THRESHOLD) {
+        snapped.x = line.x - pos.width
+        snappedLines.push({ x: line.x })
+        break
+      }
+    }
+
+    // Snap top edge
+    for (const line of lines) {
+      if (line.y !== undefined && Math.abs(pos.y - line.y) < SNAP_THRESHOLD) {
+        snapped.y = line.y
+        snappedLines.push({ y: line.y })
+        break
+      }
+    }
+
+    // Snap bottom edge
+    for (const line of lines) {
+      if (line.y !== undefined && Math.abs(pos.y + pos.height - line.y) < SNAP_THRESHOLD) {
+        snapped.y = line.y - pos.height
+        snappedLines.push({ y: line.y })
+        break
+      }
+    }
+
+    setSnapLines(snappedLines)
+    return snapped
+  }
 
   // Undo/redo
   const pushHistory = useCallback((newDesign: CertificateDesignV2) => {
@@ -473,7 +542,7 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
                   
                   if (element.type === 'text') {
                     const el = element as TextElement
-                    return <Text key={element.id} id={element.id} x={el.x} y={el.y} width={el.width} height={el.height} text={el.text} fontSize={el.fontSize} fontFamily={el.fontFamily} fontStyle={el.fontWeight === 'bold' ? 'bold' : 'normal'} fill={el.color} align={el.align} draggable={!el.locked} rotation={el.rotation} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragEnd={(e) => updateElement(el.id, { x: e.target.x(), y: e.target.y() })} onTransformEnd={(e) => { const node = e.target; updateElement(el.id, { x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
+                    return <Text key={element.id} id={element.id} x={el.x} y={el.y} width={el.width} height={el.height} text={el.text} fontSize={el.fontSize} fontFamily={el.fontFamily} fontStyle={el.fontWeight === 'bold' ? 'bold' : 'normal'} fill={el.color} align={el.align} draggable={!el.locked} rotation={el.rotation} onClick={(e) => { e.cancelBubble = true; setSelectedIds(e.evt.shiftKey ? [...selectedIds, el.id] : [el.id]) }} onDragMove={(e) => { const snapped = snapToGuides({ x: e.target.x(), y: e.target.y(), width: el.width, height: el.height }, el.id); e.target.position(snapped) }} onDragEnd={(e) => { setSnapLines([]); updateElement(el.id, { x: e.target.x(), y: e.target.y() }) }} onTransformEnd={(e) => { const node = e.target; updateElement(el.id, { x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY(), rotation: node.rotation() }); node.scaleX(1); node.scaleY(1) }} />
                   }
 
                   if (element.type === 'dynamic-field') {
@@ -516,6 +585,15 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
 
                 <Rect ref={selectionRectRef} fill="rgba(0,0,255,0.1)" stroke="blue" strokeWidth={1} visible={false} />
 
+                {/* Snap guide lines */}
+                {snapLines.map((line, i) => (
+                  line.x !== undefined ? (
+                    <Line key={`snap-x-${i}`} points={[line.x, 0, line.x, design.height]} stroke="#FF00FF" strokeWidth={1} dash={[4, 4]} />
+                  ) : line.y !== undefined ? (
+                    <Line key={`snap-y-${i}`} points={[0, line.y, design.width, line.y]} stroke="#FF00FF" strokeWidth={1} dash={[4, 4]} />
+                  ) : null
+                ))}
+
                 {selectedIds.length > 0 && (
                   <Transformer
                     ref={transformerRef}
@@ -549,6 +627,30 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
 
           {selectedElement && (
             <div className="space-y-4">
+              {/* Position and Size */}
+              <div className="border-b pb-3">
+                <h4 className="text-xs font-semibold mb-2 text-gray-700">Position & Size</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs mb-1">X</label>
+                    <input type="number" value={Math.round(selectedElement.x)} onChange={(e) => updateElement(selectedIds[0], { x: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 border rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Y</label>
+                    <input type="number" value={Math.round(selectedElement.y)} onChange={(e) => updateElement(selectedIds[0], { y: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 border rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">W</label>
+                    <input type="number" value={Math.round(selectedElement.width)} onChange={(e) => updateElement(selectedIds[0], { width: parseInt(e.target.value) || 10 })} className="w-full px-2 py-1 border rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">H</label>
+                    <input type="number" value={Math.round(selectedElement.height)} onChange={(e) => updateElement(selectedIds[0], { height: parseInt(e.target.value) || 10 })} className="w-full px-2 py-1 border rounded text-sm" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Text & Dynamic Field */}
               {(selectedElement.type === 'text' || selectedElement.type === 'dynamic-field') && (
                 <>
                   {selectedElement.type === 'text' && (
@@ -572,6 +674,96 @@ export default function VisualEditor({ templateId, initialDesign, onSave }: Visu
                     <input type="color" value={(selectedElement as any).color} onChange={(e) => updateElement(selectedIds[0], { color: e.target.value })} className="w-full h-10 border rounded" />
                   </div>
                 </>
+              )}
+
+              {/* Shape */}
+              {selectedElement.type === 'shape' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Fill Color</label>
+                    <input type="color" value={(selectedElement as any).fill || '#000000'} onChange={(e) => updateElement(selectedIds[0], { fill: e.target.value })} className="w-full h-10 border rounded" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Stroke Color</label>
+                    <input type="color" value={(selectedElement as any).stroke || '#000000'} onChange={(e) => updateElement(selectedIds[0], { stroke: e.target.value })} className="w-full h-10 border rounded" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Stroke Width</label>
+                    <input type="number" value={(selectedElement as any).strokeWidth || 0} onChange={(e) => updateElement(selectedIds[0], { strokeWidth: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border rounded text-sm" min="0" />
+                  </div>
+                </>
+              )}
+
+              {/* Image */}
+              {selectedElement.type === 'image' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Image URL</label>
+                    <input type="text" value={(selectedElement as any).src} onChange={(e) => updateElement(selectedIds[0], { src: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Opacity</label>
+                    <input type="range" min="0" max="1" step="0.1" value={(selectedElement as any).opacity || 1} onChange={(e) => updateElement(selectedIds[0], { opacity: parseFloat(e.target.value) })} className="w-full" />
+                    <span className="text-xs text-gray-500">{Math.round(((selectedElement as any).opacity || 1) * 100)}%</span>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-2">Upload New</label>
+                    <ImageUpload value={(selectedElement as any).src} onChange={(url) => updateElement(selectedIds[0], { src: url })} label="Replace Image" maxWidth={2000} />
+                  </div>
+                </>
+              )}
+
+              {/* Signature */}
+              {selectedElement.type === 'signature' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Type</label>
+                    <select value={(selectedElement as any).signatureType} onChange={(e) => updateElement(selectedIds[0], { signatureType: e.target.value })} className="w-full px-3 py-2 border rounded text-sm">
+                      <option value="text">Script Text</option>
+                      <option value="image">Image</option>
+                    </select>
+                  </div>
+                  {(selectedElement as any).signatureType === 'text' ? (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Name</label>
+                        <input type="text" value={(selectedElement as any).text} onChange={(e) => updateElement(selectedIds[0], { text: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Script Font</label>
+                        <select value={(selectedElement as any).fontFamily} onChange={(e) => updateElement(selectedIds[0], { fontFamily: e.target.value })} className="w-full px-3 py-2 border rounded text-sm">
+                          <option value="Allura">Allura</option>
+                          <option value="Dancing Script">Dancing Script</option>
+                          <option value="Great Vibes">Great Vibes</option>
+                          <option value="Pacifico">Pacifico</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Font Size</label>
+                        <input type="number" value={(selectedElement as any).fontSize || 32} onChange={(e) => updateElement(selectedIds[0], { fontSize: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded text-sm" />
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-medium mb-2">Signature Image</label>
+                      <ImageUpload value={(selectedElement as any).src || ''} onChange={(url) => updateElement(selectedIds[0], { src: url })} label="Upload Signature" maxWidth={600} />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Title</label>
+                    <input type="text" value={(selectedElement as any).title || ''} onChange={(e) => updateElement(selectedIds[0], { title: e.target.value })} className="w-full px-3 py-2 border rounded text-sm" placeholder="e.g. Director" />
+                  </div>
+                </>
+              )}
+
+              {/* QR Code */}
+              {selectedElement.type === 'qr-code' && (
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={(selectedElement as any).showLink || false} onChange={(e) => updateElement(selectedIds[0], { showLink: e.target.checked })} className="rounded" />
+                    <span className="text-sm">Show verification link below QR</span>
+                  </label>
+                </div>
               )}
             </div>
           )}
