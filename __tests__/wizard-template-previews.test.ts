@@ -53,8 +53,8 @@ describe('Certificate Wizard - Template Previews', () => {
     
     // Should have VisualEditor component integrated (not a separate button)
     expect(wizard).toContain('VisualEditor')
-    expect(wizard).toContain('Left Sidebar')
-    expect(wizard).toContain('Main Editor Pane')
+    expect(wizard).toContain('Top Bar')
+    expect(wizard).toContain('Full-Width Editor')
   })
 
   it('should maintain wizard state when customizing', () => {
@@ -89,9 +89,11 @@ describe('Template Preview Display', () => {
   it('should show template metadata', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should show template name and tags
+    // Should show template name
     expect(wizard).toContain('template.name')
-    expect(wizard).toContain('template.tags')
+    
+    // Should have template title attribute for accessibility
+    expect(wizard).toContain('title={template.name}')
   })
 
   it('should highlight selected template', () => {
