@@ -152,7 +152,8 @@ describe('Visual Editor Component', () => {
       'utf-8'
     )
     expect(content).toContain('showPreview')
-    expect(content).toContain('Preview with sample data')
+    expect(content).toContain('Preview')
+    expect(content).toContain('checkbox')
   })
 
   it('should have keyboard shortcuts', () => {
@@ -313,13 +314,16 @@ describe('Editor Integration', () => {
     expect(exists).toBe(true)
   })
 
-  it('editor should use dynamic import (client-side only)', () => {
-    const content = fs.readFileSync(
+  it('editor should separate server and client components', () => {
+    const pageContent = fs.readFileSync(
       path.join(process.cwd(), 'app/dashboard/templates/[id]/editor/page.tsx'),
       'utf-8'
     )
-    expect(content).toContain('dynamic')
-    expect(content).toContain('ssr: false')
+    const clientExists = fs.existsSync(
+      path.join(process.cwd(), 'app/dashboard/templates/[id]/editor/editor-client.tsx')
+    )
+    expect(pageContent).toContain('EditorPageClient')
+    expect(clientExists).toBe(true)
   })
 })
 

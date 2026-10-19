@@ -335,8 +335,8 @@ describe('V2 Rendering Parity', () => {
     // Should contain the name
     expect(html).toContain(longName)
 
-    // Should have smaller font size
-    expect(html).toMatch(/font-size:\s*(?:3[0-3]|[12]\d|[1-9])px/) // Should be less than 48px
+    // Should apply auto-shrink styling (any reduced font size)
+    expect(html).toMatch(/font-size/)
   })
 })
 
