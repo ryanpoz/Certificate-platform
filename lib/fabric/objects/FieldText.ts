@@ -21,11 +21,11 @@ export class FieldText extends Textbox {
 
   static type = 'FieldText'
 
-  constructor(text: string, options: FieldTextProps = {}) {
+  constructor(text: string, options: Partial<FieldTextProps> = {}) {
     super(text, {
       ...options,
       // Chip styling
-      strokeDashArray: [5, 5],
+      strokeDashArray: [5, 5] as any,
       stroke: '#3b82f6',
       strokeWidth: 2,
       fill: 'rgba(59, 130, 246, 0.1)',
@@ -34,7 +34,7 @@ export class FieldText extends Textbox {
       textAlign: options.textAlign || 'center',
       fontFamily: options.fontFamily || 'Inter',
       fontSize: options.fontSize || 16,
-    })
+    } as any)
 
     this.field = options.field || 'recipient_name'
     this.autoShrink = options.autoShrink ?? true
@@ -45,14 +45,15 @@ export class FieldText extends Textbox {
   /**
    * Include custom properties in serialization
    */
-  toObject(propertiesToInclude: string[] = []): any {
-    return super.toObject([
-      'field',
-      'autoShrink',
-      'minFontSize',
-      'maxLines',
-      ...propertiesToInclude
-    ])
+  override toObject(): any {
+    const obj = super.toObject()
+    return {
+      ...obj,
+      field: this.field,
+      autoShrink: this.autoShrink,
+      minFontSize: this.minFontSize,
+      maxLines: this.maxLines
+    }
   }
 
   /**

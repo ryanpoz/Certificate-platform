@@ -83,15 +83,14 @@ export function enableAutoShrink(
 ): () => void {
   const handler = () => autoShrinkText(textbox, options)
   
-  textbox.on('text:changed', handler)
-  textbox.on('changed', handler)
+  // Use 'changed' event instead of 'text:changed' for Fabric v6
+  textbox.on('changed' as any, handler)
   
   // Initial fit
   handler()
   
   // Return cleanup function
   return () => {
-    textbox.off('text:changed', handler)
-    textbox.off('changed', handler)
+    textbox.off('changed' as any, handler)
   }
 }

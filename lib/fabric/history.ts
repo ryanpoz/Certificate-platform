@@ -31,7 +31,8 @@ export class CanvasHistory {
   public async saveState() {
     if (this.isLoading) return
     
-    const json = JSON.stringify(this.canvas.toJSON(['data', 'id']))
+    // Fabric v6 toJSON doesn't accept custom properties parameter
+    const json = JSON.stringify(this.canvas.toJSON())
     
     // Don't save if state hasn't changed
     if (this.history[this.historyIndex] === json) return

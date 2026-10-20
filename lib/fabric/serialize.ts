@@ -75,7 +75,8 @@ async function applyBackground(canvas: Canvas, page: Page): Promise<void> {
   } else if (page.background.type === 'image') {
     // Load background image
     const img = await FabricImage.fromURL(page.background.imageUrl)
-    canvas.setBackgroundImage(img, () => canvas.renderAll())
+    canvas.backgroundImage = img
+    canvas.renderAll()
   }
 }
 
@@ -113,22 +114,21 @@ async function elementToFabric(element: Element): Promise<any | null> {
       height: element.height,
       fontSize: element.fontSize,
       fontFamily: element.fontFamily,
-      fontWeight: element.fontWeight,
-      fontStyle: element.fontStyle,
+      fontWeight: element.fontWeight as any,
+      fontStyle: element.fontStyle as any,
       fill: element.fill,
-      textAlign: element.textAlign,
+      textAlign: element.textAlign as any,
       angle: element.angle,
       scaleX: element.scaleX,
       scaleY: element.scaleY,
-      originX: element.originX,
-      originY: element.originY,
+      originX: element.originX as any,
+      originY: element.originY as any,
       opacity: element.opacity,
       field: element.field,
       autoShrink: element.autoShrink,
       minFontSize: element.minFontSize,
-      maxLines: element.maxLines,
-      data: { id: element.id }
-    })
+      maxLines: element.maxLines
+    } as any)
   }
 
   if (element.type === 'shape' && element.shape === 'rect') {
@@ -217,10 +217,10 @@ function fabricToElement(obj: any): Element | null {
       text: obj.text || '',
       fontFamily: obj.fontFamily || 'Inter',
       fontSize: obj.fontSize || 16,
-      fontWeight: obj.fontWeight || 'normal',
-      fontStyle: obj.fontStyle || 'normal',
-      fill: obj.fill || '#000000',
-      textAlign: obj.textAlign || 'left',
+      fontWeight: (obj.fontWeight === 'bold' ? 'bold' : 'normal') as 'normal' | 'bold',
+      fontStyle: (obj.fontStyle === 'italic' ? 'italic' : 'normal') as 'normal' | 'italic',
+      fill: typeof obj.fill === 'string' ? obj.fill : '#000000',
+      textAlign: (obj.textAlign || 'left') as 'left' | 'center' | 'right' | 'justify',
       x: obj.left || 0,
       y: obj.top || 0,
       width: obj.width || 200,
@@ -228,8 +228,8 @@ function fabricToElement(obj: any): Element | null {
       angle: obj.angle || 0,
       scaleX: obj.scaleX || 1,
       scaleY: obj.scaleY || 1,
-      originX: obj.originX || 'left',
-      originY: obj.originY || 'top',
+      originX: (obj.originX || 'left') as 'left' | 'center' | 'right',
+      originY: (obj.originY || 'top') as 'top' | 'center' | 'bottom',
       opacity: obj.opacity ?? 1,
       underline: obj.underline || false,
       strikethrough: obj.linethrough || false
