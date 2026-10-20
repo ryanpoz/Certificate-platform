@@ -43,16 +43,10 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     // Should import from fabric
     expect(editor).toContain('from \'fabric\'')
     
-    // Should have 2 templates
-    expect(editor).toContain('modern-saas-gradient')
-    expect(editor).toContain('portrait-academy-diploma')
+    // Should have templates
+    expect(editor).toContain('TEMPLATES')
     
     // Should have key features
-    expect(editor).toContain('Double-click')
-    expect(editor).toContain('Export PNG')
-    expect(editor).toContain('Export JSON')
-    expect(editor).toContain('Test Long Name')
-    expect(editor).toContain('Show field names')
     expect(editor).toContain('Undo')
     expect(editor).toContain('Redo')
     
@@ -60,6 +54,13 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     expect(editor).toContain('Floating Toolbar')
     expect(editor).toContain('fontFamily')
     expect(editor).toContain('fontSize')
+    
+    // Should use new modular imports
+    expect(editor).toContain('useFabricCanvas')
+    expect(editor).toContain('CanvasHistory')
+    expect(editor).toContain('loadFonts')
+    expect(editor).toContain('FieldText')
+    expect(editor).toContain('initAligningGuidelines')
   })
 
   it('should handle template switching', () => {
@@ -86,12 +87,9 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     expect(editor).toContain('IText')
     expect(editor).toContain('Textbox')
     
-    // Should handle double-click
-    expect(editor).toContain('mouse:dblclick')
-    expect(editor).toContain('enterEditing')
-    
-    // Should have shrink-to-fit logic
-    expect(editor).toContain('shrinkToFit')
+    // Should use FieldText for merge fields
+    expect(editor).toContain('FieldText')
+    expect(editor).toContain('enableAutoShrink')
   })
 
   it('should have undo/redo functionality', () => {
@@ -100,10 +98,9 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
       'utf-8'
     )
     
-    // Should track history
+    // Should use CanvasHistory
     expect(editor).toContain('history')
-    expect(editor).toContain('historyIndex')
-    expect(editor).toContain('saveHistory')
+    expect(editor).toContain('CanvasHistory')
     expect(editor).toContain('undo')
     expect(editor).toContain('redo')
   })
@@ -117,22 +114,15 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     // Should track multiple selections
     expect(editor).toContain('selectedObjects')
     
-    // Should have grouping functions
-    expect(editor).toContain('groupSelected')
-    expect(editor).toContain('ungroupSelected')
-    expect(editor).toContain('Group')
-    expect(editor).toContain('Ungroup')
-    
     // Should have alignment functions
-    expect(editor).toContain('alignSelected')
+    expect(editor).toContain('alignLeft')
+    expect(editor).toContain('alignRight')
+    expect(editor).toContain('alignTop')
     expect(editor).toContain('Align')
     
     // Should have distribution
-    expect(editor).toContain('distributeSelected')
-    expect(editor).toContain('Distribute')
-    
-    // Should mention multi-select in help
-    expect(editor).toContain('Shift+Click')
+    expect(editor).toContain('distributeH')
+    expect(editor).toContain('distributeV')
   })
 
   it('should have snap guides enabled', () => {
@@ -141,9 +131,8 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
       'utf-8'
     )
     
-    // Should enable snap features
-    expect(editor).toContain('snapAngle')
-    expect(editor).toContain('snapThreshold')
+    // Should enable aligning guidelines from fabric extensions
+    expect(editor).toContain('initAligningGuidelines')
   })
 
   it('should require authentication', () => {

@@ -14,12 +14,12 @@ export interface FieldTextProps extends TClassProperties<Textbox> {
  * Extends Textbox for text editing capabilities
  */
 export class FieldText extends Textbox {
-  field: string
-  autoShrink: boolean
-  minFontSize: number
-  maxLines: number
+  declare field: string
+  declare autoShrink: boolean
+  declare minFontSize: number
+  declare maxLines: number
 
-  static type = 'FieldText'
+  static override type = 'FieldText'
 
   constructor(text: string, options: Partial<FieldTextProps> = {}) {
     super(text, {
