@@ -234,14 +234,6 @@ export default function FabricEditor() {
     canvas.requestRenderAll()
   }
 
-  if (!isReady) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading Fabric editor...</div>
-      </div>
-    )
-  }
-
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Toolbar */}
@@ -345,9 +337,14 @@ export default function FabricEditor() {
         </div>
       </div>
 
-      {/* Canvas Container */}
-      <div ref={containerRef} className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+      {/* Canvas Container — always render canvas so useFabricCanvas can attach */}
+      <div ref={containerRef} className="relative flex-1 flex items-center justify-center p-4 overflow-hidden">
         <canvas ref={canvasRef} />
+        {!isReady && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10">
+            <div className="text-gray-500">Loading Fabric editor...</div>
+          </div>
+        )}
       </div>
 
       {/* Floating Toolbar */}

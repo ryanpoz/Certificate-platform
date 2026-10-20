@@ -3,6 +3,27 @@
 const loadedFonts = new Set<string>()
 const loadingPromises = new Map<string, Promise<void>>()
 
+const FONT_LOAD_TIMEOUT_MS = 3000
+
+/**
+ * Race a promise against a timeout; rejects if timeout wins.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        clearTimeout(timer)
+        reject(error)
+      }
+    )
+  })
+}
+
 /**
  * Load a font and cache the result
  */
@@ -20,8 +41,12 @@ export async function loadFont(fontFamily: string): Promise<void> {
   // Start loading
   const promise = (async () => {
     try {
-      // Use document.fonts.load to load the font
-      await document.fonts.load(`16px "${fontFamily}"`)
+      // Use document.fonts.load to load the font (never block longer than timeout)
+      await withTimeout(
+        document.fonts.load(`16px "${fontFamily}"`),
+        FONT_LOAD_TIMEOUT_MS,
+        `Font load timed out: ${fontFamily}`
+      )
       loadedFonts.add(fontFamily)
     } catch (error) {
       console.warn(`Failed to load font: ${fontFamily}`, error)
