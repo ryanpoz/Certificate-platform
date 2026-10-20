@@ -112,15 +112,15 @@ export class KeyboardShortcuts {
 
     // Create new object from clipboard
     const promise = FabricObject.fromObject(this.clipboard)
-    promise.then((cloned: FabricObject) => {
+    promise.then((cloned) => {
       // Offset the pasted object
       cloned.set({
         left: (cloned.left || 0) + 20,
         top: (cloned.top || 0) + 20
       })
 
-      this.canvas.add(cloned)
-      this.canvas.setActiveObject(cloned)
+      this.canvas.add(cloned as any)
+      this.canvas.setActiveObject(cloned as any)
       this.canvas.requestRenderAll()
       this.onPaste?.()
     })
@@ -132,14 +132,14 @@ export class KeyboardShortcuts {
 
     // Clone and offset
     const promise = activeObject.clone()
-    promise.then((cloned: FabricObject) => {
+    promise.then((cloned) => {
       cloned.set({
         left: (cloned.left || 0) + 20,
         top: (cloned.top || 0) + 20
       })
 
-      this.canvas.add(cloned)
-      this.canvas.setActiveObject(cloned)
+      this.canvas.add(cloned as any)
+      this.canvas.setActiveObject(cloned as any)
       this.canvas.requestRenderAll()
       this.onDuplicate?.()
     })
