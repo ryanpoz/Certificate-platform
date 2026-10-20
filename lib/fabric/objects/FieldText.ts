@@ -1,5 +1,6 @@
 import { Textbox, classRegistry } from 'fabric'
 import type { TClassProperties } from 'fabric'
+import { resolveFontFamily } from '../fonts'
 
 export interface FieldTextProps extends TClassProperties<Textbox> {
   field?: string
@@ -10,8 +11,8 @@ export interface FieldTextProps extends TClassProperties<Textbox> {
 
 /**
  * FieldText - Custom Fabric object for dynamic fields
- * Renders as a labelled dashed chip showing the field name
- * Extends Textbox for text editing capabilities
+ * Renders text normally with a separate dashed chip outline and field label.
+ * Stroke/dash must NOT be applied to the text glyphs (that causes garbled text).
  */
 export class FieldText extends Textbox {
   declare field: string
@@ -22,17 +23,19 @@ export class FieldText extends Textbox {
   static override type = 'FieldText' as const
 
   constructor(text: string, options: Partial<FieldTextProps> = {}) {
+    const fontFamily = resolveFontFamily(options.fontFamily || 'Inter')
+    const textFill = typeof options.fill === 'string' ? options.fill : '#000000'
+
     super(text, {
       ...options,
-      // Chip styling
-      strokeDashArray: [5, 5] as any,
-      stroke: '#3b82f6',
-      strokeWidth: 2,
-      fill: 'rgba(59, 130, 246, 0.1)',
-      backgroundColor: '#ffffff',
-      // Text styling
+      // Text styling — never stroke the glyphs (chip outline is drawn separately)
+      fill: textFill,
+      stroke: undefined,
+      strokeWidth: 0,
+      strokeDashArray: undefined,
+      backgroundColor: undefined,
       textAlign: options.textAlign || 'center',
-      fontFamily: options.fontFamily || 'Inter',
+      fontFamily,
       fontSize: options.fontSize || 16,
     } as any)
 
@@ -57,18 +60,31 @@ export class FieldText extends Textbox {
   }
 
   /**
-   * Render the field label above the text
+   * Draw dashed chip outline + label around the text without distorting glyphs.
    */
-  _renderText(ctx: CanvasRenderingContext2D) {
-    super._renderText(ctx)
-    
-    // Draw field label
+  override _render(ctx: CanvasRenderingContext2D) {
+    const w = this.width || 0
+    const h = this.height || 0
+
+    // Dashed chip outline (object-local coords, origin at center)
+    ctx.save()
+    ctx.strokeStyle = '#3b82f6'
+    ctx.lineWidth = 1
+    ctx.setLineDash([5, 5])
+    ctx.strokeRect(-w / 2, -h / 2, w, h)
+    ctx.restore()
+
+    // Render text normally (no stroke on glyphs)
+    super._render(ctx)
+
+    // Field label above the chip
     const label = this.getFieldLabel()
     ctx.save()
-    ctx.font = '10px Inter'
+    ctx.font = '10px sans-serif'
     ctx.fillStyle = '#3b82f6'
     ctx.textAlign = 'left'
-    ctx.fillText(label, -this.width! / 2, -this.height! / 2 - 12)
+    ctx.textBaseline = 'bottom'
+    ctx.fillText(label, -w / 2, -h / 2 - 4)
     ctx.restore()
   }
 
