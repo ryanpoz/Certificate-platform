@@ -19,7 +19,7 @@ export class FieldText extends Textbox {
   declare minFontSize: number
   declare maxLines: number
 
-  static override type = 'FieldText'
+  static override type = 'FieldText' as const
 
   constructor(text: string, options: Partial<FieldTextProps> = {}) {
     super(text, {
@@ -77,13 +77,6 @@ export class FieldText extends Textbox {
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
-  }
-
-  /**
-   * Static method to create from object (for deserialization)
-   */
-  static fromObject(object: any): Promise<FieldText> {
-    return Promise.resolve(new FieldText(object.text, object))
   }
 }
 
