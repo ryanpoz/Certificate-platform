@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { STARTER_TEMPLATES } from '@/lib/certificate-builder/starter-templates'
 import { createCertificateFromWizard, parseCsvRecipients, saveDraft, loadDraft } from './actions'
-import VisualEditor from '@/components/certificate/visual-editor'
-import { type CertificateDesignV2, migrateV1ToV2 } from '@/lib/certificate-builder/design-v2'
+import FabricEditorClient from '@/components/certificate/fabric-editor-client'
+import type { DesignConfigV3 } from '@/lib/design-config/v3-schema'
+import { createBlankLandscapeTemplate } from '@/app/dashboard/lab/fabric/blank-template'
 
 interface WizardProps {
   academyId: string
@@ -24,13 +24,13 @@ export default function CertificateWizard({ academyId, userId, academyName, user
   const [savingDraft, setSavingDraft] = useState(false)
   const [draftSaved, setDraftSaved] = useState(false)
 
-  // Step 1: Design (merged template selection + editing)
-  const [selectedTemplate, setSelectedTemplate] = useState(STARTER_TEMPLATES[0])
+  // Step 1: Design (Fabric start-screen catalog + editor)
   const [certificateName, setCertificateName] = useState('')
   const [description, setDescription] = useState('')
   const [programName, setProgramName] = useState('')
-  const [customDesign, setCustomDesign] = useState<CertificateDesignV2 | null>(null)
+  const [customDesign, setCustomDesign] = useState<DesignConfigV3 | null>(null)
   const [hasEdits, setHasEdits] = useState(false)
+  const [editorKey, setEditorKey] = useState(0)
 
   // Step 2: People
   const [recipients, setRecipients] = useState([{ name: userName, email: userEmail }])
@@ -50,12 +50,10 @@ export default function CertificateWizard({ academyId, userId, academyName, user
           setProgramName(draft.programName || '')
           setStep(draft.currentStep || 1)
           setRecipients(draft.recipients || [{ name: userName, email: userEmail }])
-          if (draft.templateConfig) {
-            setCustomDesign(draft.templateConfig)
-          }
-          if (draft.selectedTemplateId) {
-            const template = STARTER_TEMPLATES.find(t => t.id === draft.selectedTemplateId)
-            if (template) setSelectedTemplate(template)
+          // Only restore Fabric v3 designs; v2 drafts start fresh on the start screen
+          if (draft.templateConfig?.version === 3) {
+            setCustomDesign(draft.templateConfig as DesignConfigV3)
+            setEditorKey(k => k + 1)
           }
         }
       })
@@ -84,12 +82,12 @@ export default function CertificateWizard({ academyId, userId, academyName, user
       userId,
       draftId,
       certificateName: certificateName || 'Untitled Certificate',
-      templateConfig: customDesign || selectedTemplate.config,
+      templateConfig: customDesign || createBlankLandscapeTemplate(),
       currentStep: step,
       recipients,
       description,
       programName,
-      selectedTemplateId: selectedTemplate.id,
+      selectedTemplateId: 'fabric-v3',
     })
 
     if (result.success && result.draftId) {
@@ -154,96 +152,8 @@ export default function CertificateWizard({ academyId, userId, academyName, user
     a.click()
   }
 
-  function handleTemplateSelect(template: typeof STARTER_TEMPLATES[0]) {
-    if (!hasEdits && !customDesign) {
-      // No edits, just switch template
-      setSelectedTemplate(template)
-      setCustomDesign(null)
-      return
-    }
-
-    const currentDesign = customDesign || migrateV1ToV2(selectedTemplate.config)
-    const newTemplateDesign = migrateV1ToV2(template.config)
-
-    // Build content map from current design by field/type
-    const contentMap: Record<string, any> = {}
-    
-    currentDesign.elements.forEach((el: any) => {
-      if (el.type === 'dynamic-field') {
-        // Map by field name (certificate_title, org_name, etc.)
-        contentMap[`field:${el.field}`] = {
-          text: el.text, // for static overrides
-          // Don't copy position/style - use new template's
-        }
-      } else if (el.type === 'text') {
-        // Map custom text elements (non-template)
-        contentMap[`text:${el.id}`] = el
-      } else if (el.type === 'image') {
-        // Map images by semantic meaning if possible, otherwise by position
-        if (el.src) {
-          if (el.y < 200) {
-            contentMap['image:logo'] = el.src
-          } else {
-            contentMap['image:other'] = el.src
-          }
-        }
-      } else if (el.type === 'signature' && el.src) {
-        contentMap['signature:image'] = el.src
-      }
-    })
-
-    // Count custom elements that would be lost
-    const customElements = currentDesign.elements.filter((el: any) => {
-      // Elements not in standard templates
-      const elId = parseInt(el.id.replace('element-', ''))
-      return isNaN(elId) || elId > 20 // User-added elements typically have high IDs or custom IDs
-    })
-
-    // Apply content to new template
-    const mergedElements = newTemplateDesign.elements.map((el: any) => {
-      if (el.type === 'dynamic-field') {
-        const savedContent = contentMap[`field:${el.field}`]
-        if (savedContent) {
-          return { ...el, ...savedContent }
-        }
-      } else if (el.type === 'image') {
-        const logoSrc = contentMap['image:logo']
-        if (logoSrc && el.y < 200) {
-          return { ...el, src: logoSrc }
-        }
-      } else if (el.type === 'signature') {
-        const sigSrc = contentMap['signature:image']
-        if (sigSrc) {
-          return { ...el, src: sigSrc }
-        }
-      }
-      return el
-    })
-
-    const mergedDesign = {
-      ...newTemplateDesign,
-      elements: mergedElements,
-    }
-
-    // Only confirm if custom elements would be lost
-    if (customElements.length > 0) {
-      if (!confirm(`Switching templates will remove ${customElements.length} custom element(s) you added. Your content (text, images) will be preserved. Continue?`)) {
-        return
-      }
-    }
-
-    setSelectedTemplate(template)
-    setCustomDesign(mergedDesign)
-    setHasEdits(true)
-  }
-
-  async function handleEditorSave(design: CertificateDesignV2) {
+  async function handleEditorSave(design: DesignConfigV3) {
     setCustomDesign(design)
-    setHasEdits(false)
-    return { success: true }
-  }
-
-  function handleEditorChange() {
     setHasEdits(true)
   }
 
@@ -251,6 +161,10 @@ export default function CertificateWizard({ academyId, userId, academyName, user
     e.preventDefault() // Prevent form submission
     if (!certificateName.trim()) {
       alert('Please enter a certificate name')
+      return
+    }
+    if (!customDesign) {
+      alert('Please choose a template or start blank before continuing')
       return
     }
     setStep(2)
@@ -273,7 +187,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
         academyId,
         userId,
         certificateName,
-        templateConfig: customDesign || selectedTemplate.config,
+        templateConfig: customDesign || createBlankLandscapeTemplate(),
         recipients,
         description,
         programName,
@@ -325,10 +239,10 @@ export default function CertificateWizard({ academyId, userId, academyName, user
         </div>
       </div>
 
-      {/* Step 1: Design Certificate (Horizontal Template Strip + Full-Width Editor) */}
+      {/* Step 1: Design Certificate (Fabric start-screen catalog + Full-Width Editor) */}
       {step === 1 && (
         <div className="flex flex-col h-[calc(100vh-160px)] min-h-[700px]">
-          {/* Top Bar: Name + Templates + Next + Save Draft */}
+          {/* Top Bar: Name + Next + Save Draft */}
           <div className="flex items-center gap-4 p-4 border-b bg-white">
             {/* Certificate Name */}
             <div className="w-64 flex-shrink-0">
@@ -347,38 +261,8 @@ export default function CertificateWizard({ academyId, userId, academyName, user
               />
             </div>
 
-            {/* Horizontal Template Thumbnails */}
-            <div className="flex-1 min-w-0">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Templates
-              </label>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-                {STARTER_TEMPLATES.map((template) => {
-                  const previewPath = `/templates/${template.id}.svg`
-                  return (
-                    <button
-                      key={template.id}
-                      onClick={() => handleTemplateSelect(template)}
-                      type="button"
-                      title={template.name}
-                      className={`flex-shrink-0 w-28 p-2 border-2 rounded-lg hover:border-blue-500 transition-colors ${
-                        selectedTemplate.id === template.id
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 bg-white'
-                      }`}
-                    >
-                      <div className="aspect-[1.414] rounded mb-1 overflow-hidden bg-white border border-gray-100">
-                        <img
-                          src={previewPath}
-                          alt={template.name}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <div className="font-medium text-xs leading-tight truncate">{template.name}</div>
-                    </button>
-                  )
-                })}
-              </div>
+            <div className="flex-1 min-w-0 text-sm text-gray-500">
+              Pick a blank page or template in the editor, then customize with Text, Uploads, and Background.
             </div>
 
             {/* Save Draft Button */}
@@ -411,11 +295,12 @@ export default function CertificateWizard({ academyId, userId, academyName, user
             </div>
           </div>
 
-          {/* Full-Width Editor */}
+          {/* Full-Width Fabric Editor */}
           <div className="flex-1 overflow-hidden bg-gray-50">
-            <VisualEditor
-              templateId={selectedTemplate.id}
-              initialDesign={customDesign || selectedTemplate.config}
+            <FabricEditorClient
+              key={editorKey}
+              mode="wizard"
+              initialConfig={customDesign}
               onSave={handleEditorSave}
             />
           </div>
@@ -528,7 +413,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
             </div>
             <div>
               <div className="text-sm text-gray-600">Design</div>
-              <div className="font-medium">{selectedTemplate.name}{customDesign && ' (customized)'}</div>
+              <div className="font-medium">{customDesign ? 'Fabric design' : 'Not selected yet'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Recipients</div>

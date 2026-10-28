@@ -3,6 +3,8 @@ import chromium from '@sparticuz/chromium'
 import { formatDate, renderMergeFields } from '../utils/helpers'
 import { renderCertificateV2 } from '../certificate-builder/render-v2'
 import { type CertificateDesignV2 } from '../certificate-builder/design-v2'
+import { renderCertificateV3, getV3PageSize } from '../certificate-builder/render-v3'
+import { type DesignConfigV3 } from '../design-config/v3-schema'
 
 // @ts-ignore
 import QRCode from 'qrcode'
@@ -22,6 +24,10 @@ export interface GeneratePDFParams {
 }
 
 export async function generateCertificatePDF(params: GeneratePDFParams): Promise<Buffer> {
+  if (params.designConfig && params.designConfig.version === 3) {
+    return generateV3PDF(params)
+  }
+
   // Check if using v2 design
   if (params.designConfig && params.designConfig.version === 2) {
     return generateV2PDF(params)
@@ -220,6 +226,54 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
     const pdfBuffer = await page.pdf({
       format: 'letter',
       printBackground: true,
+    })
+
+    return Buffer.from(pdfBuffer)
+  } finally {
+    await browser.close()
+  }
+}
+
+async function generateV3PDF(params: GeneratePDFParams): Promise<Buffer> {
+  const design = params.designConfig as DesignConfigV3
+  const { width, height } = getV3PageSize(design)
+
+  const html = renderCertificateV3(design, {
+    recipientName: params.learnerName,
+    certificateTitle: params.courseName,
+    orgName: params.academyName,
+    issueDate: formatDate(params.issueDate),
+    certificateId: params.certificateNumber,
+    description: params.bodyText,
+    issuerName: params.academyName,
+  })
+
+  const pdfHtml = html.replace(
+    '<head>',
+    `<head>
+    <style>
+      @page {
+        size: ${width}px ${height}px;
+        margin: 0;
+      }
+    </style>`
+  )
+
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
+    headless: true,
+  })
+
+  try {
+    const page = await browser.newPage()
+    await page.setContent(pdfHtml, { waitUntil: 'load' })
+
+    const pdfBuffer = await page.pdf({
+      width: `${width}px`,
+      height: `${height}px`,
+      printBackground: true,
+      preferCSSPageSize: false,
     })
 
     return Buffer.from(pdfBuffer)

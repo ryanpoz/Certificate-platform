@@ -5,8 +5,10 @@ import { formatDate, renderMergeFields } from '@/lib/utils/helpers'
 import { generateLinkedInUrl } from '@/lib/email/resend'
 import QRCodeDisplay from './qr-code'
 import { type CertificateDesignV2 } from '@/lib/certificate-builder/design-v2'
+import type { DesignConfigV3 } from '@/lib/design-config/v3-schema'
 import QRCode from 'qrcode'
 import V2CertificateRenderer from '@/components/certificate/v2-renderer'
+import V3CertificateRenderer from '@/components/certificate/v3-renderer'
 
 interface CertificateViewProps {
   certificate: {
@@ -46,7 +48,7 @@ export default function CertificateView(props: CertificateViewProps) {
   const { certificate, learner, course, academy, template, certificateUrl, isPreviewMode } = props
   const [copied, setCopied] = useState(false)
 
-  // Check if using v2 design
+  const isV3 = template.designConfig && template.designConfig.version === 3
   const isV2 = template.designConfig && template.designConfig.version === 2
 
   useEffect(() => {
@@ -160,7 +162,22 @@ export default function CertificateView(props: CertificateViewProps) {
               </div>
             </div>
 
-            {isV2 && template.designConfig ? (
+            {isV3 && template.designConfig ? (
+              <div className="mb-8 flex justify-center overflow-x-auto">
+                <V3CertificateRenderer
+                  design={template.designConfig as DesignConfigV3}
+                  data={{
+                    recipientName: learner.fullName,
+                    certificateTitle: course.name,
+                    orgName: academy.name,
+                    issueDate: formatDate(certificate.issueDate),
+                    certificateId: certificate.number,
+                    description: template.bodyText || '',
+                    issuerName: academy.name,
+                  }}
+                />
+              </div>
+            ) : isV2 && template.designConfig ? (
               <div className="mb-8 flex justify-center">
                 <V2CertificateRenderer
                   design={template.designConfig as CertificateDesignV2}

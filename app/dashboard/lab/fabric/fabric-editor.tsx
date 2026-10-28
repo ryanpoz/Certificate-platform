@@ -8,11 +8,13 @@ import { loadFonts, extractFontsFromConfig } from '@/lib/fabric/fonts'
 import { FieldText } from '@/lib/fabric/objects/FieldText'
 import {
   designConfigToFabric,
+  fabricToDesignConfig,
   applyBackground,
   canvasBackgroundToConfig,
   applyImageCornerRadius,
   lockImageAspectRatio,
 } from '@/lib/fabric/serialize'
+import type { DesignConfigV3 } from '@/lib/design-config/v3-schema'
 import { enableAutoShrink } from '@/lib/fabric/fit-text'
 import {
   collectTextById,
@@ -69,7 +71,7 @@ type CategoryFilter = 'all' | string
 const THUMB_WIDTH = 280
 const CANVAS_PADDING = 24
 
-function resolveDesignConfig(key: DesignKey) {
+function resolveDesignConfig(key: DesignKey): DesignConfigV3 {
   if (key === BLANK_TEMPLATE_ID) return createBlankLandscapeTemplate()
   return TEMPLATES[key]
 }
@@ -120,30 +122,51 @@ function isImageObject(obj: any) {
   return obj instanceof FabricImage || obj?.type === 'image'
 }
 
-export default function FabricEditor() {
+export type FabricEditorProps = {
+  /** When set (v3), load this design and skip the start screen. */
+  initialConfig?: DesignConfigV3 | null
+  /** Called with the current design after edits (debounced). */
+  onSave?: (config: DesignConfigV3) => void | Promise<void>
+  /** lab = prototype page; wizard = certificate wizard embed. */
+  mode?: 'lab' | 'wizard'
+}
+
+const CUSTOM_DESIGN_KEY = '__custom__' as const
+type ExtendedDesignKey = DesignKey | typeof CUSTOM_DESIGN_KEY
+
+export default function FabricEditor({
+  initialConfig = null,
+  onSave,
+  mode = 'lab',
+}: FabricEditorProps = {}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const replaceInputRef = useRef<HTMLInputElement>(null)
+  const onSaveRef = useRef(onSave)
+  onSaveRef.current = onSave
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const initialLoadedRef = useRef(false)
+
   const { canvasRef, canvas, history, isReady } = useFabricCanvas({
-    width: 1123,
-    height: 794,
+    width: initialConfig?.pages[0]?.width || 1123,
+    height: initialConfig?.pages[0]?.height || 794,
     backgroundColor: '#ffffff'
   })
   
   const keyboardRef = useRef<KeyboardShortcuts | null>(null)
   const cleanupGuidelinesRef = useRef<(() => void) | null>(null)
-  const selectedTemplateRef = useRef<DesignKey | null>(null)
+  const selectedTemplateRef = useRef<ExtendedDesignKey | null>(null)
   const hasLoadedDesignRef = useRef(false)
   const pageSizeRef = useRef({ width: 1123, height: 794 })
   const cropRectRef = useRef<any>(null)
   const cropTargetRef = useRef<any>(null)
   
-  const [selectedTemplate, setSelectedTemplate] = useState<DesignKey | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<ExtendedDesignKey | null>(null)
   const [selectedObject, setSelectedObject] = useState<any>(null)
   const [selectedObjects, setSelectedObjects] = useState<any[]>([])
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false })
   const [toolbarPos, setToolbarPos] = useState({ x: 0, y: 0, visible: false })
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({})
-  const [showStartScreen, setShowStartScreen] = useState(true)
+  const [showStartScreen, setShowStartScreen] = useState(!(initialConfig && initialConfig.version === 3))
   const [startScreenMode, setStartScreenMode] = useState<'initial' | 'change'>('initial')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [activePanel, setActivePanel] = useState<SidebarPanel>('text')
@@ -158,6 +181,9 @@ export default function FabricEditor() {
   
   const userContentRef = useRef<Record<string, string>>({ ...SAMPLE_DATA })
   const userAddedFieldsRef = useRef<Set<string>>(new Set())
+  const customConfigRef = useRef<DesignConfigV3 | null>(
+    initialConfig?.version === 3 ? initialConfig : null
+  )
 
   const catalog = useMemo(() => getTemplateCatalog(TEMPLATES), [])
   const categories = useMemo(() => getCatalogCategories(catalog), [catalog])
@@ -166,9 +192,23 @@ export default function FabricEditor() {
     [catalog, categoryFilter]
   )
 
+  const emitSave = useCallback(() => {
+    if (!canvas || !onSaveRef.current || !hasLoadedDesignRef.current) return
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        const config = fabricToDesignConfig(canvas)
+        void onSaveRef.current?.(config)
+      } catch (err) {
+        console.warn('Fabric onSave failed', err)
+      }
+    }, 1500)
+  }, [canvas])
+
   const commitHistory = useCallback(() => {
     void history?.saveState()
-  }, [history])
+    emitSave()
+  }, [history, emitSave])
 
   const updateToolbarPosition = useCallback((obj: any) => {
     if (!canvas || !obj) {
@@ -244,17 +284,21 @@ export default function FabricEditor() {
     setPageOrientation(detected.orientation)
   }, [])
 
-  const loadTemplate = useCallback(async (templateKey: DesignKey) => {
+  const loadFromConfig = useCallback(async (
+    config: DesignConfigV3,
+    designKey: ExtendedDesignKey,
+    options: { carryFields?: boolean } = {}
+  ) => {
     if (!canvas) return
-
-    const config = resolveDesignConfig(templateKey)
+    const { carryFields = true } = options
     const page = config.pages[0]
-    
+    if (!page) return
+
     const fonts = extractFontsFromConfig(config)
     await loadFonts(fonts)
 
     let carriedSnapshots: CarryFieldSnapshot[] = []
-    if (hasLoadedDesignRef.current) {
+    if (carryFields && hasLoadedDesignRef.current) {
       saveFieldContent()
       carriedSnapshots = canvas.getObjects()
         .map(snapshotFieldText)
@@ -270,8 +314,11 @@ export default function FabricEditor() {
     await designConfigToFabric(config, canvas)
     syncPageFromConfig(page.width, page.height)
     setBackground(page.background)
+    customConfigRef.current = config
 
-    restoreFieldContent()
+    if (carryFields) {
+      restoreFieldContent()
+    }
 
     const keysOnCanvas = new Set(
       canvas.getObjects()
@@ -325,7 +372,7 @@ export default function FabricEditor() {
       if (isImageObject(obj)) lockImageAspectRatio(obj)
     })
 
-    selectedTemplateRef.current = templateKey
+    selectedTemplateRef.current = designKey
     hasLoadedDesignRef.current = true
     fitCanvasToContainer()
     canvas.renderAll()
@@ -333,7 +380,27 @@ export default function FabricEditor() {
     history?.resume()
     history?.clear()
     await history?.saveState()
-  }, [canvas, history, saveFieldContent, restoreFieldContent, fitCanvasToContainer, syncPageFromConfig])
+    emitSave()
+  }, [canvas, history, saveFieldContent, restoreFieldContent, fitCanvasToContainer, syncPageFromConfig, emitSave])
+
+  const loadTemplate = useCallback(async (templateKey: DesignKey) => {
+    const config = resolveDesignConfig(templateKey)
+    await loadFromConfig(config, templateKey, { carryFields: true })
+  }, [loadFromConfig])
+
+  // Restore draft / initial v3 design once canvas is ready
+  useEffect(() => {
+    if (!canvas || !history || !isReady || initialLoadedRef.current) return
+    if (initialConfig?.version === 3) {
+      initialLoadedRef.current = true
+      setSelectedTemplate(CUSTOM_DESIGN_KEY)
+      selectedTemplateRef.current = CUSTOM_DESIGN_KEY
+      void loadFromConfig(initialConfig, CUSTOM_DESIGN_KEY, { carryFields: false })
+      setShowStartScreen(false)
+    } else {
+      initialLoadedRef.current = true
+    }
+  }, [canvas, history, isReady, initialConfig, loadFromConfig])
 
   useEffect(() => {
     if (!canvas || !history || !isReady) return
@@ -401,10 +468,14 @@ export default function FabricEditor() {
     canvas.on('object:modified', onModified)
     canvas.on('object:moving', onModified)
 
-    const unsubscribe = history.onChange(setHistoryState)
+    const unsubscribe = history.onChange(state => {
+      setHistoryState(state)
+      emitSave()
+    })
 
     return () => {
       unsubscribe()
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       keyboardRef.current?.dispose()
       cleanupGuidelinesRef.current?.()
       canvas.off('selection:created', handleSelection)
@@ -416,7 +487,7 @@ export default function FabricEditor() {
       canvas.off('object:modified', onModified)
       canvas.off('object:moving', onModified)
     }
-  }, [canvas, history, isReady, updateToolbarPosition])
+  }, [canvas, history, isReady, updateToolbarPosition, emitSave])
 
   useEffect(() => {
     if (!canvas || showStartScreen || !selectedTemplate) return

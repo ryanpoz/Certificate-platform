@@ -6,26 +6,17 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
-describe('Certificate Wizard - Template Previews', () => {
-  it('should use real SVG preview images instead of colored boxes', () => {
+describe('Certificate Wizard - Fabric template catalog', () => {
+  it('should embed Fabric editor with start-screen catalog', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should use SVG previews from public/templates/
-    expect(wizard).toContain('/templates/')
-    expect(wizard).toContain('.svg')
-    
-    // Should use img tag, not colored div
-    expect(wizard).toContain('<img')
-    expect(wizard).toContain('src={previewPath}')
-    
-    // Should NOT use backgroundColor style
-    expect(wizard).not.toContain('backgroundColor: bgColor')
+    expect(wizard).toContain('FabricEditorClient')
+    expect(wizard).toContain('mode="wizard"')
+    expect(wizard).not.toContain('src={previewPath}')
+    expect(wizard).not.toContain('VisualEditor')
   })
 
-  it('should have SVG files for all starter templates', () => {
-    const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
-    
-    // Extract template IDs from wizard
+  it('should keep SVG files available for legacy assets', () => {
     const templateIds = [
       'bold-pop-blocks',
       'classic-formal',
@@ -41,66 +32,60 @@ describe('Certificate Wizard - Template Previews', () => {
       'split-panel-navy',
     ]
     
-    // Check each template has an SVG file
     templateIds.forEach(id => {
       const svgPath = join(process.cwd(), `public/templates/${id}.svg`)
       expect(existsSync(svgPath)).toBe(true)
     })
   })
 
-  it('should show editor integrated with template selection', () => {
+  it('should show Fabric editor integrated in the Design step', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should have VisualEditor component integrated (not a separate button)
-    expect(wizard).toContain('VisualEditor')
-    expect(wizard).toContain('Top Bar')
-    expect(wizard).toContain('Full-Width Editor')
+    expect(wizard).toContain('FabricEditorClient')
+    expect(wizard).toContain('Full-Width Fabric Editor')
   })
 
   it('should maintain wizard state when customizing', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should track selected template
-    expect(wizard).toContain('selectedTemplate')
-    expect(wizard).toContain('setSelectedTemplate')
-    
-    // Should track certificate name
+    expect(wizard).toContain('customDesign')
+    expect(wizard).toContain('setCustomDesign')
     expect(wizard).toContain('certificateName')
     expect(wizard).toContain('setCertificateName')
   })
 
-  it('should require certificate name before customizing', () => {
+  it('should require certificate name before advancing', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should check certificate name is entered
     expect(wizard).toContain('certificateName.trim()')
     expect(wizard).toContain('Please enter a certificate name')
   })
 })
 
 describe('Template Preview Display', () => {
-  it('should use aspect ratio 1.414 for certificate preview', () => {
+  it('should rely on Fabric catalog for template previews', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
+    const editor = readFileSync(
+      join(process.cwd(), 'app/dashboard/lab/fabric/fabric-editor.tsx'),
+      'utf-8'
+    )
     
-    // Should maintain A4/Letter aspect ratio
-    expect(wizard).toContain('aspect-[1.414]')
+    expect(wizard).toContain('FabricEditorClient')
+    expect(editor).toContain('getTemplateCatalog')
+    expect(editor).toContain('Start blank')
   })
 
-  it('should show template metadata', () => {
+  it('should show Fabric design status in the review step', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should show template name
-    expect(wizard).toContain('template.name')
-    
-    // Should have template title attribute for accessibility
-    expect(wizard).toContain('title={template.name}')
+    expect(wizard).toContain('Fabric design')
+    expect(wizard).toContain('customDesign')
   })
 
-  it('should highlight selected template', () => {
+  it('should pass initialConfig into Fabric for draft restore', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
-    // Should apply different styles to selected template
-    expect(wizard).toContain('selectedTemplate.id === template.id')
-    expect(wizard).toContain('border-blue-600')
+    expect(wizard).toContain('initialConfig={customDesign}')
+    expect(wizard).toContain('templateConfig?.version === 3')
   })
 })
