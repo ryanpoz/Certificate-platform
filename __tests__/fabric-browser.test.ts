@@ -48,6 +48,15 @@ describe('Fabric.js Editor - Phase 1b Integration', () => {
     expect(editorCode).not.toContain('Template Thumbnails')
   })
 
+  it('should keep text editing working with the start screen', () => {
+    // Never toggle className on the Fabric-owned <canvas> node
+    expect(editorCode).not.toMatch(/<canvas[^>]*className=\{showStartScreen/)
+    // Hide via wrapper + refresh mouse offset after show/fit
+    expect(editorCode).toContain('calcOffset')
+    expect(editorCode).toContain('mouse:dblclick')
+    expect(editorCode).toContain('enterEditing')
+  })
+
   it('should have keyboard shortcuts', () => {
     // Should use KeyboardShortcuts class
     expect(editorCode).toContain('KeyboardShortcuts')

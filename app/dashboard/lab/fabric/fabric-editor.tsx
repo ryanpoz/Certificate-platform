@@ -107,6 +107,8 @@ export default function FabricEditor() {
       width: page.width * scale,
       height: page.height * scale
     })
+    // Recalculate offset after resize so clicks / text editing hit the right place
+    canvas.calcOffset()
     canvas.requestRenderAll()
   }, [canvas])
 
@@ -228,9 +230,28 @@ export default function FabricEditor() {
       setToolbarPos(prev => ({ ...prev, visible: false }))
     }
 
+    const handleDblClick = (e: any) => {
+      const target = e.target
+      if (target && (target instanceof IText || target instanceof Textbox)) {
+        target.enterEditing()
+        target.selectAll()
+      }
+    }
+
+    const onEditingEntered = () => {
+      setToolbarPos(prev => ({ ...prev, visible: false }))
+    }
+
+    const onEditingExited = () => {
+      handleSelection()
+    }
+
     canvas.on('selection:created', handleSelection)
     canvas.on('selection:updated', handleSelection)
     canvas.on('selection:cleared', onCleared)
+    canvas.on('mouse:dblclick', handleDblClick)
+    canvas.on('text:editing:entered', onEditingEntered)
+    canvas.on('text:editing:exited', onEditingExited)
 
     const unsubscribe = history.onChange(setHistoryState)
 
@@ -241,8 +262,20 @@ export default function FabricEditor() {
       canvas.off('selection:created', handleSelection)
       canvas.off('selection:updated', handleSelection)
       canvas.off('selection:cleared', onCleared)
+      canvas.off('mouse:dblclick', handleDblClick)
+      canvas.off('text:editing:entered', onEditingEntered)
+      canvas.off('text:editing:exited', onEditingExited)
     }
   }, [canvas, history, isReady])
+
+  // After leaving the start screen, refresh Fabric's mouse offset (canvas was covered / not interactive)
+  useEffect(() => {
+    if (!canvas || showStartScreen || !selectedTemplate) return
+    requestAnimationFrame(() => {
+      canvas.calcOffset()
+      fitCanvasToContainer(selectedTemplate)
+    })
+  }, [canvas, showStartScreen, selectedTemplate, fitCanvasToContainer])
 
   // Fit canvas on window resize and orientation change
   useEffect(() => {
@@ -443,13 +476,20 @@ export default function FabricEditor() {
         </div>
       )}
 
-      {/* Canvas Container — always render canvas so useFabricCanvas can attach */}
+      {/* Canvas Container — always render canvas so useFabricCanvas can attach.
+          Never put dynamic className on the <canvas> Fabric owns (breaks hit-testing / editing).
+          Hide via a wrapper instead while the start screen is open. */}
       <div
         ref={containerRef}
         className="relative flex-1 flex items-center justify-center overflow-hidden min-h-0"
         style={{ padding: CANVAS_PADDING }}
       >
-        <canvas ref={canvasRef} className={showStartScreen ? 'invisible' : undefined} />
+        <div
+          className={showStartScreen ? 'invisible pointer-events-none' : undefined}
+          aria-hidden={showStartScreen}
+        >
+          <canvas ref={canvasRef} />
+        </div>
         {!isReady && !showStartScreen && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10">
             <div className="text-gray-500">Loading Fabric editor...</div>
