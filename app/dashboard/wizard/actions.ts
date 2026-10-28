@@ -205,8 +205,29 @@ export async function savePublishedDesign(data: {
   }
 }
 
-export async function deleteDraft(draftId: string) {
+export async function deleteDraft(draftId: string, academyId?: string) {
   try {
+    const [course] = await db
+      .select()
+      .from(courses)
+      .where(eq(courses.id, draftId))
+      .limit(1)
+
+    if (!course) {
+      return { error: 'Draft not found' }
+    }
+    if (academyId && course.academyId !== academyId) {
+      return { error: 'Draft not found' }
+    }
+
+    const isDraft =
+      course.draftData != null ||
+      (course.code.startsWith('DRAFT-') && !course.templateId)
+
+    if (!isDraft) {
+      return { error: 'Only drafts can be deleted from this action' }
+    }
+
     await db.delete(courses).where(eq(courses.id, draftId))
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/certificates')

@@ -7,7 +7,7 @@ import { attachSnapGuides } from '@/lib/fabric/snap-guides'
 import { createFabricShape } from '@/lib/fabric/create-shape'
 import { strokeDashForStyle, styleFromDashArray, snapRotationAngle, type ShapeKind } from '@/lib/fabric/shapes'
 import { serializeLocked } from '@/lib/fabric/lock'
-import { loadFonts, extractFontsFromConfig } from '@/lib/fabric/fonts'
+import { loadFonts, extractFontsFromConfig, resolveFontFamily } from '@/lib/fabric/fonts'
 import { FieldText } from '@/lib/fabric/objects/FieldText'
 import {
   designConfigToFabric,
@@ -27,6 +27,7 @@ import {
 import {
   selectFieldsToCarry,
   clampFieldPosition,
+  resolveCarryFieldStyle,
   type CarryFieldSnapshot,
 } from '@/lib/fabric/carry-fields'
 import {
@@ -391,13 +392,40 @@ export default function FabricEditor({
       restoreFieldContent()
     }
 
-    const keysOnCanvas = new Set(
-      canvas.getObjects()
-        .filter((o: any) => o instanceof FieldText || o.type === 'FieldText')
-        .map((o: any) => o.field as string)
+    // Template owns visual style — re-apply fill/font from config after text restore
+    // so switching light↔dark templates never leaves unreadable black-on-black text.
+    for (const element of page.elements) {
+      if (element.type !== 'field') continue
+      const obj = canvas.getObjects().find((o: any) =>
+        (o instanceof FieldText || o.type === 'FieldText') && o.field === element.field
+      )
+      if (!obj) continue
+      obj.set({
+        fill: element.fill,
+        fontFamily: resolveFontFamily(element.fontFamily),
+        fontSize: element.fontSize,
+        fontWeight: element.fontWeight,
+        fontStyle: element.fontStyle,
+        textAlign: element.textAlign,
+      })
+    }
+
+    const nativeFields = canvas.getObjects().filter(
+      (o: any) => o instanceof FieldText || o.type === 'FieldText'
     )
-    // Carry every previous field that the destination template doesn't already have
-    // (not only Text-panel "user-added" fields — blank/template fields must survive too).
+    const keysOnCanvas = new Set(nativeFields.map((o: any) => o.field as string))
+    const carryStyle = resolveCarryFieldStyle(
+      nativeFields.map((o: any) => ({
+        fill: typeof o.fill === 'string' ? o.fill : undefined,
+        fontFamily: o.fontFamily,
+        fontSize: o.fontSize,
+        textAlign: o.textAlign,
+      })),
+      page.background
+    )
+
+    // Carry every previous field that the destination template doesn't already have.
+    // Text value is preserved; colours/fonts follow the destination template.
     const toCarry = selectFieldsToCarry(carriedSnapshots, keysOnCanvas)
     for (const snap of toCarry) {
       const pos = clampFieldPosition(
@@ -412,10 +440,10 @@ export default function FabricEditor({
         top: pos.top,
         width: snap.width,
         height: snap.height,
-        fontSize: snap.fontSize,
-        fontFamily: snap.fontFamily,
-        fill: snap.fill,
-        textAlign: snap.textAlign as any,
+        fontSize: carryStyle.fontSize,
+        fontFamily: carryStyle.fontFamily,
+        fill: carryStyle.fill,
+        textAlign: carryStyle.textAlign as any,
         angle: snap.angle,
         scaleX: snap.scaleX,
         scaleY: snap.scaleY,
@@ -1118,6 +1146,17 @@ export default function FabricEditor({
       isShapeObject(selectedObject) ||
       selectedObjects.length > 1)
 
+  const toolbarPositionKey = (() => {
+    if (selectedObjects.length > 1) {
+      return `multi:${selectedObjects.length}:${selectedObjects
+        .map((o: any) => (o.get?.('data') || o.data || {}).id || o.field || '')
+        .join(',')}`
+    }
+    if (!selectedObject) return 'none'
+    const data = selectedObject.get?.('data') || selectedObject.data || {}
+    return String(data.id || selectedObject.field || selectedObject.type || 'obj')
+  })()
+
   return (
     <div className="h-full flex flex-col bg-gray-50 relative">
       {selectedTemplate !== null && (
@@ -1276,6 +1315,7 @@ export default function FabricEditor({
         <CropToolbar
           x={toolbarPos.x || (typeof window !== 'undefined' ? window.innerWidth / 2 : 0)}
           y={toolbarPos.y || 80}
+          positionKey={`crop:${toolbarPositionKey}`}
           onApply={applyCrop}
           onCancel={cancelCrop}
         />
@@ -1286,6 +1326,7 @@ export default function FabricEditor({
           kind="text"
           x={toolbarPos.x}
           y={toolbarPos.y}
+          positionKey={toolbarPositionKey}
           locked={selectionLocked}
           fontFamily={selectedObject.fontFamily || 'Inter'}
           fontSize={selectedObject.fontSize || 16}
@@ -1308,6 +1349,7 @@ export default function FabricEditor({
           kind="image"
           x={toolbarPos.x}
           y={toolbarPos.y}
+          positionKey={toolbarPositionKey}
           locked={selectionLocked}
           opacity={selectedObject.opacity ?? 1}
           cornerRadius={imageCornerRadius}
@@ -1327,6 +1369,7 @@ export default function FabricEditor({
           kind="line"
           x={toolbarPos.x}
           y={toolbarPos.y}
+          positionKey={toolbarPositionKey}
           locked={selectionLocked}
           stroke={typeof selectedObject.stroke === 'string' ? selectedObject.stroke : '#111827'}
           strokeWidth={selectedObject.strokeWidth ?? 3}
@@ -1348,6 +1391,7 @@ export default function FabricEditor({
           kind="shape"
           x={toolbarPos.x}
           y={toolbarPos.y}
+          positionKey={toolbarPositionKey}
           locked={selectionLocked}
           fill={solidFillColor(selectedObject.fill)}
           fillMode={shapeFillMode}
@@ -1371,6 +1415,7 @@ export default function FabricEditor({
           kind="shape"
           x={toolbarPos.x}
           y={toolbarPos.y}
+          positionKey={toolbarPositionKey}
           locked={selectionLocked}
           selectionCount={selectedObjects.length}
           onArrange={runArrange}

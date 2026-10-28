@@ -1,13 +1,92 @@
 'use client'
 
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { EDITOR_FONTS } from '@/lib/fabric/fonts'
 
 export type ToolbarKind = 'text' | 'image' | 'shape' | 'line'
+
+/** Drag handle + offset so floating popups can be moved without blocking controls. */
+function useDraggableOffset(positionKey?: string) {
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const dragRef = useRef<{
+    pointerId: number
+    startX: number
+    startY: number
+    originX: number
+    originY: number
+  } | null>(null)
+
+  useEffect(() => {
+    setOffset({ x: 0, y: 0 })
+  }, [positionKey])
+
+  function onHandlePointerDown(e: ReactPointerEvent<HTMLElement>) {
+    if (e.button !== 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    const target = e.currentTarget
+    target.setPointerCapture(e.pointerId)
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: offset.x,
+      originY: offset.y,
+    }
+  }
+
+  function onHandlePointerMove(e: ReactPointerEvent<HTMLElement>) {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== e.pointerId) return
+    setOffset({
+      x: drag.originX + (e.clientX - drag.startX),
+      y: drag.originY + (e.clientY - drag.startY),
+    })
+  }
+
+  function onHandlePointerUp(e: ReactPointerEvent<HTMLElement>) {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== e.pointerId) return
+    dragRef.current = null
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      // ignore
+    }
+  }
+
+  return {
+    offset,
+    handleProps: {
+      onPointerDown: onHandlePointerDown,
+      onPointerMove: onHandlePointerMove,
+      onPointerUp: onHandlePointerUp,
+      onPointerCancel: onHandlePointerUp,
+    },
+  }
+}
+
+function DragHandle({ handleProps }: { handleProps: ReturnType<typeof useDraggableOffset>['handleProps'] }) {
+  return (
+    <button
+      type="button"
+      title="Drag to move"
+      aria-label="Drag toolbar"
+      className="cursor-grab active:cursor-grabbing touch-none select-none rounded px-1 py-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+      {...handleProps}
+    >
+      <span className="block leading-none text-xs tracking-tighter" aria-hidden>
+        ⋮⋮
+      </span>
+    </button>
+  )
+}
 
 export function FloatingObjectToolbar({
   kind,
   x,
   y,
+  positionKey,
   locked,
   // text
   fontFamily,
@@ -46,6 +125,8 @@ export function FloatingObjectToolbar({
   kind: ToolbarKind
   x: number
   y: number
+  /** When this changes (new selection), drag offset resets to the default anchor. */
+  positionKey?: string
   locked?: boolean
   fontFamily?: string
   fontSize?: number
@@ -78,13 +159,15 @@ export function FloatingObjectToolbar({
   onToggleLock?: () => void
 }) {
   const count = selectionCount ?? 1
+  const { offset, handleProps } = useDraggableOffset(positionKey ?? kind)
 
   return (
     <div
       className="fixed z-50 flex max-w-[min(96vw,900px)] flex-wrap items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1.5 shadow-xl"
-      style={{ left: x, top: y, transform: 'translateX(-50%)' }}
+      style={{ left: x + offset.x, top: y + offset.y, transform: 'translateX(-50%)' }}
       onMouseDown={e => e.stopPropagation()}
     >
+      <DragHandle handleProps={handleProps} />
       {locked && (
         <span title="Locked" className="rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700">
           🔒
@@ -405,19 +488,25 @@ export function FloatingObjectToolbar({
 export function CropToolbar({
   x,
   y,
+  positionKey,
   onApply,
   onCancel,
 }: {
   x: number
   y: number
+  positionKey?: string
   onApply: () => void
   onCancel: () => void
 }) {
+  const { offset, handleProps } = useDraggableOffset(positionKey ?? 'crop')
+
   return (
     <div
       className="fixed z-50 flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-xl"
-      style={{ left: x, top: y, transform: 'translateX(-50%)' }}
+      style={{ left: x + offset.x, top: y + offset.y, transform: 'translateX(-50%)' }}
+      onMouseDown={e => e.stopPropagation()}
     >
+      <DragHandle handleProps={handleProps} />
       <span className="text-xs text-gray-600">Drag the crop rectangle</span>
       <button type="button" onClick={onApply} className="rounded bg-blue-600 px-2 py-1 text-xs text-white">
         Apply

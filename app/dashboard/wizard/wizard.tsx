@@ -148,7 +148,7 @@ export default function CertificateWizard({
     return () => clearTimeout(timer)
   }, [certificateName, customDesign, description, programName, recipients, step, hasEdits, draftId, isEditingPublished])
 
-  async function handleSaveDraft(isAutosave = false) {
+  async function handleSaveDraft(isAutosave = false, stepOverride?: number) {
     // Autosave must not create brand-new courses
     if (isAutosave && !draftId && !isEditingPublished) return
 
@@ -156,6 +156,7 @@ export default function CertificateWizard({
     setDraftSaved(false)
 
     const templateConfig = customDesign || createBlankLandscapeTemplate()
+    const stepToSave = stepOverride ?? step
 
     if (isEditingPublished && editingCourseId) {
       const result = await savePublishedDesign({
@@ -185,7 +186,7 @@ export default function CertificateWizard({
       draftId,
       certificateName: certificateName || 'Untitled Certificate',
       templateConfig,
-      currentStep: step,
+      currentStep: stepToSave,
       recipients,
       description,
       programName,
@@ -210,17 +211,39 @@ export default function CertificateWizard({
 
   function addRecipient() {
     setRecipients([...recipients, { name: '', email: '' }])
+    setHasEdits(true)
   }
 
   function updateRecipient(index: number, field: 'name' | 'email', value: string) {
     const updated = [...recipients]
     updated[index][field] = value
     setRecipients(updated)
+    setHasEdits(true)
   }
 
   function removeRecipient(index: number) {
     setRecipients(recipients.filter((_, i) => i !== index))
+    setHasEdits(true)
   }
+
+  const saveDraftLabel = savingDraft
+    ? 'Saving...'
+    : draftSaved
+      ? '✓ Saved'
+      : isEditingPublished
+        ? 'Save'
+        : 'Save Draft'
+
+  const saveDraftButton = (
+    <button
+      onClick={() => void handleSaveDraft(false)}
+      disabled={savingDraft || !certificateName.trim()}
+      type="button"
+      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {saveDraftLabel}
+    </button>
+  )
 
   async function handleCsvUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -237,6 +260,7 @@ export default function CertificateWizard({
 
       setRecipients(parsed)
       setCsvError('')
+      setHasEdits(true)
     } catch (error) {
       setCsvError('Failed to parse CSV file')
     }
@@ -257,7 +281,7 @@ export default function CertificateWizard({
     setHasEdits(true)
   }
 
-  function handleNextToPeople(e: React.FormEvent) {
+  async function handleNextToPeople(e: React.FormEvent) {
     e.preventDefault() // Prevent form submission
     if (!certificateName.trim()) {
       alert('Please enter a certificate name')
@@ -268,9 +292,12 @@ export default function CertificateWizard({
       return
     }
     setStep(2)
+    setHasEdits(true)
+    // Persist progress so returning to the draft restores recipients step later
+    if (draftId) void handleSaveDraft(true, 2)
   }
 
-  function handleNextToReview(e: React.FormEvent) {
+  async function handleNextToReview(e: React.FormEvent) {
     e.preventDefault()
     const valid = recipients.every(r => r.name.trim() && r.email.trim() && r.email.includes('@'))
     if (!valid) {
@@ -278,6 +305,8 @@ export default function CertificateWizard({
       return
     }
     setStep(3)
+    setHasEdits(true)
+    if (draftId) void handleSaveDraft(true, 3)
   }
 
   async function handleIssue() {
@@ -342,14 +371,7 @@ export default function CertificateWizard({
               <label className="block text-xs font-medium text-transparent mb-1">
                 Save
               </label>
-              <button
-                onClick={() => handleSaveDraft(false)}
-                disabled={savingDraft || !certificateName}
-                type="button"
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {savingDraft ? 'Saving...' : draftSaved ? '✓ Saved' : isEditingPublished ? 'Save' : 'Save Draft'}
-              </button>
+              {saveDraftButton}
             </div>
 
             {/* Next Button */}
@@ -459,7 +481,7 @@ export default function CertificateWizard({
             </button>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center gap-3">
             <button
               onClick={() => setStep(1)}
               type="button"
@@ -467,13 +489,16 @@ export default function CertificateWizard({
             >
               Back
             </button>
-            <button
-              onClick={handleNextToReview}
-              type="button"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Next
-            </button>
+            <div className="flex items-center gap-3">
+              {saveDraftButton}
+              <button
+                onClick={handleNextToReview}
+                type="button"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -513,7 +538,7 @@ export default function CertificateWizard({
             </div>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center gap-3">
             <button
               onClick={() => setStep(2)}
               disabled={loading}
@@ -522,14 +547,17 @@ export default function CertificateWizard({
             >
               Back
             </button>
-            <button
-              onClick={handleIssue}
-              disabled={loading}
-              type="button"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Issuing...' : 'Issue & Send'}
-            </button>
+            <div className="flex items-center gap-3">
+              {saveDraftButton}
+              <button
+                onClick={handleIssue}
+                disabled={loading}
+                type="button"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading ? 'Issuing...' : 'Issue & Send'}
+              </button>
+            </div>
           </div>
         </div>
       )}

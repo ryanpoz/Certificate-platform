@@ -5,6 +5,7 @@ import { eq, desc, sql, and } from 'drizzle-orm'
 import Link from 'next/link'
 import { checkFirstTimeUser } from '../wizard/actions'
 import { redirect } from 'next/navigation'
+import { DraftActions } from './draft-actions'
 
 function isDraftProgram(
   program: { draftData: unknown; code: string },
@@ -137,12 +138,11 @@ export default async function CertificatesPage() {
                     <div className="text-sm text-gray-500 truncate">{program.description}</div>
                   ) : null}
                 </div>
-                <Link
-                  href={`/dashboard/wizard?draft=${program.id}`}
-                  className="text-blue-600 hover:text-blue-900 font-medium text-sm whitespace-nowrap"
-                >
-                  Continue editing
-                </Link>
+                <DraftActions
+                  draftId={program.id}
+                  academyId={user.academyId}
+                  name={program.name}
+                />
               </div>
             ))}
           </div>

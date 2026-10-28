@@ -22,6 +22,9 @@ import {
   fieldKeysFromElements,
   selectFieldsToCarry,
   clampFieldPosition,
+  contrastTextColorForBackground,
+  resolveCarryFieldStyle,
+  relativeLuminance,
   type CarryFieldSnapshot,
 } from '@/lib/fabric/carry-fields'
 
@@ -244,5 +247,38 @@ describe('Carry user-added fields across template switches', () => {
       left: 24,
       top: 770,
     })
+  })
+
+  it('picks light text on dark backgrounds and dark text on light ones', () => {
+    expect(relativeLuminance('#000000')).toBeLessThan(0.1)
+    expect(relativeLuminance('#ffffff')).toBeGreaterThan(0.9)
+    expect(contrastTextColorForBackground({ type: 'color', color: '#0f0f1e' })).toBe('#ffffff')
+    expect(contrastTextColorForBackground({ type: 'color', color: '#ffffff' })).toBe('#111111')
+    expect(
+      contrastTextColorForBackground({
+        type: 'gradient',
+        gradient: {
+          type: 'linear',
+          coords: { x1: 0, y1: 0, x2: 100, y2: 100 },
+          stops: [
+            { offset: 0, color: '#1a1a2e' },
+            { offset: 1, color: '#0f0f1e' },
+          ],
+        },
+      })
+    ).toBe('#ffffff')
+  })
+
+  it('styles carried fields from destination fields, not the previous template', () => {
+    const style = resolveCarryFieldStyle(
+      [{ fill: '#ffffff', fontFamily: 'Playfair Display', fontSize: 40, textAlign: 'center' }],
+      { type: 'color', color: '#0f0f1e' }
+    )
+    expect(style.fill).toBe('#ffffff')
+    expect(style.fontFamily).toBe('Playfair Display')
+    expect(style.fontSize).toBe(40)
+
+    const fallback = resolveCarryFieldStyle([], { type: 'color', color: '#111111' })
+    expect(fallback.fill).toBe('#ffffff')
   })
 })

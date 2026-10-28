@@ -50,17 +50,24 @@ describe('Wizard draft reopen', () => {
     expect(page).toContain('editCourseId={params.edit}')
   })
 
-  it('lists drafts separately with Continue editing (issued keep View / Issue more)', () => {
+  it('lists drafts separately with Continue editing and Delete (issued keep View / Issue more)', () => {
     const certs = readFileSync(
       join(process.cwd(), 'app/dashboard/certificates/page.tsx'),
       'utf-8'
     )
     expect(certs).toContain('draftData')
     expect(certs).toContain('Drafts')
-    expect(certs).toContain('Continue editing')
-    expect(certs).toContain('/dashboard/wizard?draft=')
+    expect(certs).toContain('DraftActions')
     expect(certs).toContain('Issue more')
     expect(certs).not.toContain('/dashboard/wizard?edit=')
+
+    const actions = readFileSync(
+      join(process.cwd(), 'app/dashboard/certificates/draft-actions.tsx'),
+      'utf-8'
+    )
+    expect(actions).toContain('Continue editing')
+    expect(actions).toContain('deleteDraft')
+    expect(actions).toContain('Delete')
   })
 
   it('redirects draft course pages back into the wizard', () => {
@@ -79,6 +86,21 @@ describe('Wizard draft reopen', () => {
     )
     expect(wizardSrc).toContain('Autosave existing drafts only')
     expect(wizardSrc).toContain('if (isAutosave && !draftId && !isEditingPublished) return')
+  })
+
+  it('can save draft progress including recipients on every wizard step', () => {
+    const wizardSrc = readFileSync(
+      join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'),
+      'utf-8'
+    )
+    // Save Draft control reused across design / recipients / review
+    expect(wizardSrc).toContain('saveDraftButton')
+    expect(wizardSrc).toContain('setHasEdits(true)')
+    expect(wizardSrc).toContain('recipients')
+    expect(wizardSrc).toContain('currentStep: stepToSave')
+    // Persists when advancing steps if a draft already exists
+    expect(wizardSrc).toContain('handleSaveDraft(true, 2)')
+    expect(wizardSrc).toContain('handleSaveDraft(true, 3)')
   })
 })
 
