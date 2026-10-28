@@ -60,8 +60,15 @@ export const TransformSchema = z.object({
   scaleY: z.number().positive().default(1),
   originX: z.enum(['left', 'center', 'right']).default('left'),
   originY: z.enum(['top', 'center', 'bottom']).default('top'),
-  opacity: z.number().min(0).max(1).default(1)
+  opacity: z.number().min(0).max(1).default(1),
+  locked: z.boolean().optional(),
 })
+
+/** Solid colour string or 2-stop linear gradient for shape fills */
+export const ShapeFillSchema = z.union([
+  z.string(),
+  LinearGradientSchema,
+])
 
 // Text element
 export const TextElementSchema = z.object({
@@ -136,16 +143,21 @@ export const SignatureElementSchema = z.object({
   fill: z.string().optional()
 }).merge(TransformSchema)
 
+const ShapePaintBase = {
+  fill: ShapeFillSchema.optional(),
+  stroke: z.string().optional(),
+  strokeWidth: z.number().min(0).default(1),
+  strokeDashArray: z.array(z.number()).optional(),
+  strokeLineCap: z.enum(['butt', 'round', 'square']).optional(),
+}
+
 // Shape element
 export const ShapeElementSchema = z.discriminatedUnion('shape', [
   z.object({
     type: z.literal('shape'),
     id: z.string(),
     shape: z.literal('rect'),
-    fill: z.string().optional(),
-    stroke: z.string().optional(),
-    strokeWidth: z.number().min(0).default(1),
-    strokeDashArray: z.array(z.number()).optional(),
+    ...ShapePaintBase,
     rx: z.number().min(0).default(0), // Border radius
     ry: z.number().min(0).default(0)
   }).merge(TransformSchema),
@@ -153,11 +165,16 @@ export const ShapeElementSchema = z.discriminatedUnion('shape', [
     type: z.literal('shape'),
     id: z.string(),
     shape: z.literal('circle'),
-    fill: z.string().optional(),
-    stroke: z.string().optional(),
-    strokeWidth: z.number().min(0).default(1),
-    strokeDashArray: z.array(z.number()).optional(),
+    ...ShapePaintBase,
     radius: z.number().positive()
+  }).merge(TransformSchema.omit({ width: true, height: true })),
+  z.object({
+    type: z.literal('shape'),
+    id: z.string(),
+    shape: z.literal('ellipse'),
+    ...ShapePaintBase,
+    rx: z.number().positive(),
+    ry: z.number().positive(),
   }).merge(TransformSchema.omit({ width: true, height: true })),
   z.object({
     type: z.literal('shape'),
@@ -166,20 +183,27 @@ export const ShapeElementSchema = z.discriminatedUnion('shape', [
     stroke: z.string(),
     strokeWidth: z.number().min(0).default(1),
     strokeDashArray: z.array(z.number()).optional(),
+    strokeLineCap: z.enum(['butt', 'round', 'square']).optional(),
     x1: z.number(),
     y1: z.number(),
     x2: z.number(),
     y2: z.number()
-  }).merge(TransformSchema.omit({ width: true, height: true, x: true, y: true })),
+  }).merge(TransformSchema.omit({ width: true, height: true, x: true, y: true }).extend({
+    locked: z.boolean().optional(),
+    opacity: z.number().min(0).max(1).default(1),
+    angle: z.number().default(0),
+    scaleX: z.number().positive().default(1),
+    scaleY: z.number().positive().default(1),
+    originX: z.enum(['left', 'center', 'right']).default('left'),
+    originY: z.enum(['top', 'center', 'bottom']).default('top'),
+  })),
   z.object({
     type: z.literal('shape'),
     id: z.string(),
     shape: z.literal('path'),
-    fill: z.string().optional(),
-    stroke: z.string().optional(),
-    strokeWidth: z.number().min(0).default(1),
-    strokeDashArray: z.array(z.number()).optional(),
-    path: z.string() // SVG path data
+    ...ShapePaintBase,
+    path: z.string(), // SVG path data
+    kind: z.enum(['triangle', 'star', 'seal', 'ribbon']).optional(),
   }).merge(TransformSchema)
 ])
 
@@ -193,15 +217,27 @@ export const QRElementSchema = z.object({
   background: z.string().default('#ffffff')
 }).merge(TransformSchema)
 
+// Group of elements (recursive)
+export const GroupElementSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    type: z.literal('group'),
+    id: z.string(),
+    elements: z.array(ElementSchema),
+  }).merge(TransformSchema)
+)
+
 // Union of all element types
-export const ElementSchema = z.union([
-  TextElementSchema,
-  FieldElementSchema,
-  ImageElementSchema,
-  SignatureElementSchema,
-  ShapeElementSchema,
-  QRElementSchema
-])
+export const ElementSchema: z.ZodType<any> = z.lazy(() =>
+  z.union([
+    TextElementSchema,
+    FieldElementSchema,
+    ImageElementSchema,
+    SignatureElementSchema,
+    ShapeElementSchema,
+    QRElementSchema,
+    GroupElementSchema,
+  ])
+)
 
 // Page definition
 export const PageSchema = z.object({
@@ -231,7 +267,20 @@ export type ImageElement = z.infer<typeof ImageElementSchema>
 export type SignatureElement = z.infer<typeof SignatureElementSchema>
 export type ShapeElement = z.infer<typeof ShapeElementSchema>
 export type QRElement = z.infer<typeof QRElementSchema>
-export type Element = z.infer<typeof ElementSchema>
+export type ShapeFill = z.infer<typeof ShapeFillSchema>
+export type GroupElement = Transform & {
+  type: 'group'
+  id: string
+  elements: Element[]
+}
+export type Element =
+  | TextElement
+  | FieldElement
+  | ImageElement
+  | SignatureElement
+  | ShapeElement
+  | QRElement
+  | GroupElement
 export type Page = z.infer<typeof PageSchema>
 export type DesignConfigV3 = z.infer<typeof DesignConfigV3Schema>
 

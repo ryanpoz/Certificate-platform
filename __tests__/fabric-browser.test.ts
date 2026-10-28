@@ -27,9 +27,9 @@ describe('Fabric.js Editor - Phase 1b Integration', () => {
   })
 
   it('should have aligning guidelines support', () => {
-    // Should use Fabric extensions for guidelines
-    expect(editorCode).toContain('initAligningGuidelines')
-    expect(editorCode).toContain('from \'fabric/extensions\'')
+    // Custom snap guides (page + objects, ~6px)
+    expect(editorCode).toContain('attachSnapGuides')
+    expect(editorCode).toContain('from \'@/lib/fabric/snap-guides\'')
   })
 
   it('should preserve user content across template switches', () => {

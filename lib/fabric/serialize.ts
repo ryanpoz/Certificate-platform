@@ -1,5 +1,24 @@
-import { Canvas, StaticCanvas, Gradient, IText, Textbox, Rect, Circle, Image as FabricImage } from 'fabric'
-import type { Background, DesignConfigV3, Element, Page } from '@/lib/design-config/v3-schema'
+import {
+  Canvas,
+  StaticCanvas,
+  Gradient,
+  IText,
+  Textbox,
+  Rect,
+  Circle,
+  Ellipse,
+  Line,
+  Path,
+  Triangle,
+  Group,
+  Image as FabricImage,
+} from 'fabric'
+import type {
+  Background,
+  DesignConfigV3,
+  Element,
+  ShapeFill,
+} from '@/lib/design-config/v3-schema'
 import { FieldText } from './objects/FieldText'
 import { resolveFontFamily } from './fonts'
 import {
@@ -7,6 +26,8 @@ import {
   serializeBackgroundFromSnapshot,
   createSolidBackground,
 } from './background'
+import { serializeLocked } from './lock'
+import { applyObjectLock } from './create-shape'
 
 /**
  * Convert Design Config V3 to Fabric canvas (Canvas or StaticCanvas for thumbnails)
@@ -35,6 +56,7 @@ export async function designConfigToFabric(
     }
     const obj = await elementToFabric(element)
     if (obj) {
+      if ((element as any).locked) applyObjectLock(obj, true)
       canvas.add(obj)
     }
   }
@@ -253,44 +275,137 @@ async function elementToFabric(element: Element): Promise<any | null> {
     }
   }
 
-  if (element.type === 'shape' && element.shape === 'rect') {
-    return new Rect({
+  if (element.type === 'group') {
+    const children: any[] = []
+    for (const child of element.elements) {
+      const obj = await elementToFabric(child)
+      if (obj) children.push(obj)
+    }
+    const group = new Group(children, {
       left: element.x,
       top: element.y,
-      width: element.width,
-      height: element.height,
-      fill: element.fill || 'transparent',
-      stroke: element.stroke,
-      strokeWidth: element.strokeWidth,
-      strokeDashArray: element.strokeDashArray,
-      rx: element.rx,
-      ry: element.ry,
       angle: element.angle,
       scaleX: element.scaleX,
       scaleY: element.scaleY,
-      originX: element.originX,
-      originY: element.originY,
+      originX: element.originX as any,
+      originY: element.originY as any,
       opacity: element.opacity,
-      data: { id: element.id }
+    })
+    ;(group as any).set('data', { id: element.id })
+    applyObjectLock(group, !!element.locked)
+    return group
+  }
+
+  if (element.type === 'shape') {
+    const obj = await shapeElementToFabric(element)
+    if (obj && element.locked) applyObjectLock(obj, true)
+    return obj
+  }
+
+  return null
+}
+
+function paintFill(fill: ShapeFill | undefined): any {
+  if (!fill) return 'transparent'
+  if (typeof fill === 'string') return fill
+  return new Gradient({
+    type: 'linear',
+    coords: fill.coords as any,
+    colorStops: fill.stops,
+  })
+}
+
+function serializeFill(fill: any): ShapeFill | undefined {
+  if (!fill) return undefined
+  if (typeof fill === 'string') return fill
+  if (typeof fill === 'object' && fill.colorStops) {
+    return {
+      type: 'linear',
+      coords: {
+        x1: fill.coords?.x1 ?? 0,
+        y1: fill.coords?.y1 ?? 0,
+        x2: fill.coords?.x2 ?? 0,
+        y2: fill.coords?.y2 ?? 0,
+      },
+      stops: (fill.colorStops || []).map((s: any) => ({
+        offset: s.offset,
+        color: s.color,
+      })),
+    }
+  }
+  return undefined
+}
+
+async function shapeElementToFabric(element: Extract<Element, { type: 'shape' }>): Promise<any | null> {
+  const common = {
+    left: (element as any).x ?? 0,
+    top: (element as any).y ?? 0,
+    angle: element.angle,
+    scaleX: element.scaleX,
+    scaleY: element.scaleY,
+    originX: element.originX,
+    originY: element.originY,
+    opacity: element.opacity,
+    stroke: element.stroke,
+    strokeWidth: element.strokeWidth,
+    strokeDashArray: element.strokeDashArray,
+    strokeLineCap: (element as any).strokeLineCap,
+  }
+
+  if (element.shape === 'rect') {
+    return new Rect({
+      ...common,
+      width: element.width,
+      height: element.height,
+      fill: paintFill(element.fill),
+      rx: element.rx,
+      ry: element.ry,
+      data: { id: element.id, shapeKind: (element.rx || 0) > 0 ? 'rounded-rect' : 'rect' },
     })
   }
 
-  if (element.type === 'shape' && element.shape === 'circle') {
+  if (element.shape === 'circle') {
     return new Circle({
-      left: element.x,
-      top: element.y,
+      ...common,
       radius: element.radius,
-      fill: element.fill || 'transparent',
+      fill: paintFill(element.fill),
+      data: { id: element.id, shapeKind: 'circle' },
+    })
+  }
+
+  if (element.shape === 'ellipse') {
+    return new Ellipse({
+      ...common,
+      rx: element.rx,
+      ry: element.ry,
+      fill: paintFill(element.fill),
+      data: { id: element.id, shapeKind: 'ellipse' },
+    })
+  }
+
+  if (element.shape === 'line') {
+    return new Line([element.x1, element.y1, element.x2, element.y2], {
+      ...common,
+      left: undefined,
+      top: undefined,
+      originX: 'left',
+      originY: 'top',
       stroke: element.stroke,
-      strokeWidth: element.strokeWidth,
-      strokeDashArray: element.strokeDashArray,
-      angle: element.angle,
-      scaleX: element.scaleX,
-      scaleY: element.scaleY,
-      originX: element.originX,
-      originY: element.originY,
-      opacity: element.opacity,
-      data: { id: element.id }
+      strokeLineCap: element.strokeLineCap || 'butt',
+      data: {
+        id: element.id,
+        shapeKind: element.strokeDashArray?.length ? 'dashed-line' : 'line',
+      },
+    })
+  }
+
+  if (element.shape === 'path') {
+    return new Path(element.path, {
+      ...common,
+      width: element.width,
+      height: element.height,
+      fill: paintFill(element.fill),
+      data: { id: element.id, shapeKind: element.kind || 'path', pathKind: element.kind },
     })
   }
 
@@ -341,8 +456,42 @@ export function lockImageAspectRatio(img: any) {
 /**
  * Convert Fabric object to element
  */
+function transformFromObject(obj: any, data: any) {
+  return {
+    x: obj.left || 0,
+    y: obj.top || 0,
+    width: obj.width || 100,
+    height: obj.height || 100,
+    angle: obj.angle || 0,
+    scaleX: obj.scaleX || 1,
+    scaleY: obj.scaleY || 1,
+    originX: (obj.originX || 'left') as 'left' | 'center' | 'right',
+    originY: (obj.originY || 'top') as 'top' | 'center' | 'bottom',
+    opacity: obj.opacity ?? 1,
+    locked: serializeLocked({ ...obj, data }),
+  }
+}
+
 function fabricToElement(obj: any): Element | null {
-  const data = obj.get('data') || {}
+  const data = obj.get?.('data') || obj.data || {}
+
+  // Skip editor-only chrome
+  if (data.isCropRect || data.isGuide) return null
+
+  if (obj instanceof Group || obj.type === 'group') {
+    const children = (obj.getObjects?.() || obj._objects || [])
+      .map((child: any) => fabricToElement(child))
+      .filter(Boolean) as Element[]
+    const t = transformFromObject(obj, data)
+    return {
+      type: 'group',
+      id: data.id || `group-${Date.now()}`,
+      elements: children,
+      ...t,
+      width: Math.max(1, (obj.width || 1) * (obj.scaleX || 1)),
+      height: Math.max(1, (obj.height || 1) * (obj.scaleY || 1)),
+    }
+  }
   
   if (obj instanceof FieldText || obj.type === 'FieldText') {
     return {
@@ -358,16 +507,9 @@ function fabricToElement(obj: any): Element | null {
       autoShrink: obj.autoShrink ?? true,
       minFontSize: obj.minFontSize || 12,
       maxLines: obj.maxLines || 1,
-      x: obj.left || 0,
-      y: obj.top || 0,
+      ...transformFromObject(obj, data),
       width: obj.width || 200,
       height: obj.height || 50,
-      angle: obj.angle || 0,
-      scaleX: obj.scaleX || 1,
-      scaleY: obj.scaleY || 1,
-      originX: obj.originX || 'left',
-      originY: obj.originY || 'top',
-      opacity: obj.opacity ?? 1
     }
   }
 
@@ -383,16 +525,9 @@ function fabricToElement(obj: any): Element | null {
       imageUrl: src,
       fit: 'contain',
       cornerRadius: data.cornerRadius || 0,
-      x: obj.left || 0,
-      y: obj.top || 0,
+      ...transformFromObject(obj, data),
       width: (obj.width || 100) * (obj.scaleX || 1),
       height: (obj.height || 100) * (obj.scaleY || 1),
-      angle: obj.angle || 0,
-      scaleX: obj.scaleX || 1,
-      scaleY: obj.scaleY || 1,
-      originX: (obj.originX || 'left') as 'left' | 'center' | 'right',
-      originY: (obj.originY || 'top') as 'top' | 'center' | 'bottom',
-      opacity: obj.opacity ?? 1,
     }
   }
 
@@ -409,18 +544,98 @@ function fabricToElement(obj: any): Element | null {
       textAlign: (obj.textAlign || 'left') as 'left' | 'center' | 'right' | 'justify',
       lineHeight: obj.lineHeight,
       charSpacing: obj.charSpacing,
-      x: obj.left || 0,
-      y: obj.top || 0,
+      ...transformFromObject(obj, data),
       width: obj.width || 200,
       height: obj.height || 50,
+      underline: obj.underline || false,
+      strikethrough: obj.linethrough || false
+    }
+  }
+
+  if (obj instanceof Line || obj.type === 'line') {
+    const x1 = obj.x1 ?? 0
+    const y1 = obj.y1 ?? 0
+    const x2 = obj.x2 ?? 0
+    const y2 = obj.y2 ?? 0
+    return {
+      type: 'shape',
+      id: data.id || `line-${Date.now()}`,
+      shape: 'line',
+      stroke: typeof obj.stroke === 'string' ? obj.stroke : '#000000',
+      strokeWidth: obj.strokeWidth || 1,
+      strokeDashArray: obj.strokeDashArray ? [...obj.strokeDashArray] : undefined,
+      strokeLineCap: obj.strokeLineCap || 'butt',
+      x1: (obj.left || 0) + x1,
+      y1: (obj.top || 0) + y1,
+      x2: (obj.left || 0) + x2,
+      y2: (obj.top || 0) + y2,
+      locked: serializeLocked({ ...obj, data }),
+      opacity: obj.opacity ?? 1,
       angle: obj.angle || 0,
       scaleX: obj.scaleX || 1,
       scaleY: obj.scaleY || 1,
-      originX: (obj.originX || 'left') as 'left' | 'center' | 'right',
-      originY: (obj.originY || 'top') as 'top' | 'center' | 'bottom',
-      opacity: obj.opacity ?? 1,
-      underline: obj.underline || false,
-      strikethrough: obj.linethrough || false
+      originX: 'left',
+      originY: 'top',
+    }
+  }
+
+  if (obj instanceof Ellipse || obj.type === 'ellipse') {
+    return {
+      type: 'shape',
+      id: data.id || `ellipse-${Date.now()}`,
+      shape: 'ellipse',
+      fill: serializeFill(obj.fill) || 'transparent',
+      stroke: typeof obj.stroke === 'string' ? obj.stroke : undefined,
+      strokeWidth: obj.strokeWidth || 1,
+      strokeDashArray: obj.strokeDashArray ? [...obj.strokeDashArray] : undefined,
+      strokeLineCap: obj.strokeLineCap,
+      rx: obj.rx || 50,
+      ry: obj.ry || 40,
+      ...transformFromObject(obj, data),
+    }
+  }
+
+  if (obj instanceof Path || obj.type === 'path') {
+    const pathData =
+      typeof obj.path === 'string'
+        ? obj.path
+        : (obj.path || [])
+            .map((cmd: any[]) => cmd.join(' '))
+            .join(' ')
+    return {
+      type: 'shape',
+      id: data.id || `path-${Date.now()}`,
+      shape: 'path',
+      fill: serializeFill(obj.fill) || 'transparent',
+      stroke: typeof obj.stroke === 'string' ? obj.stroke : undefined,
+      strokeWidth: obj.strokeWidth || 1,
+      strokeDashArray: obj.strokeDashArray ? [...obj.strokeDashArray] : undefined,
+      strokeLineCap: obj.strokeLineCap,
+      path: pathData || 'M 0 0',
+      kind: data.pathKind || undefined,
+      ...transformFromObject(obj, data),
+      width: Math.max(1, obj.width || 100),
+      height: Math.max(1, obj.height || 100),
+    }
+  }
+
+  if (obj instanceof Triangle || obj.type === 'triangle') {
+    // Persist triangles as path for schema stability
+    const w = obj.width || 100
+    const h = obj.height || 100
+    return {
+      type: 'shape',
+      id: data.id || `triangle-${Date.now()}`,
+      shape: 'path',
+      fill: serializeFill(obj.fill) || 'transparent',
+      stroke: typeof obj.stroke === 'string' ? obj.stroke : undefined,
+      strokeWidth: obj.strokeWidth || 1,
+      strokeDashArray: obj.strokeDashArray ? [...obj.strokeDashArray] : undefined,
+      path: `M ${w / 2} 0 L ${w} ${h} L 0 ${h} Z`,
+      kind: 'triangle',
+      ...transformFromObject(obj, data),
+      width: w,
+      height: h,
     }
   }
 
@@ -429,43 +644,40 @@ function fabricToElement(obj: any): Element | null {
       type: 'shape',
       id: data.id || `rect-${Date.now()}`,
       shape: 'rect',
-      fill: typeof obj.fill === 'string' ? obj.fill : 'transparent',
+      fill: serializeFill(obj.fill) || 'transparent',
       stroke: typeof obj.stroke === 'string' ? obj.stroke : undefined,
       strokeWidth: obj.strokeWidth || 1,
       strokeDashArray: obj.strokeDashArray ? [...obj.strokeDashArray] : undefined,
+      strokeLineCap: obj.strokeLineCap,
       rx: obj.rx || 0,
       ry: obj.ry || 0,
-      x: obj.left || 0,
-      y: obj.top || 0,
+      ...transformFromObject(obj, data),
       width: obj.width || 100,
       height: obj.height || 100,
-      angle: obj.angle || 0,
-      scaleX: obj.scaleX || 1,
-      scaleY: obj.scaleY || 1,
-      originX: (obj.originX || 'left') as 'left' | 'center' | 'right',
-      originY: (obj.originY || 'top') as 'top' | 'center' | 'bottom',
-      opacity: obj.opacity ?? 1
     }
   }
 
   if (obj instanceof Circle) {
+    const t = transformFromObject(obj, data)
     return {
       type: 'shape',
       id: data.id || `circle-${Date.now()}`,
       shape: 'circle',
-      fill: typeof obj.fill === 'string' ? obj.fill : 'transparent',
+      fill: serializeFill(obj.fill) || 'transparent',
       stroke: typeof obj.stroke === 'string' ? obj.stroke : undefined,
       strokeWidth: obj.strokeWidth || 1,
       strokeDashArray: obj.strokeDashArray ? [...obj.strokeDashArray] : undefined,
+      strokeLineCap: obj.strokeLineCap,
       radius: obj.radius || 50,
-      x: obj.left || 0,
-      y: obj.top || 0,
-      angle: obj.angle || 0,
-      scaleX: obj.scaleX || 1,
-      scaleY: obj.scaleY || 1,
-      originX: 'center' as const,
-      originY: 'center' as const,
-      opacity: obj.opacity ?? 1
+      x: t.x,
+      y: t.y,
+      angle: t.angle,
+      scaleX: t.scaleX,
+      scaleY: t.scaleY,
+      originX: t.originX,
+      originY: t.originY,
+      opacity: t.opacity,
+      locked: t.locked,
     }
   }
 

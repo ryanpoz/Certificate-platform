@@ -58,7 +58,7 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     expect(editor).toContain('useFabricCanvas')
     expect(editor).toContain('loadFonts')
     expect(editor).toContain('FieldText')
-    expect(editor).toContain('initAligningGuidelines')
+    expect(editor).toContain('attachSnapGuides')
 
     // Start screen replaces the horizontal template strip
     expect(editor).toContain('Start blank')
@@ -137,8 +137,8 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
       'utf-8'
     )
     
-    // Should enable aligning guidelines from fabric extensions
-    expect(editor).toContain('initAligningGuidelines')
+    // Custom snap guides while dragging (page + objects)
+    expect(editor).toContain('attachSnapGuides')
   })
 
   it('should require authentication', () => {

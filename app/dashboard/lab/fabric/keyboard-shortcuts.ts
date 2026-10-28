@@ -1,5 +1,7 @@
-import { Canvas, FabricObject, ActiveSelection } from 'fabric'
+import { Canvas, FabricObject } from 'fabric'
 import type { CanvasHistory } from '@/lib/fabric/history'
+import { groupSelection, ungroupSelection } from './arrange-utils'
+import { serializeLocked } from '@/lib/fabric/lock'
 
 export interface KeyboardShortcutsOptions {
   canvas: Canvas
@@ -8,11 +10,13 @@ export interface KeyboardShortcutsOptions {
   onPaste?: () => void
   onDuplicate?: () => void
   onDelete?: () => void
+  onGroup?: () => void
+  onUngroup?: () => void
 }
 
 /**
  * Keyboard shortcuts for Fabric canvas
- * Supports: Undo/Redo, Copy/Paste/Duplicate, Delete, Arrow nudge
+ * Supports: Undo/Redo, Copy/Paste/Duplicate, Delete, Group/Ungroup, Arrow nudge
  */
 export class KeyboardShortcuts {
   private canvas: Canvas
@@ -22,6 +26,8 @@ export class KeyboardShortcuts {
   private onPaste?: () => void
   private onDuplicate?: () => void
   private onDelete?: () => void
+  private onGroup?: () => void
+  private onUngroup?: () => void
 
   constructor(options: KeyboardShortcutsOptions) {
     this.canvas = options.canvas
@@ -30,6 +36,8 @@ export class KeyboardShortcuts {
     this.onPaste = options.onPaste
     this.onDuplicate = options.onDuplicate
     this.onDelete = options.onDelete
+    this.onGroup = options.onGroup
+    this.onUngroup = options.onUngroup
 
     this.setupListeners()
   }
@@ -38,8 +46,19 @@ export class KeyboardShortcuts {
     document.addEventListener('keydown', this.handleKeyDown)
   }
 
+  private isTypingInFormField(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false
+    const tag = target.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+    if (target.isContentEditable) return true
+    return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
+  }
+
   private handleKeyDown = (e: KeyboardEvent) => {
-    // Don't trigger shortcuts if user is typing in a text field
+    // Don't steal keys from inputs (e.g. certificate name) or Fabric text editing
+    if (this.isTypingInFormField(e.target)) {
+      return
+    }
     const activeObject = this.canvas.getActiveObject()
     if (activeObject && (activeObject as any).isEditing) {
       return
@@ -59,6 +78,22 @@ export class KeyboardShortcuts {
     if ((mod && e.key === 'z' && e.shiftKey) || (!isMac && e.ctrlKey && e.key === 'y')) {
       e.preventDefault()
       this.history.redo()
+      return
+    }
+
+    // Group: Cmd/Ctrl+G
+    if (mod && e.key.toLowerCase() === 'g' && !e.shiftKey) {
+      e.preventDefault()
+      void groupSelection(this.canvas)
+      this.onGroup?.()
+      return
+    }
+
+    // Ungroup: Cmd/Ctrl+Shift+G
+    if (mod && e.key.toLowerCase() === 'g' && e.shiftKey) {
+      e.preventDefault()
+      ungroupSelection(this.canvas)
+      this.onUngroup?.()
       return
     }
 
@@ -102,7 +137,6 @@ export class KeyboardShortcuts {
     const activeObject = this.canvas.getActiveObject()
     if (!activeObject) return
 
-    // Clone the object
     this.clipboard = activeObject.toObject()
     this.onCopy?.()
   }
@@ -110,10 +144,8 @@ export class KeyboardShortcuts {
   private paste() {
     if (!this.clipboard) return
 
-    // Create new object from clipboard
     const promise = FabricObject.fromObject(this.clipboard)
     promise.then((cloned) => {
-      // Offset the pasted object
       cloned.set({
         left: (cloned.left || 0) + 20,
         top: (cloned.top || 0) + 20
@@ -130,7 +162,6 @@ export class KeyboardShortcuts {
     const activeObject = this.canvas.getActiveObject()
     if (!activeObject) return
 
-    // Clone and offset
     const promise = activeObject.clone()
     promise.then((cloned) => {
       cloned.set({
@@ -149,7 +180,6 @@ export class KeyboardShortcuts {
     const activeObjects = this.canvas.getActiveObjects()
     if (activeObjects.length === 0) return
 
-    // Remove all selected objects
     activeObjects.forEach(obj => {
       this.canvas.remove(obj)
     })
@@ -164,6 +194,7 @@ export class KeyboardShortcuts {
     if (activeObjects.length === 0) return
 
     activeObjects.forEach(obj => {
+      if (serializeLocked(obj as any)) return
       const left = obj.left || 0
       const top = obj.top || 0
 

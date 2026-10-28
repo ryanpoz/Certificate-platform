@@ -131,9 +131,16 @@ function renderElement(element: Element, fieldMap: Record<string, string>): stri
     return `<div style="${style}">${escapeHtml(value)}</div>`
   }
 
+  if (element.type === 'group') {
+    const style = `${elementBaseStyle(element)}; overflow: visible;`
+    const kids = element.elements.map(child => renderElement(child, fieldMap)).join('\n')
+    return `<div style="${style}">${kids}</div>`
+  }
+
   if (element.type === 'shape' && element.shape === 'rect') {
+    const fill = typeof element.fill === 'string' ? element.fill : 'transparent'
     const style = `${elementBaseStyle(element)};
-      background-color: ${element.fill || 'transparent'};
+      background-color: ${fill};
       border: ${element.strokeWidth || 0}px solid ${element.stroke || 'transparent'};
       ${element.rx ? `border-radius: ${element.rx}px;` : ''}`
     return `<div style="${style}"></div>`
@@ -141,11 +148,53 @@ function renderElement(element: Element, fieldMap: Record<string, string>): stri
 
   if (element.type === 'shape' && element.shape === 'circle') {
     const r = element.radius || 50
+    const fill = typeof element.fill === 'string' ? element.fill : 'transparent'
     const style = `${elementBaseStyle({ ...element, width: r * 2, height: r * 2 })};
-      background-color: ${element.fill || 'transparent'};
+      background-color: ${fill};
       border: ${element.strokeWidth || 0}px solid ${element.stroke || 'transparent'};
       border-radius: 50%;`
     return `<div style="${style}"></div>`
+  }
+
+  if (element.type === 'shape' && element.shape === 'ellipse') {
+    const w = (element.rx || 50) * 2
+    const h = (element.ry || 40) * 2
+    const fill = typeof element.fill === 'string' ? element.fill : 'transparent'
+    const style = `${elementBaseStyle({ ...element, width: w, height: h })};
+      background-color: ${fill};
+      border: ${element.strokeWidth || 0}px solid ${element.stroke || 'transparent'};
+      border-radius: 50%;`
+    return `<div style="${style}"></div>`
+  }
+
+  if (element.type === 'shape' && element.shape === 'line') {
+    const x1 = element.x1
+    const y1 = element.y1
+    const x2 = element.x2
+    const y2 = element.y2
+    const left = Math.min(x1, x2)
+    const top = Math.min(y1, y2)
+    const w = Math.max(1, Math.abs(x2 - x1))
+    const h = Math.max(1, Math.abs(y2 - y1))
+    const dash = element.strokeDashArray?.length
+      ? `stroke-dasharray:${element.strokeDashArray.join(' ')};`
+      : ''
+    return `<svg style="position:absolute;left:${left}px;top:${top}px;width:${w}px;height:${h}px;overflow:visible">
+      <line x1="${x1 - left}" y1="${y1 - top}" x2="${x2 - left}" y2="${y2 - top}"
+        stroke="${element.stroke || '#000'}" stroke-width="${element.strokeWidth || 1}"
+        stroke-linecap="${element.strokeLineCap || 'butt'}" ${dash} />
+    </svg>`
+  }
+
+  if (element.type === 'shape' && element.shape === 'path') {
+    const fill = typeof element.fill === 'string' ? element.fill : 'transparent'
+    const dash = element.strokeDashArray?.length
+      ? `stroke-dasharray="${element.strokeDashArray.join(' ')}"`
+      : ''
+    return `<svg style="${elementBaseStyle(element)}; overflow:visible">
+      <path d="${element.path}" fill="${fill}" stroke="${element.stroke || 'none'}"
+        stroke-width="${element.strokeWidth || 0}" ${dash} />
+    </svg>`
   }
 
   if (element.type === 'image') {

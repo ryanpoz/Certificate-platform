@@ -1,9 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { IText, Textbox, StaticCanvas, Image as FabricImage, Rect } from 'fabric'
-import { initAligningGuidelines } from 'fabric/extensions'
+import { IText, Textbox, StaticCanvas, Image as FabricImage, Rect, Group, Ellipse, Circle, Line, Path, Triangle, Gradient } from 'fabric'
 import { useFabricCanvas } from '@/lib/fabric/useFabricCanvas'
+import { attachSnapGuides } from '@/lib/fabric/snap-guides'
+import { createFabricShape } from '@/lib/fabric/create-shape'
+import { strokeDashForStyle, styleFromDashArray, snapRotationAngle, type ShapeKind } from '@/lib/fabric/shapes'
+import { serializeLocked } from '@/lib/fabric/lock'
 import { loadFonts, extractFontsFromConfig } from '@/lib/fabric/fonts'
 import { FieldText } from '@/lib/fabric/objects/FieldText'
 import {
@@ -59,11 +62,25 @@ import {
   distributeH,
   distributeV
 } from './align-utils'
+import {
+  alignSelection,
+  distributeSelection,
+  bringForward,
+  sendBackward,
+  bringToFront,
+  sendToBack,
+  groupSelection,
+  ungroupSelection,
+  toggleLockSelection,
+  isSelectionLocked,
+} from './arrange-utils'
 import { EditorSidebar, type SidebarPanel } from './editor-sidebar'
 import { BackgroundPanel } from './panels/background-panel'
 import { TextPanel, type DynamicFieldOption } from './panels/text-panel'
 import { UploadsPanel, type UploadedAsset } from './panels/uploads-panel'
+import { ElementsPanel } from './panels/elements-panel'
 import { FloatingObjectToolbar, CropToolbar } from './floating-object-toolbar'
+import { ObjectContextMenu, type ContextMenuAction } from './context-menu'
 
 type DesignKey = keyof typeof TEMPLATES | typeof BLANK_TEMPLATE_ID
 type CategoryFilter = 'all' | string
@@ -122,6 +139,39 @@ function isImageObject(obj: any) {
   return obj instanceof FabricImage || obj?.type === 'image'
 }
 
+function isLineObject(obj: any) {
+  return obj instanceof Line || obj?.type === 'line'
+}
+
+function isShapeObject(obj: any) {
+  if (!obj || isTextObject(obj) || isImageObject(obj)) return false
+  return (
+    obj instanceof Rect ||
+    obj instanceof Circle ||
+    obj instanceof Ellipse ||
+    obj instanceof Triangle ||
+    obj instanceof Path ||
+    obj instanceof Line ||
+    obj instanceof Group ||
+    ['rect', 'circle', 'ellipse', 'triangle', 'path', 'line', 'group'].includes(obj?.type)
+  )
+}
+
+function solidFillColor(fill: any): string {
+  if (typeof fill === 'string') return fill
+  if (fill?.colorStops?.[0]?.color) return fill.colorStops[0].color
+  return '#dbeafe'
+}
+
+function gradientSecondColor(fill: any): string {
+  if (fill?.colorStops?.[1]?.color) return fill.colorStops[1].color
+  return '#2563eb'
+}
+
+function isGradientFill(fill: any): boolean {
+  return !!(fill && typeof fill === 'object' && fill.colorStops)
+}
+
 export type FabricEditorProps = {
   /** When set (v3), load this design and skip the start screen. */
   initialConfig?: DesignConfigV3 | null
@@ -153,12 +203,13 @@ export default function FabricEditor({
   })
   
   const keyboardRef = useRef<KeyboardShortcuts | null>(null)
-  const cleanupGuidelinesRef = useRef<(() => void) | null>(null)
+  const cleanupSnapRef = useRef<(() => void) | null>(null)
   const selectedTemplateRef = useRef<ExtendedDesignKey | null>(null)
   const hasLoadedDesignRef = useRef(false)
   const pageSizeRef = useRef({ width: 1123, height: 794 })
   const cropRectRef = useRef<any>(null)
   const cropTargetRef = useRef<any>(null)
+  const shiftPressedRef = useRef(false)
   
   const [selectedTemplate, setSelectedTemplate] = useState<ExtendedDesignKey | null>(null)
   const [selectedObject, setSelectedObject] = useState<any>(null)
@@ -177,6 +228,9 @@ export default function FabricEditor({
   const [background, setBackground] = useState<Background>(createSolidBackground('#ffffff'))
   const [uploads, setUploads] = useState<UploadedAsset[]>([])
   const [cropMode, setCropMode] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const [shapeFillMode, setShapeFillMode] = useState<'solid' | 'gradient'>('solid')
+  const [shapeFillColor2, setShapeFillColor2] = useState('#2563eb')
   const [, bumpToolbar] = useState(0)
   
   const userContentRef = useRef<Record<string, string>>({ ...SAMPLE_DATA })
@@ -405,25 +459,34 @@ export default function FabricEditor({
   useEffect(() => {
     if (!canvas || !history || !isReady) return
 
-    cleanupGuidelinesRef.current = initAligningGuidelines(canvas, {
-      color: '#2563eb',
-      width: 1,
-      margin: 4
-    })
+    cleanupSnapRef.current = attachSnapGuides(canvas, () => pageSizeRef.current, 6)
 
     keyboardRef.current = new KeyboardShortcuts({
       canvas,
-      history
+      history,
     })
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') shiftPressedRef.current = true
+    }
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') shiftPressedRef.current = false
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
 
     const handleSelection = () => {
       const selected = canvas.getActiveObjects() || []
       setSelectedObjects(selected)
-      const one = selected.length === 1 ? selected[0] : null
+      const one = selected.length === 1 ? selected[0] : canvas.getActiveObject()
       setSelectedObject(one)
 
-      if (one && (isTextObject(one) || isImageObject(one))) {
+      if (one && (isTextObject(one) || isImageObject(one) || isShapeObject(one) || selected.length > 1)) {
         updateToolbarPosition(one)
+        if (isShapeObject(one) && !isLineObject(one)) {
+          setShapeFillMode(isGradientFill(one.fill) ? 'gradient' : 'solid')
+          setShapeFillColor2(gradientSecondColor(one.fill))
+        }
       } else {
         setToolbarPos(prev => ({ ...prev, visible: false }))
       }
@@ -434,11 +497,12 @@ export default function FabricEditor({
       setSelectedObject(null)
       setSelectedObjects([])
       setToolbarPos(prev => ({ ...prev, visible: false }))
+      setContextMenu(null)
     }
 
     const handleDblClick = (e: any) => {
       const target = e.target
-      if (target && isTextObject(target) && !(target instanceof FieldText && false)) {
+      if (target && isTextObject(target) && !serializeLocked(target)) {
         if (typeof target.enterEditing === 'function') {
           target.enterEditing()
           target.selectAll?.()
@@ -459,6 +523,30 @@ export default function FabricEditor({
       if (active) updateToolbarPosition(active)
     }
 
+    const onRotating = (e: any) => {
+      const target = e.target
+      if (!target) return
+      const snapped = snapRotationAngle(target.angle || 0, shiftPressedRef.current)
+      if (snapped !== target.angle) {
+        target.set({ angle: snapped })
+        target.setCoords()
+      }
+    }
+
+    const onContextMenu = (opt: any) => {
+      opt.e?.preventDefault?.()
+      const target = opt.target
+      if (!target) {
+        setContextMenu(null)
+        return
+      }
+      if (!canvas.getActiveObjects().includes(target)) {
+        canvas.setActiveObject(target)
+        canvas.requestRenderAll()
+      }
+      setContextMenu({ x: opt.e.clientX, y: opt.e.clientY })
+    }
+
     canvas.on('selection:created', handleSelection)
     canvas.on('selection:updated', handleSelection)
     canvas.on('selection:cleared', onCleared)
@@ -467,6 +555,26 @@ export default function FabricEditor({
     canvas.on('text:editing:exited', onEditingExited)
     canvas.on('object:modified', onModified)
     canvas.on('object:moving', onModified)
+    canvas.on('object:rotating', onRotating)
+    canvas.on('mouse:down', (opt: any) => {
+      if (opt.e?.button === 2 || opt.e?.which === 3) onContextMenu(opt)
+    })
+
+    const el = canvas.getElement()
+    const nativeCtx = (ev: MouseEvent) => {
+      ev.preventDefault()
+      const target = canvas.findTarget(ev as any)
+      if (target) {
+        if (!canvas.getActiveObjects().includes(target as any)) {
+          canvas.setActiveObject(target as any)
+          canvas.requestRenderAll()
+        }
+        setContextMenu({ x: ev.clientX, y: ev.clientY })
+      } else {
+        setContextMenu(null)
+      }
+    }
+    el.addEventListener('contextmenu', nativeCtx)
 
     const unsubscribe = history.onChange(state => {
       setHistoryState(state)
@@ -477,7 +585,10 @@ export default function FabricEditor({
       unsubscribe()
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       keyboardRef.current?.dispose()
-      cleanupGuidelinesRef.current?.()
+      cleanupSnapRef.current?.()
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      el.removeEventListener('contextmenu', nativeCtx)
       canvas.off('selection:created', handleSelection)
       canvas.off('selection:updated', handleSelection)
       canvas.off('selection:cleared', onCleared)
@@ -486,6 +597,7 @@ export default function FabricEditor({
       canvas.off('text:editing:exited', onEditingExited)
       canvas.off('object:modified', onModified)
       canvas.off('object:moving', onModified)
+      canvas.off('object:rotating', onRotating)
     }
   }, [canvas, history, isReady, updateToolbarPosition, emitSave])
 
@@ -631,6 +743,137 @@ export default function FabricEditor({
     canvas.add(obj)
     canvas.setActiveObject(obj)
     canvas.requestRenderAll()
+  }
+
+  const addShape = (kind: ShapeKind) => {
+    if (!canvas) return
+    const { width, height } = pageSizeRef.current
+    const obj = createFabricShape(kind, width, height)
+    canvas.add(obj)
+    canvas.setActiveObject(obj)
+    canvas.requestRenderAll()
+  }
+
+  const applyShapeFill = (obj: any, mode: 'solid' | 'gradient', color1: string, color2: string) => {
+    if (mode === 'gradient') {
+      const w = (obj.width || 100) * (obj.scaleX || 1)
+      obj.set({
+        fill: new Gradient({
+          type: 'linear',
+          coords: { x1: 0, y1: 0, x2: w, y2: 0 },
+          colorStops: [
+            { offset: 0, color: color1 },
+            { offset: 1, color: color2 },
+          ],
+        }),
+      })
+    } else {
+      obj.set({ fill: color1 })
+    }
+  }
+
+  const updateShapeProp = (prop: string, value: any) => {
+    if (!selectedObject || !canvas || serializeLocked(selectedObject)) return
+    if (prop === 'fillMode') {
+      setShapeFillMode(value)
+      applyShapeFill(
+        selectedObject,
+        value,
+        solidFillColor(selectedObject.fill),
+        shapeFillColor2
+      )
+    } else if (prop === 'fill') {
+      applyShapeFill(selectedObject, shapeFillMode, value, shapeFillColor2)
+    } else if (prop === 'fillColor2') {
+      setShapeFillColor2(value)
+      applyShapeFill(selectedObject, 'gradient', solidFillColor(selectedObject.fill), value)
+    } else if (prop === 'strokeStyle') {
+      selectedObject.set({
+        strokeDashArray: strokeDashForStyle(value, selectedObject.strokeWidth || 2),
+      })
+    } else if (prop === 'rx') {
+      selectedObject.set({ rx: value, ry: value })
+    } else {
+      selectedObject.set({ [prop]: value })
+    }
+    canvas.requestRenderAll()
+    bumpToolbar(n => n + 1)
+    if (!['opacity', 'rx'].includes(prop)) commitHistory()
+  }
+
+  const runArrange = (action: string) => {
+    if (!canvas) return
+    switch (action) {
+      case 'align-left':
+        alignSelection(canvas, 'left')
+        break
+      case 'align-center':
+        alignSelection(canvas, 'center')
+        break
+      case 'align-right':
+        alignSelection(canvas, 'right')
+        break
+      case 'align-top':
+        alignSelection(canvas, 'top')
+        break
+      case 'align-middle':
+        alignSelection(canvas, 'middle')
+        break
+      case 'align-bottom':
+        alignSelection(canvas, 'bottom')
+        break
+      case 'distribute-h':
+        distributeSelection(canvas, 'horizontal')
+        break
+      case 'distribute-v':
+        distributeSelection(canvas, 'vertical')
+        break
+      case 'bring-forward':
+        bringForward(canvas)
+        break
+      case 'send-backward':
+        sendBackward(canvas)
+        break
+      case 'bring-front':
+        bringToFront(canvas)
+        break
+      case 'send-back':
+        sendToBack(canvas)
+        break
+      case 'group':
+        void groupSelection(canvas)
+        break
+      case 'ungroup':
+        ungroupSelection(canvas)
+        break
+      case 'duplicate':
+        keyboardRef.current && (keyboardRef.current as any)
+        {
+          const active = canvas.getActiveObject()
+          if (active) {
+            void active.clone().then((cloned: any) => {
+              cloned.set({ left: (cloned.left || 0) + 20, top: (cloned.top || 0) + 20 })
+              canvas.add(cloned)
+              canvas.setActiveObject(cloned)
+              canvas.requestRenderAll()
+            })
+          }
+        }
+        break
+      case 'delete':
+        deleteSelected()
+        break
+      case 'lock':
+      case 'unlock':
+        toggleLockSelection(canvas)
+        bumpToolbar(n => n + 1)
+        break
+    }
+    commitHistory()
+  }
+
+  const handleContextAction = (action: ContextMenuAction) => {
+    runArrange(action)
   }
 
   const addDynamicField = (option: DynamicFieldOption) => {
@@ -835,8 +1078,10 @@ export default function FabricEditor({
   }
 
   const deleteSelected = () => {
-    if (!canvas || !selectedObject) return
-    canvas.remove(selectedObject)
+    if (!canvas) return
+    const objs = canvas.getActiveObjects()
+    if (objs.length === 0) return
+    objs.forEach(o => canvas.remove(o))
     canvas.discardActiveObject()
     canvas.requestRenderAll()
   }
@@ -845,6 +1090,16 @@ export default function FabricEditor({
     isImageObject(selectedObject)
       ? ((selectedObject.get?.('data') || selectedObject.data || {}).cornerRadius || 0)
       : 0
+
+  const selectionLocked = isSelectionLocked(selectedObjects.length ? selectedObjects : selectedObject ? [selectedObject] : [])
+  const showObjectToolbar =
+    !cropMode &&
+    toolbarPos.visible &&
+    selectedObject &&
+    (isTextObject(selectedObject) ||
+      isImageObject(selectedObject) ||
+      isShapeObject(selectedObject) ||
+      selectedObjects.length > 1)
 
   return (
     <div className="h-full flex flex-col bg-gray-50 relative">
@@ -950,6 +1205,9 @@ export default function FabricEditor({
                 onCommitHistory={commitHistory}
               />
             )}
+            {activePanel === 'elements' && (
+              <ElementsPanel onAddShape={addShape} />
+            )}
           </EditorSidebar>
         )}
 
@@ -1006,11 +1264,12 @@ export default function FabricEditor({
         />
       )}
 
-      {!cropMode && toolbarPos.visible && selectedObject && isTextObject(selectedObject) && (
+      {showObjectToolbar && isTextObject(selectedObject) && selectedObjects.length <= 1 && (
         <FloatingObjectToolbar
           kind="text"
           x={toolbarPos.x}
           y={toolbarPos.y}
+          locked={selectionLocked}
           fontFamily={selectedObject.fontFamily || 'Inter'}
           fontSize={selectedObject.fontSize || 16}
           fontWeight={selectedObject.fontWeight || 'normal'}
@@ -1021,14 +1280,18 @@ export default function FabricEditor({
           charSpacing={selectedObject.charSpacing ?? 0}
           lineHeight={selectedObject.lineHeight ?? 1.16}
           onTextChange={updateTextStyle}
+          selectionCount={selectedObjects.length}
+          onArrange={runArrange}
+          onToggleLock={() => { toggleLockSelection(canvas!); bumpToolbar(n => n + 1); commitHistory() }}
         />
       )}
 
-      {!cropMode && toolbarPos.visible && selectedObject && isImageObject(selectedObject) && (
+      {showObjectToolbar && isImageObject(selectedObject) && selectedObjects.length <= 1 && (
         <FloatingObjectToolbar
           kind="image"
           x={toolbarPos.x}
           y={toolbarPos.y}
+          locked={selectionLocked}
           opacity={selectedObject.opacity ?? 1}
           cornerRadius={imageCornerRadius}
           onImageChange={updateImageProp}
@@ -1036,6 +1299,79 @@ export default function FabricEditor({
           onCrop={startCrop}
           onReplace={() => replaceInputRef.current?.click()}
           onDelete={deleteSelected}
+          selectionCount={selectedObjects.length}
+          onArrange={runArrange}
+          onToggleLock={() => { toggleLockSelection(canvas!); bumpToolbar(n => n + 1); commitHistory() }}
+        />
+      )}
+
+      {showObjectToolbar && isLineObject(selectedObject) && selectedObjects.length <= 1 && (
+        <FloatingObjectToolbar
+          kind="line"
+          x={toolbarPos.x}
+          y={toolbarPos.y}
+          locked={selectionLocked}
+          stroke={typeof selectedObject.stroke === 'string' ? selectedObject.stroke : '#111827'}
+          strokeWidth={selectedObject.strokeWidth ?? 3}
+          strokeStyle={styleFromDashArray(selectedObject.strokeDashArray)}
+          strokeLineCap={selectedObject.strokeLineCap || 'butt'}
+          onShapeChange={updateShapeProp}
+          onDelete={deleteSelected}
+          selectionCount={selectedObjects.length}
+          onArrange={runArrange}
+          onToggleLock={() => { toggleLockSelection(canvas!); bumpToolbar(n => n + 1); commitHistory() }}
+        />
+      )}
+
+      {showObjectToolbar &&
+        isShapeObject(selectedObject) &&
+        !isLineObject(selectedObject) &&
+        selectedObjects.length <= 1 && (
+        <FloatingObjectToolbar
+          kind="shape"
+          x={toolbarPos.x}
+          y={toolbarPos.y}
+          locked={selectionLocked}
+          fill={solidFillColor(selectedObject.fill)}
+          fillMode={shapeFillMode}
+          fillColor2={shapeFillColor2}
+          stroke={typeof selectedObject.stroke === 'string' ? selectedObject.stroke : '#2563eb'}
+          strokeWidth={selectedObject.strokeWidth ?? 2}
+          strokeStyle={styleFromDashArray(selectedObject.strokeDashArray)}
+          rx={typeof selectedObject.rx === 'number' ? selectedObject.rx : undefined}
+          opacity={selectedObject.opacity ?? 1}
+          onShapeChange={updateShapeProp}
+          onShapeCommit={commitHistory}
+          onDelete={deleteSelected}
+          selectionCount={selectedObjects.length}
+          onArrange={runArrange}
+          onToggleLock={() => { toggleLockSelection(canvas!); bumpToolbar(n => n + 1); commitHistory() }}
+        />
+      )}
+
+      {showObjectToolbar && selectedObjects.length > 1 && (
+        <FloatingObjectToolbar
+          kind="shape"
+          x={toolbarPos.x}
+          y={toolbarPos.y}
+          locked={selectionLocked}
+          selectionCount={selectedObjects.length}
+          onArrange={runArrange}
+          onToggleLock={() => { toggleLockSelection(canvas!); bumpToolbar(n => n + 1); commitHistory() }}
+          onDelete={deleteSelected}
+        />
+      )}
+
+      {contextMenu && (
+        <ObjectContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          canGroup={selectedObjects.length >= 2}
+          canUngroup={!!(selectedObject && (selectedObject instanceof Group || selectedObject.type === 'group'))}
+          canDistribute={selectedObjects.length >= 3}
+          locked={selectionLocked}
+          onAction={handleContextAction}
+          onClose={() => setContextMenu(null)}
         />
       )}
     </div>

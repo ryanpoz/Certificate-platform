@@ -2,13 +2,13 @@
 
 import type { ReactNode } from 'react'
 
-export type SidebarPanel = 'text' | 'uploads' | 'background' | null
+export type SidebarPanel = 'text' | 'uploads' | 'background' | 'elements' | null
 
 const NAV: { id: Exclude<SidebarPanel, null>; label: string; icon: string }[] = [
   { id: 'text', label: 'Text', icon: 'T' },
   { id: 'uploads', label: 'Uploads', icon: '↑' },
   { id: 'background', label: 'Background', icon: 'BG' },
-  // Elements panel comes later — leave room in the rail
+  { id: 'elements', label: 'Elements', icon: '◇' },
 ]
 
 export function EditorSidebar({
@@ -42,13 +42,6 @@ export function EditorSidebar({
             </button>
           )
         })}
-        <div
-          className="mt-2 flex h-11 w-11 flex-col items-center justify-center rounded-lg text-[10px] text-gray-300"
-          title="Elements (coming soon)"
-        >
-          <span className="text-sm leading-none">◇</span>
-          <span className="mt-0.5">El</span>
-        </div>
       </div>
       {activePanel && (
         <div className="w-64 overflow-y-auto p-3">
