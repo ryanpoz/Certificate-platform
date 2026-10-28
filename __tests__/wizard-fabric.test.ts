@@ -27,7 +27,58 @@ describe('Wizard Fabric builder integration', () => {
   })
 
   it('only restores v3 drafts into the editor', () => {
-    expect(wizard).toContain('templateConfig?.version === 3')
+    expect(wizard).toContain('config?.version === 3')
+    expect(wizard).toContain('applyV3Design')
+  })
+
+  it('loads drafts before mounting the editor and keeps the draft URL', () => {
+    expect(wizard).toContain('draftLoading')
+    expect(wizard).toContain('loadDraft')
+    expect(wizard).toContain('/dashboard/wizard?draft=')
+    expect(wizard).toContain('Loading draft')
+  })
+})
+
+describe('Wizard draft reopen', () => {
+  it('awaits searchParams so ?draft= / ?edit= are passed into the wizard', () => {
+    const page = readFileSync(
+      join(process.cwd(), 'app/dashboard/wizard/page.tsx'),
+      'utf-8'
+    )
+    expect(page).toContain('await searchParams')
+    expect(page).toContain('draftId={params.draft}')
+    expect(page).toContain('editCourseId={params.edit}')
+  })
+
+  it('lists drafts separately with Continue editing (issued keep View / Issue more)', () => {
+    const certs = readFileSync(
+      join(process.cwd(), 'app/dashboard/certificates/page.tsx'),
+      'utf-8'
+    )
+    expect(certs).toContain('draftData')
+    expect(certs).toContain('Drafts')
+    expect(certs).toContain('Continue editing')
+    expect(certs).toContain('/dashboard/wizard?draft=')
+    expect(certs).toContain('Issue more')
+    expect(certs).not.toContain('/dashboard/wizard?edit=')
+  })
+
+  it('redirects draft course pages back into the wizard', () => {
+    const course = readFileSync(
+      join(process.cwd(), 'app/dashboard/courses/[id]/page.tsx'),
+      'utf-8'
+    )
+    expect(course).toContain('draftData')
+    expect(course).toContain('/dashboard/wizard?draft=')
+  })
+
+  it('does not autosave-create a new certificates row until Save Draft', () => {
+    const wizardSrc = readFileSync(
+      join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'),
+      'utf-8'
+    )
+    expect(wizardSrc).toContain('Autosave existing drafts only')
+    expect(wizardSrc).toContain('if (isAutosave && !draftId && !isEditingPublished) return')
   })
 })
 

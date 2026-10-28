@@ -97,14 +97,14 @@ describe('Wizard Redesign - Fabric design persistence', () => {
 })
 
 describe('Wizard Redesign - Step Flow', () => {
-  it('should have 3 steps: Design Certificate, Add Recipients, Test and Send', () => {
+  it('should have Design → Recipients → Send flow without a top stepper', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
-    
-    // Stepper should show 3 steps with exact labels
-    expect(wizard).toContain('{[1, 2, 3].map')
-    expect(wizard).toContain('Design Certificate')
-    expect(wizard).toContain('Add Recipients')
+
+    // No 1–2–3 progress bar at the top
+    expect(wizard).not.toContain('{[1, 2, 3].map')
+    expect(wizard).toContain('Next: Add Recipients')
     expect(wizard).toContain('Test and Send')
+    expect(wizard).toContain('handleNextToPeople')
   })
 
   it('should advance to Add Recipients only via explicit Next button', () => {

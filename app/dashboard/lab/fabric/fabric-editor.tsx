@@ -94,11 +94,13 @@ function resolveDesignConfig(key: DesignKey): DesignConfigV3 {
 }
 
 function textIdForObject(obj: any): string | null {
+  // FieldText must key off `field` so values survive template switches even when
+  // element ids differ (e.g. blank uses id "certificate_title" for course_name).
+  if (obj instanceof FieldText || obj.type === 'FieldText') {
+    return ((obj.field as string) || null)
+  }
   const data = obj.get?.('data') || obj.data || {}
   if (data.id) return data.id as string
-  if (obj instanceof FieldText || obj.type === 'FieldText') {
-    return (obj.field as string) || null
-  }
   return null
 }
 
@@ -303,13 +305,20 @@ export default function FabricEditor({
 
   const saveFieldContent = useCallback(() => {
     if (!canvas) return
-    const sources = canvas.getObjects()
-      .map((obj: any) => {
-        const id = textIdForObject(obj)
-        if (!id) return null
-        return { id, text: (obj.text as string) || '' }
-      })
-      .filter((s): s is { id: string; text: string } => s !== null)
+    const sources: { id: string; text: string }[] = []
+    canvas.getObjects().forEach((obj: any) => {
+      const text = (obj.text as string) || ''
+      if (!text) return
+      if (obj instanceof FieldText || obj.type === 'FieldText') {
+        if (obj.field) sources.push({ id: obj.field, text })
+        // Also keep element-id alias (blank uses certificate_title for course_name)
+        const dataId = (obj.get?.('data') || obj.data || {}).id as string | undefined
+        if (dataId && dataId !== obj.field) sources.push({ id: dataId, text })
+        return
+      }
+      const id = textIdForObject(obj)
+      if (id) sources.push({ id, text })
+    })
 
     userContentRef.current = mergeTextById(
       userContentRef.current,
@@ -320,6 +329,14 @@ export default function FabricEditor({
   const restoreFieldContent = useCallback(() => {
     if (!canvas) return
     canvas.getObjects().forEach((obj: any) => {
+      if (obj instanceof FieldText || obj.type === 'FieldText') {
+        const dataId = (obj.get?.('data') || obj.data || {}).id as string | undefined
+        const content =
+          resolveTextById(obj.field, userContentRef.current) ??
+          (dataId ? resolveTextById(dataId, userContentRef.current) : undefined)
+        if (content !== undefined) obj.set({ text: content })
+        return
+      }
       const id = textIdForObject(obj)
       if (!id) return
       const content = resolveTextById(id, userContentRef.current)
@@ -379,11 +396,9 @@ export default function FabricEditor({
         .filter((o: any) => o instanceof FieldText || o.type === 'FieldText')
         .map((o: any) => o.field as string)
     )
-    const toCarry = selectFieldsToCarry(
-      carriedSnapshots,
-      keysOnCanvas,
-      userAddedFieldsRef.current
-    )
+    // Carry every previous field that the destination template doesn't already have
+    // (not only Text-panel "user-added" fields — blank/template fields must survive too).
+    const toCarry = selectFieldsToCarry(carriedSnapshots, keysOnCanvas)
     for (const snap of toCarry) {
       const pos = clampFieldPosition(
         snap.left,
@@ -412,8 +427,10 @@ export default function FabricEditor({
         maxLines: snap.maxLines,
         data: { id: snap.elementId || snap.field },
       } as any)
+      enableAutoShrink(field)
       canvas.add(field)
       keysOnCanvas.add(snap.field)
+      userAddedFieldsRef.current.add(snap.field)
     }
 
     canvas.getObjects().forEach(obj => {

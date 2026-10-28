@@ -5,8 +5,13 @@ import { db } from '@/lib/db'
 import { academies } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
-export default async function WizardPage({ searchParams }: { searchParams: { draft?: string } }) {
+export default async function WizardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ draft?: string; edit?: string }>
+}) {
   const user = await requireAuth()
+  const params = await searchParams
 
   const [academy] = await db
     .select()
@@ -25,7 +30,8 @@ export default async function WizardPage({ searchParams }: { searchParams: { dra
       academyName={academy.name}
       userEmail={user.email}
       userName={user.name}
-      draftId={searchParams.draft}
+      draftId={params.draft}
+      editCourseId={params.edit}
     />
   )
 }

@@ -1,6 +1,7 @@
 /**
- * Pure helpers for carrying user-added FieldText objects across template switches.
+ * Pure helpers for carrying FieldText objects across template switches.
  * Fields whose keys already exist on the destination canvas are skipped (no duplicates).
+ * An optional userAddedFieldKeys filter can further limit which fields are carried.
  */
 
 export type CarryFieldSnapshot = {

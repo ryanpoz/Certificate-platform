@@ -47,20 +47,31 @@ export class KeyboardShortcuts {
   }
 
   private isTypingInFormField(target: EventTarget | null): boolean {
-    if (!(target instanceof HTMLElement)) return false
-    const tag = target.tagName
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
-    if (target.isContentEditable) return true
-    return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
+    const el =
+      target instanceof HTMLElement
+        ? target
+        : target && typeof (target as Node).nodeType === 'number'
+          ? (target as Node).parentElement
+          : null
+    if (!el) return false
+    const tag = el.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON') return true
+    if (el.isContentEditable || el.getAttribute('contenteditable') === 'true') return true
+    return Boolean(el.closest('input, textarea, select, button, [contenteditable="true"]'))
+  }
+
+  /** True when focus is in a form control (certificate name, etc.) — check both target and activeElement. */
+  private shouldIgnoreShortcuts(e: KeyboardEvent): boolean {
+    if (this.isTypingInFormField(e.target)) return true
+    if (this.isTypingInFormField(document.activeElement)) return true
+    const activeObject = this.canvas.getActiveObject()
+    if (activeObject && (activeObject as any).isEditing) return true
+    return false
   }
 
   private handleKeyDown = (e: KeyboardEvent) => {
-    // Don't steal keys from inputs (e.g. certificate name) or Fabric text editing
-    if (this.isTypingInFormField(e.target)) {
-      return
-    }
-    const activeObject = this.canvas.getActiveObject()
-    if (activeObject && (activeObject as any).isEditing) {
+    // Never steal keys from inputs (e.g. certificate name) or Fabric text editing
+    if (this.shouldIgnoreShortcuts(e)) {
       return
     }
 
@@ -118,8 +129,10 @@ export class KeyboardShortcuts {
       return
     }
 
-    // Delete: Delete or Backspace (not while editing text)
+    // Delete: Delete or Backspace — only when canvas has a selection; never preventDefault otherwise
     if (e.key === 'Delete' || e.key === 'Backspace') {
+      const activeObjects = this.canvas.getActiveObjects()
+      if (activeObjects.length === 0) return
       e.preventDefault()
       this.deleteSelected()
       return
@@ -127,6 +140,7 @@ export class KeyboardShortcuts {
 
     // Arrow nudge: Arrow keys (Shift = 10px, normal = 1px)
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (this.canvas.getActiveObjects().length === 0) return
       e.preventDefault()
       this.nudge(e.key, e.shiftKey ? 10 : 1)
       return

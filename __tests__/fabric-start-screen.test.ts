@@ -207,17 +207,17 @@ describe('Carry user-added fields across template switches', () => {
     ).toEqual(new Set(['recipient_name', 'custom_1']))
   })
 
-  it('carries only user-added fields missing from the destination', () => {
+  it('carries fields missing from the destination (including blank/template fields)', () => {
     const snapshots = [
       snap('recipient_name', 'Alex'),
       snap('custom_1', 'Extra A'),
       snap('custom_2', 'Extra B'),
+      snap('description', 'Did the course'),
     ]
     const alreadyOnCanvas = new Set(['recipient_name', 'custom_1'])
-    const userAdded = new Set(['custom_1', 'custom_2'])
 
-    const carried = selectFieldsToCarry(snapshots, alreadyOnCanvas, userAdded)
-    expect(carried.map(c => c.field)).toEqual(['custom_2'])
+    const carried = selectFieldsToCarry(snapshots, alreadyOnCanvas)
+    expect(carried.map(c => c.field)).toEqual(['custom_2', 'description'])
     expect(carried[0].text).toBe('Extra B')
   })
 
@@ -225,19 +225,18 @@ describe('Carry user-added fields across template switches', () => {
     const snapshots = [snap('custom_2'), snap('custom_2')]
     const carried = selectFieldsToCarry(
       snapshots,
-      new Set(['recipient_name']),
-      new Set(['custom_2'])
+      new Set(['recipient_name'])
     )
     expect(carried).toHaveLength(1)
   })
 
-  it('skips non-user-added fields even if missing on destination', () => {
+  it('optionally limits carry to user-added keys when a filter set is provided', () => {
     const carried = selectFieldsToCarry(
-      [snap('description')],
+      [snap('description'), snap('custom_1')],
       new Set(['recipient_name']),
       new Set(['custom_1'])
     )
-    expect(carried).toEqual([])
+    expect(carried.map(c => c.field)).toEqual(['custom_1'])
   })
 
   it('clamps carried field positions into the page', () => {

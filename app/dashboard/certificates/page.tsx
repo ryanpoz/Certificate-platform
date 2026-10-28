@@ -1,10 +1,19 @@
 import { requireAuth } from '@/lib/utils/session'
 import { db } from '@/lib/db'
-import { certificates, courses, learners, events } from '@/lib/db/schema'
+import { certificates, courses, events } from '@/lib/db/schema'
 import { eq, desc, sql, and } from 'drizzle-orm'
 import Link from 'next/link'
 import { checkFirstTimeUser } from '../wizard/actions'
 import { redirect } from 'next/navigation'
+
+function isDraftProgram(
+  program: { draftData: unknown; code: string },
+  issuedCount: number
+) {
+  if (program.draftData != null) return true
+  // Fallback: draft rows use DRAFT- codes and have never issued
+  return program.code.startsWith('DRAFT-') && issuedCount === 0
+}
 
 export default async function CertificatesPage() {
   const user = await requireAuth()
@@ -24,6 +33,7 @@ export default async function CertificatesPage() {
       code: courses.code,
       description: courses.description,
       createdAt: courses.createdAt,
+      draftData: courses.draftData,
     })
     .from(courses)
     .where(eq(courses.academyId, user.academyId))
@@ -78,6 +88,13 @@ export default async function CertificatesPage() {
 
   const metricsMap = new Map(programMetrics.map(m => [m.programId, m]))
 
+  const drafts = allPrograms.filter(p =>
+    isDraftProgram(p, metricsMap.get(p.id)?.issued || 0)
+  )
+  const issued = allPrograms.filter(
+    p => !isDraftProgram(p, metricsMap.get(p.id)?.issued || 0)
+  )
+
   return (
     <div className="px-4 sm:px-0">
       <div className="sm:flex sm:items-center sm:justify-between mb-8">
@@ -100,7 +117,39 @@ export default async function CertificatesPage() {
         </div>
       </div>
 
-      {allPrograms.length === 0 ? (
+      {drafts.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Drafts</h2>
+          <div className="bg-white shadow-sm rounded-lg border divide-y">
+            {drafts.map(program => (
+              <div
+                key={program.id}
+                className="flex items-center justify-between gap-4 px-6 py-4"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium text-gray-900 truncate">{program.name}</div>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-800 shrink-0">
+                      Draft
+                    </span>
+                  </div>
+                  {program.description ? (
+                    <div className="text-sm text-gray-500 truncate">{program.description}</div>
+                  ) : null}
+                </div>
+                <Link
+                  href={`/dashboard/wizard?draft=${program.id}`}
+                  className="text-blue-600 hover:text-blue-900 font-medium text-sm whitespace-nowrap"
+                >
+                  Continue editing
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {issued.length === 0 && drafts.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
           <svg
             className="mx-auto h-12 w-12 text-gray-400"
@@ -128,6 +177,8 @@ export default async function CertificatesPage() {
             </Link>
           </div>
         </div>
+      ) : issued.length === 0 ? (
+        <p className="text-sm text-gray-500">No issued certificates yet.</p>
       ) : (
         <div className="bg-white shadow-sm rounded-lg border">
           <table className="min-w-full divide-y divide-gray-200">
@@ -151,7 +202,7 @@ export default async function CertificatesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {allPrograms.map((program) => {
+              {issued.map((program) => {
                 const metrics = metricsMap.get(program.id)!
                 const isSample = program.name === 'Sample Certificate'
 
@@ -185,7 +236,7 @@ export default async function CertificatesPage() {
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {metrics.linkedinClicks}
                     </td>
-                    <td className="px-6 py-4 text-right text-sm">
+                    <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
                       <Link
                         href={`/dashboard/courses/${program.id}`}
                         className="text-blue-600 hover:text-blue-900 mr-4"

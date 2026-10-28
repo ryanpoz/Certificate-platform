@@ -1343,12 +1343,15 @@ export const TEMPLATES: Record<string, DesignConfigV3> = {
 
 export const SAMPLE_DATA: Record<string, string> = {
   recipient_name: 'Alexandra Martinez-Rodriguez',
-  org_name: 'International Academy of Sciences',
+  course_name: 'Certificate of Excellence',
+  // Alias used by some blank/legacy element ids
   certificate_title: 'Certificate of Excellence',
   description: 'Has demonstrated outstanding achievement',
+  issue_date: 'October 19, 2026',
+  custom_1: 'Dr. Sarah Johnson',
+  org_name: 'International Academy of Sciences',
   signer_1_name: 'Dr. Sarah Johnson',
   signer_1_title: 'Director of Education',
-  issue_date: 'October 19, 2026',
 }
 
 const DISPLAY_NAMES: Record<string, string> = {

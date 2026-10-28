@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/utils/session'
 import { db } from '@/lib/db'
 import { courses, templates, certificates } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import TemplateEditor from './template-editor'
 import RecipientProgress from './recipient-progress'
@@ -23,6 +23,11 @@ export default async function CourseDetailPage({
 
   if (!course) {
     notFound()
+  }
+
+  // Unpublished wizard drafts reopen in the wizard, not the published course view
+  if (course.draftData) {
+    redirect(`/dashboard/wizard?draft=${course.id}`)
   }
 
   let template = null

@@ -45,14 +45,13 @@ export async function saveDraft(data: SaveDraftData) {
       lastSaved: new Date().toISOString(),
     }
 
+    let id = draftId
     if (draftId) {
       // Update existing draft
       await db
         .update(courses)
         .set({ draftData, name: certificateName || 'Untitled Certificate' })
         .where(eq(courses.id, draftId))
-
-      return { success: true, draftId }
     } else {
       // Create new draft
       const courseCode = `DRAFT-${nanoid(6).toUpperCase()}`
@@ -67,8 +66,12 @@ export async function saveDraft(data: SaveDraftData) {
         })
         .returning()
 
-      return { success: true, draftId: course.id }
+      id = course.id
     }
+
+    revalidatePath('/dashboard/certificates')
+    revalidatePath('/dashboard/wizard')
+    return { success: true, draftId: id }
   } catch (error) {
     console.error('Failed to save draft:', error)
     return { error: 'Failed to save draft' }
@@ -91,6 +94,114 @@ export async function loadDraft(draftId: string) {
   } catch (error) {
     console.error('Failed to load draft:', error)
     return { error: 'Failed to load draft' }
+  }
+}
+
+/** Load a course for editing — draft data if present, otherwise published template design. */
+export async function loadCourseForEdit(courseId: string) {
+  try {
+    const [course] = await db
+      .select()
+      .from(courses)
+      .where(eq(courses.id, courseId))
+      .limit(1)
+
+    if (!course) {
+      return { error: 'Certificate not found' }
+    }
+
+    if (course.draftData) {
+      return {
+        success: true,
+        mode: 'draft' as const,
+        courseId: course.id,
+        courseName: course.name,
+        draft: course.draftData as any,
+      }
+    }
+
+    let templateConfig: any = null
+    let templateId: string | null = course.templateId || null
+    if (course.templateId) {
+      const [template] = await db
+        .select()
+        .from(templates)
+        .where(eq(templates.id, course.templateId))
+        .limit(1)
+      templateConfig = template?.designConfig || null
+      templateId = template?.id || null
+    }
+
+    return {
+      success: true,
+      mode: 'published' as const,
+      courseId: course.id,
+      courseName: course.name,
+      description: course.description || '',
+      templateId,
+      templateConfig,
+    }
+  } catch (error) {
+    console.error('Failed to load course for edit:', error)
+    return { error: 'Failed to load certificate' }
+  }
+}
+
+/** Persist design edits for an already-published certificate (updates linked template). */
+export async function savePublishedDesign(data: {
+  courseId: string
+  academyId: string
+  certificateName: string
+  templateConfig: any
+  description?: string
+  templateId?: string | null
+}) {
+  try {
+    const { courseId, academyId, certificateName, templateConfig, description, templateId } = data
+
+    let resolvedTemplateId = templateId || null
+
+    if (resolvedTemplateId) {
+      await db
+        .update(templates)
+        .set({
+          name: certificateName,
+          designConfig: templateConfig,
+          updatedAt: new Date(),
+        })
+        .where(eq(templates.id, resolvedTemplateId))
+    } else {
+      const [created] = await db
+        .insert(templates)
+        .values({
+          academyId,
+          name: certificateName,
+          isDefault: false,
+          designConfig: templateConfig,
+          bodyText: `This certifies that {{learnerName}} has successfully completed {{courseName}}.`,
+          emailSubject: `Your ${certificateName} Certificate`,
+          emailBody: `Congratulations! You've earned your ${certificateName} certificate.`,
+          version: 1,
+        })
+        .returning()
+      resolvedTemplateId = created.id
+    }
+
+    await db
+      .update(courses)
+      .set({
+        name: certificateName,
+        description: description || '',
+        templateId: resolvedTemplateId,
+      })
+      .where(eq(courses.id, courseId))
+
+    revalidatePath('/dashboard/certificates')
+    revalidatePath(`/dashboard/courses/${courseId}`)
+    return { success: true, templateId: resolvedTemplateId }
+  } catch (error) {
+    console.error('Failed to save published design:', error)
+    return { error: 'Failed to save design' }
   }
 }
 
@@ -145,11 +256,12 @@ Certificate #{{certificateNumber}}`
     // Or update existing draft course
     let course
     if (draftId) {
-      // Update draft to published state
+      // Update draft to published state (drop draft payload + DRAFT- code)
       const [updated] = await db
         .update(courses)
         .set({
           name: programName || certificateName,
+          code: `CERT-${nanoid(6).toUpperCase()}`,
           description: description || `Certificate program for ${certificateName}`,
           templateId: template.id,
           draftData: null, // Clear draft data on publish

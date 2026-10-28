@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createCertificateFromWizard, parseCsvRecipients, saveDraft, loadDraft } from './actions'
+import {
+  createCertificateFromWizard,
+  parseCsvRecipients,
+  saveDraft,
+  loadDraft,
+  loadCourseForEdit,
+  savePublishedDesign,
+} from './actions'
 import FabricEditorClient from '@/components/certificate/fabric-editor-client'
 import type { DesignConfigV3 } from '@/lib/design-config/v3-schema'
 import { createBlankLandscapeTemplate } from '@/app/dashboard/lab/fabric/blank-template'
@@ -14,15 +21,29 @@ interface WizardProps {
   userEmail: string
   userName: string
   draftId?: string
+  /** Published certificate course id — open design for editing */
+  editCourseId?: string
 }
 
-export default function CertificateWizard({ academyId, userId, academyName, userEmail, userName, draftId: initialDraftId }: WizardProps) {
+export default function CertificateWizard({
+  academyId,
+  userId,
+  academyName,
+  userEmail,
+  userName,
+  draftId: initialDraftId,
+  editCourseId,
+}: WizardProps) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [draftId, setDraftId] = useState(initialDraftId)
   const [savingDraft, setSavingDraft] = useState(false)
   const [draftSaved, setDraftSaved] = useState(false)
+  const [draftLoading, setDraftLoading] = useState(!!(initialDraftId || editCourseId))
+  const [editingCourseId, setEditingCourseId] = useState<string | undefined>(editCourseId)
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
+  const isEditingPublished = !!editingCourseId && !draftId
 
   // Step 1: Design (Fabric start-screen catalog + editor)
   const [certificateName, setCertificateName] = useState('')
@@ -39,10 +60,32 @@ export default function CertificateWizard({ academyId, userId, academyName, user
   // Step 3: Result
   const [result, setResult] = useState<any>(null)
 
-  // Load draft on mount
+  // Load draft or published course for editing
   useEffect(() => {
+    const idToLoad = initialDraftId || editCourseId
+    if (!idToLoad) {
+      setDraftLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setDraftLoading(true)
+
+    const applyV3Design = (config: any) => {
+      if (config?.version === 3) {
+        setCustomDesign(config as DesignConfigV3)
+        setEditorKey(k => k + 1)
+      } else {
+        setCustomDesign(null)
+      }
+    }
+
     if (initialDraftId) {
+      setDraftId(initialDraftId)
+      setEditingCourseId(undefined)
+      setEditingTemplateId(null)
       loadDraft(initialDraftId).then((res) => {
+        if (cancelled) return
         if (res.success && res.draft) {
           const draft = res.draft as any
           setCertificateName(draft.certificateName || '')
@@ -50,39 +93,98 @@ export default function CertificateWizard({ academyId, userId, academyName, user
           setProgramName(draft.programName || '')
           setStep(draft.currentStep || 1)
           setRecipients(draft.recipients || [{ name: userName, email: userEmail }])
-          // Only restore Fabric v3 designs; v2 drafts start fresh on the start screen
-          if (draft.templateConfig?.version === 3) {
-            setCustomDesign(draft.templateConfig as DesignConfigV3)
-            setEditorKey(k => k + 1)
-          }
+          applyV3Design(draft.templateConfig)
         }
+        setDraftLoading(false)
+      })
+    } else if (editCourseId) {
+      loadCourseForEdit(editCourseId).then((res) => {
+        if (cancelled) return
+        if (!res.success) {
+          setDraftLoading(false)
+          return
+        }
+        if (res.mode === 'draft' && res.draft) {
+          setDraftId(res.courseId)
+          setEditingCourseId(undefined)
+          setEditingTemplateId(null)
+          const draft = res.draft as any
+          setCertificateName(draft.certificateName || res.courseName || '')
+          setDescription(draft.description || '')
+          setProgramName(draft.programName || '')
+          setStep(draft.currentStep || 1)
+          setRecipients(draft.recipients || [{ name: userName, email: userEmail }])
+          applyV3Design(draft.templateConfig)
+          window.history.replaceState({}, '', `/dashboard/wizard?draft=${res.courseId}`)
+        } else {
+          setDraftId(undefined)
+          setEditingCourseId(res.courseId)
+          setEditingTemplateId(res.templateId || null)
+          setCertificateName(res.courseName || '')
+          setDescription(res.description || '')
+          setProgramName(res.courseName || '')
+          setStep(1)
+          applyV3Design(res.templateConfig)
+        }
+        setDraftLoading(false)
       })
     }
-  }, [initialDraftId, userName, userEmail])
 
-  // Autosave draft every 10 seconds if there are changes
+    return () => {
+      cancelled = true
+    }
+  }, [initialDraftId, editCourseId, userName, userEmail])
+
+  // Autosave existing drafts only — never create a new certificates-list row until
+  // the user explicitly clicks Save Draft (otherwise drafts look like issued certs).
   useEffect(() => {
-    if (!certificateName) return // Don't autosave until name is set
-    
+    if (!certificateName || !hasEdits) return
+    if (!draftId && !isEditingPublished) return
+
     const timer = setTimeout(async () => {
-      if (hasEdits || certificateName) {
-        await handleSaveDraft(true)
-      }
+      await handleSaveDraft(true)
     }, 10000)
 
     return () => clearTimeout(timer)
-  }, [certificateName, customDesign, description, programName, recipients, step, hasEdits])
+  }, [certificateName, customDesign, description, programName, recipients, step, hasEdits, draftId, isEditingPublished])
 
   async function handleSaveDraft(isAutosave = false) {
+    // Autosave must not create brand-new courses
+    if (isAutosave && !draftId && !isEditingPublished) return
+
     if (!isAutosave) setSavingDraft(true)
     setDraftSaved(false)
+
+    const templateConfig = customDesign || createBlankLandscapeTemplate()
+
+    if (isEditingPublished && editingCourseId) {
+      const result = await savePublishedDesign({
+        courseId: editingCourseId,
+        academyId,
+        certificateName: certificateName || 'Untitled Certificate',
+        templateConfig,
+        description,
+        templateId: editingTemplateId,
+      })
+
+      if (result.success) {
+        if (result.templateId) setEditingTemplateId(result.templateId)
+        setDraftSaved(true)
+        setHasEdits(false)
+        if (!isAutosave) {
+          setTimeout(() => setDraftSaved(false), 3000)
+        }
+      }
+      if (!isAutosave) setSavingDraft(false)
+      return
+    }
 
     const result = await saveDraft({
       academyId,
       userId,
       draftId,
       certificateName: certificateName || 'Untitled Certificate',
-      templateConfig: customDesign || createBlankLandscapeTemplate(),
+      templateConfig,
       currentStep: step,
       recipients,
       description,
@@ -94,11 +196,9 @@ export default function CertificateWizard({ academyId, userId, academyName, user
       setDraftId(result.draftId)
       setDraftSaved(true)
       setHasEdits(false)
-      
-      // Update URL to include draft ID if not already there
-      if (!initialDraftId && result.draftId) {
-        window.history.replaceState({}, '', `/dashboard/wizard?draft=${result.draftId}`)
-      }
+
+      // Keep URL shareable/reloadable so the draft can be reopened
+      window.history.replaceState({}, '', `/dashboard/wizard?draft=${result.draftId}`)
 
       if (!isAutosave) {
         setTimeout(() => setDraftSaved(false), 3000)
@@ -209,39 +309,10 @@ export default function CertificateWizard({ academyId, userId, academyName, user
   }
 
   return (
-    <div className="max-w-full mx-auto px-4 py-8">
-      {/* Stepper */}
-      <div className="mb-8">
-        <div className="flex items-center justify-center">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center">
-              <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                  step >= s
-                    ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-gray-300 text-gray-500'
-                }`}
-              >
-                {s}
-              </div>
-              {s < 3 && (
-                <div
-                  className={`w-24 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300'}`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-center mt-2 text-sm text-gray-600">
-          <div className="w-40 text-center">Design Certificate</div>
-          <div className="w-40 text-center">Add Recipients</div>
-          <div className="w-40 text-center">Test and Send</div>
-        </div>
-      </div>
-
-      {/* Step 1: Design Certificate (Fabric start-screen catalog + Full-Width Editor) */}
+    <div className="max-w-full mx-auto px-4 py-4">
+      {/* Step 1: Design — no top stepper; progress is via Next / Back buttons */}
       {step === 1 && (
-        <div className="flex flex-col h-[calc(100vh-160px)] min-h-[700px]">
+        <div className="flex flex-col h-[calc(100vh-80px)] min-h-[700px]">
           {/* Top Bar: Name + Next + Save Draft */}
           <div className="flex items-center gap-4 p-4 border-b bg-white">
             {/* Certificate Name */}
@@ -256,6 +327,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                   setCertificateName(e.target.value)
                   setHasEdits(true)
                 }}
+                onKeyDown={(e) => e.stopPropagation()}
                 placeholder="e.g. Motion Ads Certified"
                 className="w-full px-3 py-1.5 border rounded text-sm"
               />
@@ -276,7 +348,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                 type="button"
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {savingDraft ? 'Saving...' : draftSaved ? '✓ Saved' : 'Save Draft'}
+                {savingDraft ? 'Saving...' : draftSaved ? '✓ Saved' : isEditingPublished ? 'Save' : 'Save Draft'}
               </button>
             </div>
 
@@ -297,12 +369,18 @@ export default function CertificateWizard({ academyId, userId, academyName, user
 
           {/* Full-Width Fabric Editor */}
           <div className="flex-1 overflow-hidden bg-gray-50">
-            <FabricEditorClient
-              key={editorKey}
-              mode="wizard"
-              initialConfig={customDesign}
-              onSave={handleEditorSave}
-            />
+            {draftLoading ? (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                Loading draft…
+              </div>
+            ) : (
+              <FabricEditorClient
+                key={editorKey}
+                mode="wizard"
+                initialConfig={customDesign}
+                onSave={handleEditorSave}
+              />
+            )}
           </div>
         </div>
       )}
@@ -348,6 +426,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                   type="text"
                   value={recipient.name}
                   onChange={(e) => updateRecipient(index, 'name', e.target.value)}
+                  onKeyDown={(e) => e.stopPropagation()}
                   placeholder="Full name"
                   className="flex-1 px-4 py-2 border rounded-lg"
                 />
@@ -355,6 +434,7 @@ export default function CertificateWizard({ academyId, userId, academyName, user
                   type="email"
                   value={recipient.email}
                   onChange={(e) => updateRecipient(index, 'email', e.target.value)}
+                  onKeyDown={(e) => e.stopPropagation()}
                   placeholder="email@example.com"
                   className="flex-1 px-4 py-2 border rounded-lg"
                 />
