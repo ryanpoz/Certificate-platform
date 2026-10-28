@@ -613,7 +613,9 @@ export default function FabricEditor() {
       data: { id: asset.id, imageUrl: asset.dataUrl, cornerRadius: 0 },
     } as any)
     lockImageAspectRatio(img)
+    // Above page background, under text/fields (and other existing objects)
     canvas.add(img)
+    canvas.sendObjectToBack(img)
     canvas.setActiveObject(img)
     canvas.requestRenderAll()
   }
@@ -747,8 +749,14 @@ export default function FabricEditor() {
       lockImageAspectRatio(next)
       const radius = (prev.get?.('data') || {}).cornerRadius || 0
       applyImageCornerRadius(next, radius)
+      const stackIndex = canvas.getObjects().indexOf(prev)
       canvas.remove(prev)
-      canvas.add(next)
+      if (stackIndex >= 0) {
+        canvas.insertAt(stackIndex, next)
+      } else {
+        canvas.add(next)
+        canvas.sendObjectToBack(next)
+      }
       canvas.setActiveObject(next)
       canvas.requestRenderAll()
     }
