@@ -43,7 +43,9 @@ export const BackgroundSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('image'),
-    imageUrl: z.string().url()
+    // Allow https URLs and data: URLs (lab stores uploads as data URLs for now)
+    imageUrl: z.string().min(1),
+    opacity: z.number().min(0).max(1).optional().default(1)
   })
 ])
 
@@ -115,6 +117,7 @@ export const ImageElementSchema = z.object({
   id: z.string(),
   imageUrl: z.string(),
   fit: z.enum(['fill', 'contain', 'cover']).default('contain'),
+  cornerRadius: z.number().min(0).optional().default(0),
   filters: z.array(z.object({
     type: z.string(),
     options: z.record(z.any())

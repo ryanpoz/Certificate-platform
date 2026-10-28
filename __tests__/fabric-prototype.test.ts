@@ -50,10 +50,9 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     expect(editor).toContain('Undo')
     expect(editor).toContain('Redo')
     
-    // Should have floating toolbar
-    expect(editor).toContain('Floating Toolbar')
-    expect(editor).toContain('fontFamily')
-    expect(editor).toContain('fontSize')
+    // Should have floating object toolbar
+    expect(editor).toContain('FloatingObjectToolbar')
+    expect(editor).toContain('EditorSidebar')
     
     // Should use new modular imports
     expect(editor).toContain('useFabricCanvas')

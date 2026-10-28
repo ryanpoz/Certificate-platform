@@ -1,7 +1,12 @@
 import { Canvas, StaticCanvas, Gradient, IText, Textbox, Rect, Circle, Image as FabricImage } from 'fabric'
-import type { DesignConfigV3, Element, Page } from '@/lib/design-config/v3-schema'
+import type { Background, DesignConfigV3, Element, Page } from '@/lib/design-config/v3-schema'
 import { FieldText } from './objects/FieldText'
 import { resolveFontFamily } from './fonts'
+import {
+  coverScale,
+  serializeBackgroundFromSnapshot,
+  createSolidBackground,
+} from './background'
 
 /**
  * Convert Design Config V3 to Fabric canvas (Canvas or StaticCanvas for thumbnails)
@@ -19,7 +24,7 @@ export async function designConfigToFabric(
   canvas.setZoom(1)
 
   // Set background
-  await applyBackground(canvas, page)
+  await applyBackground(canvas, page.background, page.width, page.height)
 
   // Add elements — skip duplicate field ids
   const seenFieldIds = new Set<string>()
@@ -38,6 +43,101 @@ export async function designConfigToFabric(
 }
 
 /**
+ * Apply a Background config to a Fabric canvas (cover-fit for images).
+ */
+export async function applyBackground(
+  canvas: Canvas | StaticCanvas,
+  background: Background,
+  pageWidth: number,
+  pageHeight: number
+): Promise<void> {
+  canvas.backgroundImage = undefined
+
+  if (background.type === 'color') {
+    canvas.set('backgroundColor', background.color)
+    return
+  }
+
+  if (background.type === 'gradient') {
+    const grad = background.gradient
+    const gradient = new Gradient({
+      type: grad.type,
+      coords: grad.coords as any,
+      colorStops: grad.stops
+    })
+    canvas.set('backgroundColor', gradient as any)
+    return
+  }
+
+  if (background.type === 'image') {
+    canvas.set('backgroundColor', '#ffffff')
+    try {
+      const img = await FabricImage.fromURL(background.imageUrl, {
+        crossOrigin: 'anonymous',
+      } as any)
+      const iw = img.width || 1
+      const ih = img.height || 1
+      const scale = coverScale(iw, ih, pageWidth, pageHeight)
+      img.set({
+        originX: 'center',
+        originY: 'center',
+        left: pageWidth / 2,
+        top: pageHeight / 2,
+        scaleX: scale,
+        scaleY: scale,
+        opacity: background.opacity ?? 1,
+      })
+      canvas.backgroundImage = img
+    } catch (err) {
+      console.warn('Failed to load background image', err)
+      canvas.set('backgroundColor', '#ffffff')
+    }
+  }
+}
+
+/**
+ * Read current canvas background into Design Config Background.
+ */
+export function canvasBackgroundToConfig(canvas: Canvas | StaticCanvas): Background {
+  const bgImg = canvas.backgroundImage as any
+  const bgColor = canvas.backgroundColor as any
+
+  if (bgImg) {
+    const src =
+      bgImg.getSrc?.() ||
+      bgImg._element?.src ||
+      bgImg.src ||
+      ''
+    return serializeBackgroundFromSnapshot({
+      backgroundImage: {
+        src,
+        opacity: bgImg.opacity ?? 1,
+      },
+    })
+  }
+
+  if (bgColor && typeof bgColor === 'object') {
+    const colorStops = (bgColor.colorStops || []).map((s: any) => ({
+      offset: s.offset,
+      color: s.color,
+    }))
+    return serializeBackgroundFromSnapshot({
+      backgroundColor: {
+        type: bgColor.type || 'linear',
+        coords: bgColor.coords,
+        colorStops,
+      },
+    })
+  }
+
+  if (typeof bgColor === 'string' && bgColor) {
+    return createSolidBackground(bgColor)
+  }
+
+  return createSolidBackground('#ffffff')
+}
+
+/**
  * Convert Fabric canvas to Design Config V3
  */
 export function fabricToDesignConfig(canvas: Canvas): DesignConfigV3 {
@@ -50,41 +150,21 @@ export function fabricToDesignConfig(canvas: Canvas): DesignConfigV3 {
     }
   })
 
+  const width = (canvas as any).width || 1123
+  const height = (canvas as any).height || 794
+  // Prefer logical page size stored on canvas data when zoomed
+  const pageWidth = (canvas as any).__pageWidth || width
+  const pageHeight = (canvas as any).__pageHeight || height
+
   return {
     version: 3,
     pages: [{
-      width: canvas.width || 1123,
-      height: canvas.height || 794,
+      width: pageWidth,
+      height: pageHeight,
       unit: 'px',
-      background: {
-        type: 'color',
-        color: typeof canvas.backgroundColor === 'string' ? canvas.backgroundColor : '#ffffff'
-      },
+      background: canvasBackgroundToConfig(canvas),
       elements
     }]
-  }
-}
-
-/**
- * Apply background to canvas
- */
-async function applyBackground(canvas: Canvas | StaticCanvas, page: Page): Promise<void> {
-  canvas.backgroundImage = undefined
-  if (page.background.type === 'color') {
-    canvas.set('backgroundColor', page.background.color)
-  } else if (page.background.type === 'gradient') {
-    const grad = page.background.gradient
-    const gradient = new Gradient({
-      type: grad.type,
-      coords: grad.coords,
-      colorStops: grad.stops
-    })
-    canvas.set('backgroundColor', gradient)
-  } else if (page.background.type === 'image') {
-    // Load background image
-    const img = await FabricImage.fromURL(page.background.imageUrl)
-    canvas.backgroundImage = img
-    canvas.renderAll()
   }
 }
 
@@ -104,6 +184,10 @@ async function elementToFabric(element: Element): Promise<any | null> {
       fontStyle: element.fontStyle,
       fill: element.fill,
       textAlign: element.textAlign,
+      underline: element.underline,
+      linethrough: element.strikethrough,
+      charSpacing: element.charSpacing,
+      lineHeight: element.lineHeight,
       angle: element.angle,
       scaleX: element.scaleX,
       scaleY: element.scaleY,
@@ -138,6 +222,35 @@ async function elementToFabric(element: Element): Promise<any | null> {
       maxLines: element.maxLines,
       data: { id: element.id }
     } as any)
+  }
+
+  if (element.type === 'image') {
+    try {
+      const img = await FabricImage.fromURL(element.imageUrl, {
+        crossOrigin: 'anonymous',
+      } as any)
+      img.set({
+        left: element.x,
+        top: element.y,
+        angle: element.angle,
+        scaleX: element.scaleX,
+        scaleY: element.scaleY,
+        originX: element.originX,
+        originY: element.originY,
+        opacity: element.opacity,
+        data: {
+          id: element.id,
+          imageUrl: element.imageUrl,
+          cornerRadius: element.cornerRadius || 0,
+        },
+      } as any)
+      applyImageCornerRadius(img, element.cornerRadius || 0)
+      lockImageAspectRatio(img)
+      return img
+    } catch (err) {
+      console.warn('Failed to load image element', err)
+      return null
+    }
   }
 
   if (element.type === 'shape' && element.shape === 'rect') {
@@ -181,9 +294,48 @@ async function elementToFabric(element: Element): Promise<any | null> {
     })
   }
 
-  // TODO: Add other element types (image, signature, qr, line, path)
-  
   return null
+}
+
+export function applyImageCornerRadius(img: any, radius: number) {
+  const data = img.get?.('data') || img.data || {}
+  data.cornerRadius = radius
+  img.set('data', data)
+
+  if (!radius || radius <= 0) {
+    img.set({ clipPath: undefined })
+    return
+  }
+
+  const w = (img.width || 0) * (img.scaleX || 1)
+  const h = (img.height || 0) * (img.scaleY || 1)
+  // clipPath is in object local unscaled space
+  const localW = img.width || 0
+  const localH = img.height || 0
+  const rx = Math.min(radius, localW / 2, localH / 2)
+  img.set({
+    clipPath: new Rect({
+      width: localW,
+      height: localH,
+      rx,
+      ry: rx,
+      originX: 'center',
+      originY: 'center',
+    }),
+  })
+  void w
+  void h
+}
+
+export function lockImageAspectRatio(img: any) {
+  // Keep aspect ratio when resizing from corners (Fabric v6)
+  img.set({
+    lockUniScaling: true,
+  } as any)
+  img.on?.('scaling', () => {
+    const sx = img.scaleX || 1
+    img.set({ scaleY: sx })
+  })
 }
 
 /**
@@ -219,6 +371,31 @@ function fabricToElement(obj: any): Element | null {
     }
   }
 
+  if (obj instanceof FabricImage || obj.type === 'image') {
+    const src =
+      data.imageUrl ||
+      obj.getSrc?.() ||
+      obj._element?.src ||
+      ''
+    return {
+      type: 'image',
+      id: data.id || `image-${Date.now()}`,
+      imageUrl: src,
+      fit: 'contain',
+      cornerRadius: data.cornerRadius || 0,
+      x: obj.left || 0,
+      y: obj.top || 0,
+      width: (obj.width || 100) * (obj.scaleX || 1),
+      height: (obj.height || 100) * (obj.scaleY || 1),
+      angle: obj.angle || 0,
+      scaleX: obj.scaleX || 1,
+      scaleY: obj.scaleY || 1,
+      originX: (obj.originX || 'left') as 'left' | 'center' | 'right',
+      originY: (obj.originY || 'top') as 'top' | 'center' | 'bottom',
+      opacity: obj.opacity ?? 1,
+    }
+  }
+
   if (obj instanceof IText || obj instanceof Textbox) {
     return {
       type: 'text',
@@ -230,6 +407,8 @@ function fabricToElement(obj: any): Element | null {
       fontStyle: (obj.fontStyle === 'italic' ? 'italic' : 'normal') as 'normal' | 'italic',
       fill: typeof obj.fill === 'string' ? obj.fill : '#000000',
       textAlign: (obj.textAlign || 'left') as 'left' | 'center' | 'right' | 'justify',
+      lineHeight: obj.lineHeight,
+      charSpacing: obj.charSpacing,
       x: obj.left || 0,
       y: obj.top || 0,
       width: obj.width || 200,
@@ -298,7 +477,6 @@ function fabricToElement(obj: any): Element | null {
  */
 export function testRoundTrip(config: DesignConfigV3): boolean {
   try {
-    // Basic validation - can't test actual canvas in Node
     return config.version === 3 && config.pages.length > 0
   } catch (error) {
     console.error('Round-trip test failed:', error)

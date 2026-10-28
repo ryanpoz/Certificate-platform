@@ -1,5 +1,17 @@
 // Font loading utilities to ensure fonts are ready before rendering
 
+/** Fonts offered in the Fabric lab text toolbar / Text panel. */
+export const EDITOR_FONTS = [
+  'Inter',
+  'Playfair Display',
+  'Montserrat',
+  'Georgia',
+  'Arial',
+  'Times New Roman',
+] as const
+
+export type EditorFont = (typeof EDITOR_FONTS)[number]
+
 const loadedFonts = new Set<string>()
 const failedFonts = new Set<string>()
 const loadingPromises = new Map<string, Promise<void>>()

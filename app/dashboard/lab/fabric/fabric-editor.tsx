@@ -1,12 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { IText, Textbox, StaticCanvas } from 'fabric'
+import { IText, Textbox, StaticCanvas, Image as FabricImage, Rect } from 'fabric'
 import { initAligningGuidelines } from 'fabric/extensions'
 import { useFabricCanvas } from '@/lib/fabric/useFabricCanvas'
 import { loadFonts, extractFontsFromConfig } from '@/lib/fabric/fonts'
 import { FieldText } from '@/lib/fabric/objects/FieldText'
-import { designConfigToFabric } from '@/lib/fabric/serialize'
+import {
+  designConfigToFabric,
+  applyBackground,
+  canvasBackgroundToConfig,
+  applyImageCornerRadius,
+  lockImageAspectRatio,
+} from '@/lib/fabric/serialize'
 import { enableAutoShrink } from '@/lib/fabric/fit-text'
 import {
   collectTextById,
@@ -18,6 +24,16 @@ import {
   clampFieldPosition,
   type CarryFieldSnapshot,
 } from '@/lib/fabric/carry-fields'
+import {
+  getPageSize,
+  detectPageSize,
+  remapObjectPositions,
+  type PagePaper,
+  type PageOrientation,
+} from '@/lib/fabric/page-size'
+import { scaleImageToPageFraction } from '@/lib/fabric/upload-validation'
+import { createSolidBackground } from '@/lib/fabric/background'
+import type { Background } from '@/lib/design-config/v3-schema'
 import { KeyboardShortcuts } from './keyboard-shortcuts'
 import {
   TEMPLATES,
@@ -41,6 +57,11 @@ import {
   distributeH,
   distributeV
 } from './align-utils'
+import { EditorSidebar, type SidebarPanel } from './editor-sidebar'
+import { BackgroundPanel } from './panels/background-panel'
+import { TextPanel, type DynamicFieldOption } from './panels/text-panel'
+import { UploadsPanel, type UploadedAsset } from './panels/uploads-panel'
+import { FloatingObjectToolbar, CropToolbar } from './floating-object-toolbar'
 
 type DesignKey = keyof typeof TEMPLATES | typeof BLANK_TEMPLATE_ID
 type CategoryFilter = 'all' | string
@@ -90,8 +111,18 @@ function snapshotFieldText(obj: any): CarryFieldSnapshot | null {
   }
 }
 
+function isTextObject(obj: any) {
+  return obj instanceof IText || obj instanceof Textbox || obj instanceof FieldText ||
+    obj?.type === 'i-text' || obj?.type === 'textbox' || obj?.type === 'FieldText'
+}
+
+function isImageObject(obj: any) {
+  return obj instanceof FabricImage || obj?.type === 'image'
+}
+
 export default function FabricEditor() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const replaceInputRef = useRef<HTMLInputElement>(null)
   const { canvasRef, canvas, history, isReady } = useFabricCanvas({
     width: 1123,
     height: 794,
@@ -102,6 +133,9 @@ export default function FabricEditor() {
   const cleanupGuidelinesRef = useRef<(() => void) | null>(null)
   const selectedTemplateRef = useRef<DesignKey | null>(null)
   const hasLoadedDesignRef = useRef(false)
+  const pageSizeRef = useRef({ width: 1123, height: 794 })
+  const cropRectRef = useRef<any>(null)
+  const cropTargetRef = useRef<any>(null)
   
   const [selectedTemplate, setSelectedTemplate] = useState<DesignKey | null>(null)
   const [selectedObject, setSelectedObject] = useState<any>(null)
@@ -112,10 +146,17 @@ export default function FabricEditor() {
   const [showStartScreen, setShowStartScreen] = useState(true)
   const [startScreenMode, setStartScreenMode] = useState<'initial' | 'change'>('initial')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
+  const [activePanel, setActivePanel] = useState<SidebarPanel>('text')
+  const [pagePaper, setPagePaper] = useState<PagePaper>('a4')
+  const [pageOrientation, setPageOrientation] = useState<PageOrientation>('landscape')
+  const [pageWidth, setPageWidth] = useState(1123)
+  const [pageHeight, setPageHeight] = useState(794)
+  const [background, setBackground] = useState<Background>(createSolidBackground('#ffffff'))
+  const [uploads, setUploads] = useState<UploadedAsset[]>([])
+  const [cropMode, setCropMode] = useState(false)
+  const [, bumpToolbar] = useState(0)
   
-  // Track user content by field/element id to preserve across template switches
   const userContentRef = useRef<Record<string, string>>({ ...SAMPLE_DATA })
-  // Field keys created via Add Field — re-added on template switch if missing
   const userAddedFieldsRef = useRef<Set<string>>(new Set())
 
   const catalog = useMemo(() => getTemplateCatalog(TEMPLATES), [])
@@ -125,31 +166,49 @@ export default function FabricEditor() {
     [catalog, categoryFilter]
   )
 
-  const fitCanvasToContainer = useCallback((templateKey: DesignKey | null = selectedTemplateRef.current) => {
-    if (!canvas || !containerRef.current || !templateKey) return
+  const commitHistory = useCallback(() => {
+    void history?.saveState()
+  }, [history])
 
-    const page = resolveDesignConfig(templateKey).pages[0]
+  const updateToolbarPosition = useCallback((obj: any) => {
+    if (!canvas || !obj) {
+      setToolbarPos(prev => ({ ...prev, visible: false }))
+      return
+    }
+    const el = canvas.getElement()
+    const rect = el.getBoundingClientRect()
+    const bound = obj.getBoundingRect()
+    setToolbarPos({
+      x: rect.left + bound.left + bound.width / 2,
+      y: Math.max(8, rect.top + bound.top - 48),
+      visible: true,
+    })
+  }, [canvas])
+
+  const fitCanvasToContainer = useCallback(() => {
+    if (!canvas || !containerRef.current) return
+    const { width, height } = pageSizeRef.current
+
     const availableWidth = containerRef.current.clientWidth - CANVAS_PADDING * 2
     const availableHeight = containerRef.current.clientHeight - CANVAS_PADDING * 2
     if (availableWidth <= 0 || availableHeight <= 0) return
 
-    // Fill the area below the toolbar; portrait uses full height via height-bound scale
-    const scale = Math.min(availableWidth / page.width, availableHeight / page.height)
+    const scale = Math.min(availableWidth / width, availableHeight / height)
 
-    canvas.setDimensions({ width: page.width, height: page.height })
+    ;(canvas as any).__pageWidth = width
+    ;(canvas as any).__pageHeight = height
+    canvas.setDimensions({ width, height })
     canvas.setZoom(scale)
     canvas.setDimensions({
-      width: page.width * scale,
-      height: page.height * scale
+      width: width * scale,
+      height: height * scale
     })
-    // Recalculate offset after resize so clicks / text editing hit the right place
     canvas.calcOffset()
     canvas.requestRenderAll()
   }, [canvas])
 
   const saveFieldContent = useCallback(() => {
     if (!canvas) return
-
     const sources = canvas.getObjects()
       .map((obj: any) => {
         const id = textIdForObject(obj)
@@ -166,7 +225,6 @@ export default function FabricEditor() {
 
   const restoreFieldContent = useCallback(() => {
     if (!canvas) return
-
     canvas.getObjects().forEach((obj: any) => {
       const id = textIdForObject(obj)
       if (!id) return
@@ -177,17 +235,24 @@ export default function FabricEditor() {
     })
   }, [canvas])
 
+  const syncPageFromConfig = useCallback((width: number, height: number) => {
+    const detected = detectPageSize(width, height)
+    pageSizeRef.current = { width, height }
+    setPageWidth(width)
+    setPageHeight(height)
+    setPagePaper(detected.paper)
+    setPageOrientation(detected.orientation)
+  }, [])
+
   const loadTemplate = useCallback(async (templateKey: DesignKey) => {
     if (!canvas) return
 
     const config = resolveDesignConfig(templateKey)
     const page = config.pages[0]
     
-    // Preload fonts before rendering
     const fonts = extractFontsFromConfig(config)
     await loadFonts(fonts)
 
-    // Snapshot user-added fields + text before clear (template switch)
     let carriedSnapshots: CarryFieldSnapshot[] = []
     if (hasLoadedDesignRef.current) {
       saveFieldContent()
@@ -196,21 +261,18 @@ export default function FabricEditor() {
         .filter((s): s is CarryFieldSnapshot => s !== null)
     }
 
-    // Pause history while we clear + rebuild (avoid ghost snapshots)
     history?.pause()
 
-    // Clear all objects and reset background so old template doesn't linger
     canvas.clear()
     canvas.backgroundImage = undefined
     canvas.backgroundColor = '#ffffff'
 
-    // Load new template
     await designConfigToFabric(config, canvas)
+    syncPageFromConfig(page.width, page.height)
+    setBackground(page.background)
 
-    // Restore user text by id onto fields the template already has
     restoreFieldContent()
 
-    // Re-add user-added fields the new template does not already include
     const keysOnCanvas = new Set(
       canvas.getObjects()
         .filter((o: any) => o instanceof FieldText || o.type === 'FieldText')
@@ -253,7 +315,6 @@ export default function FabricEditor() {
       keysOnCanvas.add(snap.field)
     }
 
-    // Enable auto-shrink on all FieldText objects (template + carried)
     canvas.getObjects().forEach(obj => {
       if (obj instanceof FieldText && obj.autoShrink) {
         enableAutoShrink(obj, {
@@ -261,20 +322,19 @@ export default function FabricEditor() {
           maxLines: obj.maxLines
         })
       }
+      if (isImageObject(obj)) lockImageAspectRatio(obj)
     })
 
     selectedTemplateRef.current = templateKey
     hasLoadedDesignRef.current = true
-    fitCanvasToContainer(templateKey)
+    fitCanvasToContainer()
     canvas.renderAll()
 
-    // Fresh history snapshot for this design (first load or switch)
     history?.resume()
     history?.clear()
     await history?.saveState()
-  }, [canvas, history, saveFieldContent, restoreFieldContent, fitCanvasToContainer])
+  }, [canvas, history, saveFieldContent, restoreFieldContent, fitCanvasToContainer, syncPageFromConfig])
 
-  // Initialize aligning guidelines + keyboard shortcuts (no auto template load)
   useEffect(() => {
     if (!canvas || !history || !isReady) return
 
@@ -292,19 +352,15 @@ export default function FabricEditor() {
     const handleSelection = () => {
       const selected = canvas.getActiveObjects() || []
       setSelectedObjects(selected)
-      setSelectedObject(selected.length === 1 ? selected[0] : null)
+      const one = selected.length === 1 ? selected[0] : null
+      setSelectedObject(one)
 
-      if (selected.length === 1 && (selected[0] instanceof IText || selected[0] instanceof Textbox)) {
-        const obj = selected[0]
-        const bound = obj.getBoundingRect()
-        setToolbarPos({
-          x: bound.left + bound.width / 2,
-          y: bound.top - 50,
-          visible: true
-        })
+      if (one && (isTextObject(one) || isImageObject(one))) {
+        updateToolbarPosition(one)
       } else {
         setToolbarPos(prev => ({ ...prev, visible: false }))
       }
+      bumpToolbar(n => n + 1)
     }
 
     const onCleared = () => {
@@ -315,9 +371,11 @@ export default function FabricEditor() {
 
     const handleDblClick = (e: any) => {
       const target = e.target
-      if (target && (target instanceof IText || target instanceof Textbox)) {
-        target.enterEditing()
-        target.selectAll()
+      if (target && isTextObject(target) && !(target instanceof FieldText && false)) {
+        if (typeof target.enterEditing === 'function') {
+          target.enterEditing()
+          target.selectAll?.()
+        }
       }
     }
 
@@ -329,12 +387,19 @@ export default function FabricEditor() {
       handleSelection()
     }
 
+    const onModified = () => {
+      const active = canvas.getActiveObject()
+      if (active) updateToolbarPosition(active)
+    }
+
     canvas.on('selection:created', handleSelection)
     canvas.on('selection:updated', handleSelection)
     canvas.on('selection:cleared', onCleared)
     canvas.on('mouse:dblclick', handleDblClick)
     canvas.on('text:editing:entered', onEditingEntered)
     canvas.on('text:editing:exited', onEditingExited)
+    canvas.on('object:modified', onModified)
+    canvas.on('object:moving', onModified)
 
     const unsubscribe = history.onChange(setHistoryState)
 
@@ -348,27 +413,25 @@ export default function FabricEditor() {
       canvas.off('mouse:dblclick', handleDblClick)
       canvas.off('text:editing:entered', onEditingEntered)
       canvas.off('text:editing:exited', onEditingExited)
+      canvas.off('object:modified', onModified)
+      canvas.off('object:moving', onModified)
     }
-  }, [canvas, history, isReady])
+  }, [canvas, history, isReady, updateToolbarPosition])
 
-  // After leaving the start screen, refresh Fabric's mouse offset (canvas was covered / not interactive)
   useEffect(() => {
     if (!canvas || showStartScreen || !selectedTemplate) return
     requestAnimationFrame(() => {
       canvas.calcOffset()
-      fitCanvasToContainer(selectedTemplate)
+      fitCanvasToContainer()
     })
-  }, [canvas, showStartScreen, selectedTemplate, fitCanvasToContainer])
+  }, [canvas, showStartScreen, selectedTemplate, fitCanvasToContainer, activePanel])
 
-  // Fit canvas on window resize and orientation change
   useEffect(() => {
     if (!isReady || !canvas || !selectedTemplate) return
-
     const onResize = () => fitCanvasToContainer()
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onResize)
     requestAnimationFrame(() => fitCanvasToContainer())
-
     return () => {
       window.removeEventListener('resize', onResize)
       window.removeEventListener('orientationchange', onResize)
@@ -377,38 +440,30 @@ export default function FabricEditor() {
 
   const generateThumbnails = useCallback(async () => {
     const thumbs: Record<string, string> = {}
-
     for (const entry of getTemplateCatalog(TEMPLATES)) {
       const config = entry.config
       const page = config.pages[0]
-      const fonts = extractFontsFromConfig(config)
-      await loadFonts(fonts)
-
+      await loadFonts(extractFontsFromConfig(config))
       const thumbWidth = THUMB_WIDTH
       const thumbHeight = (page.height / page.width) * thumbWidth
       const el = document.createElement('canvas')
-
       const thumbFabric = new StaticCanvas(el, {
         width: page.width,
         height: page.height,
         renderOnAddRemove: false
       })
-
       try {
         await designConfigToFabric(config, thumbFabric)
-
         thumbFabric.getObjects().forEach((obj: any) => {
           if (obj instanceof FieldText || obj.type === 'FieldText') {
             const sample = SAMPLE_DATA[obj.field]
             if (sample) obj.set({ text: sample })
           }
         })
-
         const scale = thumbWidth / page.width
         thumbFabric.setZoom(scale)
         thumbFabric.setDimensions({ width: thumbWidth, height: thumbHeight })
         thumbFabric.renderAll()
-
         thumbs[entry.key] = thumbFabric.toDataURL({ format: 'png', multiplier: 1 })
       } catch (err) {
         console.warn(`Thumbnail failed for ${entry.key}`, err)
@@ -416,7 +471,6 @@ export default function FabricEditor() {
         thumbFabric.dispose()
       }
     }
-
     setThumbnails(thumbs)
   }, [])
 
@@ -443,63 +497,308 @@ export default function FabricEditor() {
     setStartScreenMode('initial')
   }
 
-  const updateTextStyle = (property: string, value: any) => {
-    if (!selectedObject || !canvas) return
-    
-    selectedObject.set({ [property]: value })
+  const applyBackgroundAndRender = useCallback(async (bg: Background, commit = false) => {
+    if (!canvas) return
+    const { width, height } = pageSizeRef.current
+    await applyBackground(canvas, bg, width, height)
+    setBackground(bg)
+    canvas.requestRenderAll()
+    if (commit) commitHistory()
+  }, [canvas, commitHistory])
+
+  const changePageSize = useCallback((paper: PagePaper, orientation: PageOrientation) => {
+    if (!canvas) return
+    const next = getPageSize(paper, orientation)
+    const from = pageSizeRef.current
+    history?.pause()
+
+    const objects = canvas.getObjects()
+    const remapped = remapObjectPositions(
+      objects.map((o: any) => ({ left: o.left || 0, top: o.top || 0, obj: o })),
+      from.width,
+      from.height,
+      next.width,
+      next.height
+    )
+    remapped.forEach(item => {
+      item.obj.set({ left: item.left, top: item.top })
+      item.obj.setCoords()
+    })
+
+    pageSizeRef.current = { width: next.width, height: next.height }
+    setPagePaper(paper)
+    setPageOrientation(orientation)
+    setPageWidth(next.width)
+    setPageHeight(next.height)
+
+    // Re-apply background to new size (gradients/images need new coords/cover)
+    void (async () => {
+      const bg = canvasBackgroundToConfig(canvas)
+      await applyBackground(canvas, bg, next.width, next.height)
+      setBackground(bg)
+      fitCanvasToContainer()
+      history?.resume()
+      commitHistory()
+    })()
+  }, [canvas, history, fitCanvasToContainer, commitHistory])
+
+  const addPlainText = (text: string, fontSize: number, fontWeight: 'normal' | 'bold' = 'normal') => {
+    if (!canvas) return
+    const { width, height } = pageSizeRef.current
+    const obj = new IText(text, {
+      left: width / 2,
+      top: height / 2,
+      originX: 'center',
+      originY: 'center',
+      fontSize,
+      fontFamily: 'Inter',
+      fontWeight,
+      fill: '#111111',
+      textAlign: 'center',
+      data: { id: `text-${Date.now()}` },
+    })
+    canvas.add(obj)
+    canvas.setActiveObject(obj)
     canvas.requestRenderAll()
   }
 
-  const addTextField = () => {
+  const addDynamicField = (option: DynamicFieldOption) => {
     if (!canvas) return
-
-    // Unique field id so we never create duplicate field keys
     const existing = new Set(
       canvas.getObjects()
         .filter((o: any) => o instanceof FieldText || o.type === 'FieldText')
         .map((o: any) => o.field as string)
     )
-    let n = 1
-    while (existing.has(`custom_${n}`) && n < 3) n++
-    const fieldId = n <= 3 ? `custom_${n}` : `custom_${Date.now()}`
-    
-    const field = new FieldText('New Field', {
-      left: 100,
-      top: 100,
-      width: 200,
-      fontSize: 24,
-      fill: '#000000',
-      field: fieldId as any,
-      autoShrink: true,
-      data: { id: fieldId },
-    } as any)
+    if (existing.has(option.field)) {
+      const found = canvas.getObjects().find((o: any) => o.field === option.field)
+      if (found) {
+        canvas.setActiveObject(found)
+        canvas.requestRenderAll()
+      }
+      return
+    }
 
-    userAddedFieldsRef.current.add(fieldId)
-    
+    const { width, height } = pageSizeRef.current
+    const field = new FieldText(option.placeholder, {
+      left: width / 2,
+      top: height / 2,
+      originX: 'center',
+      originY: 'center',
+      width: Math.min(400, width * 0.5),
+      fontSize: 28,
+      fill: '#111111',
+      field: option.field as any,
+      autoShrink: true,
+      data: { id: option.field },
+    } as any)
+    userAddedFieldsRef.current.add(option.field)
     enableAutoShrink(field)
     canvas.add(field)
     canvas.setActiveObject(field)
     canvas.requestRenderAll()
   }
 
+  const placeUpload = async (asset: UploadedAsset) => {
+    if (!canvas) return
+    const { width, height } = pageSizeRef.current
+    const img = await FabricImage.fromURL(asset.dataUrl)
+    const scale = scaleImageToPageFraction(img.width || 1, img.height || 1, width, 0.4)
+    img.set({
+      left: width / 2,
+      top: height / 2,
+      originX: 'center',
+      originY: 'center',
+      scaleX: scale,
+      scaleY: scale,
+      data: { id: asset.id, imageUrl: asset.dataUrl, cornerRadius: 0 },
+    } as any)
+    lockImageAspectRatio(img)
+    canvas.add(img)
+    canvas.setActiveObject(img)
+    canvas.requestRenderAll()
+  }
+
+  const updateTextStyle = (property: string, value: any) => {
+    if (!selectedObject || !canvas) return
+    selectedObject.set({ [property]: value })
+    if (property === 'fontFamily') {
+      void loadFonts([value])
+    }
+    canvas.requestRenderAll()
+    commitHistory()
+    bumpToolbar(n => n + 1)
+  }
+
+  const updateImageProp = (prop: 'opacity' | 'cornerRadius', value: number) => {
+    if (!selectedObject || !canvas || !isImageObject(selectedObject)) return
+    if (prop === 'opacity') {
+      selectedObject.set({ opacity: value })
+    } else {
+      applyImageCornerRadius(selectedObject, value)
+    }
+    canvas.requestRenderAll()
+    bumpToolbar(n => n + 1)
+  }
+
+  const startCrop = () => {
+    if (!canvas || !selectedObject || !isImageObject(selectedObject)) return
+    const img = selectedObject
+    cropTargetRef.current = img
+    const bound = img.getBoundingRect()
+    const rect = new Rect({
+      left: bound.left + bound.width * 0.1,
+      top: bound.top + bound.height * 0.1,
+      width: bound.width * 0.8,
+      height: bound.height * 0.8,
+      fill: 'rgba(37,99,235,0.15)',
+      stroke: '#2563eb',
+      strokeWidth: 2,
+      strokeDashArray: [6, 4],
+      cornerColor: '#2563eb',
+      transparentCorners: false,
+      data: { id: '__crop_rect__', isCropRect: true },
+    })
+    history?.pause()
+    canvas.add(rect)
+    canvas.setActiveObject(rect)
+    cropRectRef.current = rect
+    setCropMode(true)
+    canvas.requestRenderAll()
+  }
+
+  const cancelCrop = () => {
+    if (!canvas) return
+    if (cropRectRef.current) {
+      canvas.remove(cropRectRef.current)
+      cropRectRef.current = null
+    }
+    if (cropTargetRef.current) {
+      canvas.setActiveObject(cropTargetRef.current)
+    }
+    cropTargetRef.current = null
+    setCropMode(false)
+    history?.resume()
+    canvas.requestRenderAll()
+  }
+
+  const applyCrop = () => {
+    if (!canvas || !cropRectRef.current || !cropTargetRef.current) {
+      cancelCrop()
+      return
+    }
+    const img = cropTargetRef.current
+    const crop = cropRectRef.current
+    const imgBound = img.getBoundingRect()
+    const cropBound = crop.getBoundingRect()
+
+    const scaleX = img.scaleX || 1
+    const scaleY = img.scaleY || 1
+    const relLeft = (cropBound.left - imgBound.left) / scaleX
+    const relTop = (cropBound.top - imgBound.top) / scaleY
+    const relW = cropBound.width / scaleX
+    const relH = cropBound.height / scaleY
+
+    img.set({
+      cropX: Math.max(0, (img.cropX || 0) + relLeft),
+      cropY: Math.max(0, (img.cropY || 0) + relTop),
+      width: Math.max(1, relW),
+      height: Math.max(1, relH),
+    })
+    img.setCoords()
+
+    canvas.remove(crop)
+    cropRectRef.current = null
+    cropTargetRef.current = null
+    setCropMode(false)
+    history?.resume()
+    canvas.setActiveObject(img)
+    canvas.requestRenderAll()
+    commitHistory()
+  }
+
+  const replaceSelectedImage = async (file: File | null) => {
+    if (!file || !canvas || !selectedObject || !isImageObject(selectedObject)) return
+    const { validateImageUpload } = await import('@/lib/fabric/upload-validation')
+    const result = validateImageUpload(file)
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+    // TODO: Move replaced images to Supabase Storage instead of data URLs.
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const dataUrl = String(reader.result || '')
+      const next = await FabricImage.fromURL(dataUrl)
+      const prev = selectedObject
+      next.set({
+        left: prev.left,
+        top: prev.top,
+        originX: prev.originX,
+        originY: prev.originY,
+        angle: prev.angle,
+        scaleX: prev.scaleX,
+        scaleY: prev.scaleY,
+        opacity: prev.opacity,
+        data: {
+          ...(prev.get?.('data') || {}),
+          imageUrl: dataUrl,
+        },
+      } as any)
+      lockImageAspectRatio(next)
+      const radius = (prev.get?.('data') || {}).cornerRadius || 0
+      applyImageCornerRadius(next, radius)
+      canvas.remove(prev)
+      canvas.add(next)
+      canvas.setActiveObject(next)
+      canvas.requestRenderAll()
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const deleteSelected = () => {
+    if (!canvas || !selectedObject) return
+    canvas.remove(selectedObject)
+    canvas.discardActiveObject()
+    canvas.requestRenderAll()
+  }
+
+  const imageCornerRadius =
+    isImageObject(selectedObject)
+      ? ((selectedObject.get?.('data') || selectedObject.data || {}).cornerRadius || 0)
+      : 0
+
   return (
     <div className="h-full flex flex-col bg-gray-50 relative">
-      {/* Toolbar — visible once a design has been chosen */}
       {selectedTemplate !== null && (
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-2 flex-wrap shrink-0">
-          <button
-            onClick={addTextField}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Add Field
-          </button>
-
           <button
             onClick={openChangeTemplate}
             className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50"
           >
             Change template
           </button>
+
+          <div className="border-l border-gray-300 h-6 mx-2" />
+
+          <div className="flex items-center gap-1 text-xs">
+            <span className="text-gray-500 mr-1">Page</span>
+            <select
+              value={pagePaper}
+              onChange={e => changePageSize(e.target.value as PagePaper, pageOrientation)}
+              className="rounded border px-2 py-1"
+            >
+              <option value="a4">A4</option>
+              <option value="letter">US Letter</option>
+            </select>
+            <select
+              value={pageOrientation}
+              onChange={e => changePageSize(pagePaper, e.target.value as PageOrientation)}
+              className="rounded border px-2 py-1"
+            >
+              <option value="landscape">Landscape</option>
+              <option value="portrait">Portrait</option>
+            </select>
+          </div>
           
           <div className="border-l border-gray-300 h-6 mx-2" />
           
@@ -523,34 +822,17 @@ export default function FabricEditor() {
           {selectedObjects.length >= 2 && (
             <>
               <div className="border-l border-gray-300 h-6 mx-2" />
-              <button onClick={() => alignLeft(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Align Left">
-                ⬅️
-              </button>
-              <button onClick={() => alignCenterH(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Center Horizontally">
-                ↔️
-              </button>
-              <button onClick={() => alignRight(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Align Right">
-                ➡️
-              </button>
-              <button onClick={() => alignTop(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Align Top">
-                ⬆️
-              </button>
-              <button onClick={() => alignCenterV(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Center Vertically">
-                ↕️
-              </button>
-              <button onClick={() => alignBottom(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Align Bottom">
-                ⬇️
-              </button>
-              
+              <button onClick={() => alignLeft(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Align Left">⬅️</button>
+              <button onClick={() => alignCenterH(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Center Horizontally">↔️</button>
+              <button onClick={() => alignRight(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Align Right">➡️</button>
+              <button onClick={() => alignTop(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Align Top">⬆️</button>
+              <button onClick={() => alignCenterV(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Center Vertically">↕️</button>
+              <button onClick={() => alignBottom(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Align Bottom">⬇️</button>
               {selectedObjects.length >= 3 && (
                 <>
                   <div className="border-l border-gray-300 h-6 mx-2" />
-                  <button onClick={() => distributeH(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Distribute Horizontally">
-                    ↔️ Dist
-                  </button>
-                  <button onClick={() => distributeV(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Distribute Vertically">
-                    ↕️ Dist
-                  </button>
+                  <button onClick={() => distributeH(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Distribute Horizontally">↔️ Dist</button>
+                  <button onClick={() => distributeV(canvas!)} className="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Distribute Vertically">↕️ Dist</button>
                 </>
               )}
             </>
@@ -562,28 +844,55 @@ export default function FabricEditor() {
         </div>
       )}
 
-      {/* Canvas Container — always render canvas so useFabricCanvas can attach.
-          Never put dynamic className on the <canvas> Fabric owns (breaks hit-testing / editing).
-          Hide via a wrapper instead while the start screen is open. */}
-      <div
-        ref={containerRef}
-        className="relative flex-1 flex items-center justify-center overflow-hidden min-h-0"
-        style={{ padding: CANVAS_PADDING }}
-      >
-        <div
-          className={showStartScreen ? 'invisible pointer-events-none' : undefined}
-          aria-hidden={showStartScreen}
-        >
-          <canvas ref={canvasRef} />
-        </div>
-        {!isReady && !showStartScreen && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10">
-            <div className="text-gray-500">Loading Fabric editor...</div>
-          </div>
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {selectedTemplate !== null && !showStartScreen && (
+          <EditorSidebar activePanel={activePanel} onSelect={setActivePanel}>
+            {activePanel === 'text' && (
+              <TextPanel
+                onAddHeading={() => addPlainText('Heading', 48, 'bold')}
+                onAddSubheading={() => addPlainText('Subheading', 32)}
+                onAddBody={() => addPlainText('Body text', 18)}
+                onAddField={addDynamicField}
+              />
+            )}
+            {activePanel === 'uploads' && (
+              <UploadsPanel
+                assets={uploads}
+                onAddAsset={asset => setUploads(prev => [asset, ...prev])}
+                onPlaceAsset={asset => void placeUpload(asset)}
+              />
+            )}
+            {activePanel === 'background' && (
+              <BackgroundPanel
+                pageWidth={pageWidth}
+                pageHeight={pageHeight}
+                current={background}
+                onApply={bg => void applyBackgroundAndRender(bg, false)}
+                onCommitHistory={commitHistory}
+              />
+            )}
+          </EditorSidebar>
         )}
+
+        <div
+          ref={containerRef}
+          className="relative flex-1 flex items-center justify-center overflow-hidden min-h-0"
+          style={{ padding: CANVAS_PADDING }}
+        >
+          <div
+            className={showStartScreen ? 'invisible pointer-events-none' : undefined}
+            aria-hidden={showStartScreen}
+          >
+            <canvas ref={canvasRef} />
+          </div>
+          {!isReady && !showStartScreen && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 z-10">
+              <div className="text-gray-500">Loading Fabric editor...</div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Start screen / Change template overlay */}
       {showStartScreen && (
         <StartScreen
           mode={startScreenMode}
@@ -598,37 +907,57 @@ export default function FabricEditor() {
         />
       )}
 
-      {/* Floating Toolbar */}
-      {toolbarPos.visible && selectedObject && (selectedObject instanceof IText || selectedObject instanceof Textbox) && (
-        <div
-          className="fixed bg-white rounded-lg shadow-xl border border-gray-200 px-3 py-2 flex items-center gap-2 z-50"
-          style={{ left: toolbarPos.x, top: toolbarPos.y, transform: 'translateX(-50%)' }}
-        >
-          <select
-            value={selectedObject.fontFamily || 'Inter'}
-            onChange={(e) => updateTextStyle('fontFamily', e.target.value)}
-            className="text-xs border rounded px-2 py-1"
-          >
-            <option value="Inter">Inter</option>
-            <option value="Playfair Display">Playfair Display</option>
-            <option value="Montserrat">Montserrat</option>
-            <option value="Georgia">Georgia</option>
-          </select>
+      <input
+        ref={replaceInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        className="hidden"
+        onChange={e => {
+          void replaceSelectedImage(e.target.files?.[0] || null)
+          e.target.value = ''
+        }}
+      />
 
-          <input
-            type="number"
-            value={selectedObject.fontSize || 16}
-            onChange={(e) => updateTextStyle('fontSize', parseInt(e.target.value))}
-            className="text-xs border rounded px-2 py-1 w-16"
-          />
+      {cropMode && (
+        <CropToolbar
+          x={toolbarPos.x || (typeof window !== 'undefined' ? window.innerWidth / 2 : 0)}
+          y={toolbarPos.y || 80}
+          onApply={applyCrop}
+          onCancel={cancelCrop}
+        />
+      )}
 
-          <input
-            type="color"
-            value={typeof selectedObject.fill === 'string' ? selectedObject.fill : '#000000'}
-            onChange={(e) => updateTextStyle('fill', e.target.value)}
-            className="w-8 h-8 border rounded cursor-pointer"
-          />
-        </div>
+      {!cropMode && toolbarPos.visible && selectedObject && isTextObject(selectedObject) && (
+        <FloatingObjectToolbar
+          kind="text"
+          x={toolbarPos.x}
+          y={toolbarPos.y}
+          fontFamily={selectedObject.fontFamily || 'Inter'}
+          fontSize={selectedObject.fontSize || 16}
+          fontWeight={selectedObject.fontWeight || 'normal'}
+          fontStyle={selectedObject.fontStyle || 'normal'}
+          underline={!!selectedObject.underline}
+          fill={typeof selectedObject.fill === 'string' ? selectedObject.fill : '#000000'}
+          textAlign={selectedObject.textAlign || 'left'}
+          charSpacing={selectedObject.charSpacing ?? 0}
+          lineHeight={selectedObject.lineHeight ?? 1.16}
+          onTextChange={updateTextStyle}
+        />
+      )}
+
+      {!cropMode && toolbarPos.visible && selectedObject && isImageObject(selectedObject) && (
+        <FloatingObjectToolbar
+          kind="image"
+          x={toolbarPos.x}
+          y={toolbarPos.y}
+          opacity={selectedObject.opacity ?? 1}
+          cornerRadius={imageCornerRadius}
+          onImageChange={updateImageProp}
+          onImageCommit={commitHistory}
+          onCrop={startCrop}
+          onReplace={() => replaceInputRef.current?.click()}
+          onDelete={deleteSelected}
+        />
       )}
     </div>
   )
@@ -680,7 +1009,6 @@ function StartScreen({
           )}
         </div>
 
-        {/* Start blank */}
         <button
           type="button"
           onClick={onSelectBlank}
@@ -699,7 +1027,6 @@ function StartScreen({
           </div>
         </button>
 
-        {/* Category chips */}
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <span className="text-sm font-medium text-gray-700 mr-1">Templates</span>
           <button
@@ -729,7 +1056,6 @@ function StartScreen({
           ))}
         </div>
 
-        {/* Catalog grid — driven by getTemplateCatalog(TEMPLATES), not a hard-coded list */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {catalog.map(entry => (
             <button

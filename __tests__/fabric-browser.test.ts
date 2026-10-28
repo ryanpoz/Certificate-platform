@@ -60,7 +60,14 @@ describe('Fabric.js Editor - Phase 1b Integration', () => {
   it('should retain user-added fields when switching templates', () => {
     expect(editorCode).toContain('userAddedFieldsRef')
     expect(editorCode).toContain('selectFieldsToCarry')
-    expect(editorCode).toContain('Add Field')
+    expect(editorCode).toContain('addDynamicField')
+  })
+
+  it('should expose text, uploads, and background sidebar panels', () => {
+    expect(editorCode).toContain('TextPanel')
+    expect(editorCode).toContain('UploadsPanel')
+    expect(editorCode).toContain('BackgroundPanel')
+    expect(editorCode).toContain('changePageSize')
   })
 
   it('should have keyboard shortcuts', () => {
