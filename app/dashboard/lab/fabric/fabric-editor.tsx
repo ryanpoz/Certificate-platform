@@ -13,6 +13,11 @@ import {
   mergeTextById,
   resolveTextById,
 } from '@/lib/fabric/text-by-id'
+import {
+  selectFieldsToCarry,
+  clampFieldPosition,
+  type CarryFieldSnapshot,
+} from '@/lib/fabric/carry-fields'
 import { KeyboardShortcuts } from './keyboard-shortcuts'
 import {
   TEMPLATES,
@@ -57,6 +62,34 @@ function textIdForObject(obj: any): string | null {
   return null
 }
 
+function snapshotFieldText(obj: any): CarryFieldSnapshot | null {
+  if (!(obj instanceof FieldText || obj.type === 'FieldText')) return null
+  const field = (obj.field as string) || ''
+  if (!field) return null
+  const data = obj.get?.('data') || obj.data || {}
+  return {
+    field,
+    text: (obj.text as string) || '',
+    left: obj.left ?? 0,
+    top: obj.top ?? 0,
+    width: obj.width ?? 200,
+    height: obj.height ?? 50,
+    fontSize: obj.fontSize ?? 24,
+    fontFamily: obj.fontFamily || 'Inter',
+    fill: typeof obj.fill === 'string' ? obj.fill : '#000000',
+    textAlign: obj.textAlign || 'center',
+    autoShrink: obj.autoShrink ?? true,
+    minFontSize: obj.minFontSize ?? 12,
+    maxLines: obj.maxLines ?? 1,
+    angle: obj.angle ?? 0,
+    scaleX: obj.scaleX ?? 1,
+    scaleY: obj.scaleY ?? 1,
+    originX: obj.originX || 'left',
+    originY: obj.originY || 'top',
+    elementId: data.id as string | undefined,
+  }
+}
+
 export default function FabricEditor() {
   const containerRef = useRef<HTMLDivElement>(null)
   const { canvasRef, canvas, history, isReady } = useFabricCanvas({
@@ -82,6 +115,8 @@ export default function FabricEditor() {
   
   // Track user content by field/element id to preserve across template switches
   const userContentRef = useRef<Record<string, string>>({ ...SAMPLE_DATA })
+  // Field keys created via Add Field — re-added on template switch if missing
+  const userAddedFieldsRef = useRef<Set<string>>(new Set())
 
   const catalog = useMemo(() => getTemplateCatalog(TEMPLATES), [])
   const categories = useMemo(() => getCatalogCategories(catalog), [catalog])
@@ -146,14 +181,19 @@ export default function FabricEditor() {
     if (!canvas) return
 
     const config = resolveDesignConfig(templateKey)
+    const page = config.pages[0]
     
     // Preload fonts before rendering
     const fonts = extractFontsFromConfig(config)
     await loadFonts(fonts)
 
-    // Save current field content by id when switching away from an existing design
+    // Snapshot user-added fields + text before clear (template switch)
+    let carriedSnapshots: CarryFieldSnapshot[] = []
     if (hasLoadedDesignRef.current) {
       saveFieldContent()
+      carriedSnapshots = canvas.getObjects()
+        .map(snapshotFieldText)
+        .filter((s): s is CarryFieldSnapshot => s !== null)
     }
 
     // Pause history while we clear + rebuild (avoid ghost snapshots)
@@ -167,10 +207,53 @@ export default function FabricEditor() {
     // Load new template
     await designConfigToFabric(config, canvas)
 
-    // Restore user text by id (never create duplicate field ids)
+    // Restore user text by id onto fields the template already has
     restoreFieldContent()
 
-    // Enable auto-shrink on all FieldText objects
+    // Re-add user-added fields the new template does not already include
+    const keysOnCanvas = new Set(
+      canvas.getObjects()
+        .filter((o: any) => o instanceof FieldText || o.type === 'FieldText')
+        .map((o: any) => o.field as string)
+    )
+    const toCarry = selectFieldsToCarry(
+      carriedSnapshots,
+      keysOnCanvas,
+      userAddedFieldsRef.current
+    )
+    for (const snap of toCarry) {
+      const pos = clampFieldPosition(
+        snap.left,
+        snap.top,
+        snap.width,
+        page.width,
+        page.height
+      )
+      const field = new FieldText(snap.text || 'New Field', {
+        left: pos.left,
+        top: pos.top,
+        width: snap.width,
+        height: snap.height,
+        fontSize: snap.fontSize,
+        fontFamily: snap.fontFamily,
+        fill: snap.fill,
+        textAlign: snap.textAlign as any,
+        angle: snap.angle,
+        scaleX: snap.scaleX,
+        scaleY: snap.scaleY,
+        originX: snap.originX as any,
+        originY: snap.originY as any,
+        field: snap.field as any,
+        autoShrink: snap.autoShrink,
+        minFontSize: snap.minFontSize,
+        maxLines: snap.maxLines,
+        data: { id: snap.elementId || snap.field },
+      } as any)
+      canvas.add(field)
+      keysOnCanvas.add(snap.field)
+    }
+
+    // Enable auto-shrink on all FieldText objects (template + carried)
     canvas.getObjects().forEach(obj => {
       if (obj instanceof FieldText && obj.autoShrink) {
         enableAutoShrink(obj, {
@@ -387,8 +470,11 @@ export default function FabricEditor() {
       fontSize: 24,
       fill: '#000000',
       field: fieldId as any,
-      autoShrink: true
+      autoShrink: true,
+      data: { id: fieldId },
     } as any)
+
+    userAddedFieldsRef.current.add(fieldId)
     
     enableAutoShrink(field)
     canvas.add(field)
