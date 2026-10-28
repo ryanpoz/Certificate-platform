@@ -57,13 +57,18 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     
     // Should use new modular imports
     expect(editor).toContain('useFabricCanvas')
-    expect(editor).toContain('CanvasHistory')
     expect(editor).toContain('loadFonts')
     expect(editor).toContain('FieldText')
     expect(editor).toContain('initAligningGuidelines')
+
+    // Start screen replaces the horizontal template strip
+    expect(editor).toContain('Start blank')
+    expect(editor).toContain('Change template')
+    expect(editor).toContain('showStartScreen')
+    expect(editor).not.toContain('Template Thumbnails')
   })
 
-  it('should handle template switching', () => {
+  it('should handle template switching via start screen', () => {
     const editor = readFileSync(
       join(process.cwd(), 'app/dashboard/lab/fabric/fabric-editor.tsx'),
       'utf-8'
@@ -75,6 +80,8 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
     
     // Should have loadTemplate function
     expect(editor).toContain('loadTemplate')
+    expect(editor).toContain('handleDesignSelect')
+    expect(editor).toContain('BLANK_TEMPLATE_ID')
   })
 
   it('should support text editing features', () => {
@@ -98,9 +105,9 @@ describe('Fabric.js Prototype - Smoke Tests', () => {
       'utf-8'
     )
     
-    // Should use CanvasHistory
+    // History comes from useFabricCanvas
     expect(editor).toContain('history')
-    expect(editor).toContain('CanvasHistory')
+    expect(editor).toContain('useFabricCanvas')
     expect(editor).toContain('undo')
     expect(editor).toContain('redo')
   })
