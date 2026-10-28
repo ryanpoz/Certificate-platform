@@ -1360,6 +1360,72 @@ const DISPLAY_NAMES: Record<string, string> = {
   'portrait-academy-diploma': 'Academy Diploma',
 }
 
+/** Optional category per template key — add a value when adding templates to enable filter chips. */
+const TEMPLATE_CATEGORIES: Record<string, string> = {
+  'modern-saas-gradient': 'Modern',
+  'classic-bordered': 'Classic',
+  'minimal-modern': 'Modern',
+  'bold-dark': 'Modern',
+  'colorful-corporate': 'Corporate',
+  'portrait-academy-diploma': 'Classic',
+}
+
+export type TemplateOrientation = 'Landscape' | 'Portrait'
+
+export type TemplateCatalogEntry = {
+  key: string
+  name: string
+  category: string
+  orientation: TemplateOrientation
+  config: DesignConfigV3
+}
+
 export function getTemplateDisplayName(key: string): string {
   return DISPLAY_NAMES[key] || key.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
+export function getTemplateCategory(key: string): string {
+  return TEMPLATE_CATEGORIES[key] || 'Other'
+}
+
+export function getTemplateOrientation(config: DesignConfigV3): TemplateOrientation {
+  const page = config.pages[0]
+  if (!page) return 'Landscape'
+  return page.height > page.width ? 'Portrait' : 'Landscape'
+}
+
+/**
+ * Build catalog entries from TEMPLATES. New templates appear automatically
+ * when added to TEMPLATES (and optionally TEMPLATE_CATEGORIES / DISPLAY_NAMES).
+ */
+export function getTemplateCatalog(
+  templates: Record<string, DesignConfigV3> = TEMPLATES
+): TemplateCatalogEntry[] {
+  return Object.keys(templates).map(key => {
+    const config = templates[key]
+    return {
+      key,
+      name: getTemplateDisplayName(key),
+      category: getTemplateCategory(key),
+      orientation: getTemplateOrientation(config),
+      config,
+    }
+  })
+}
+
+/** Unique categories present in the catalog, sorted alphabetically. */
+export function getCatalogCategories(catalog: TemplateCatalogEntry[]): string[] {
+  const set = new Set(catalog.map(e => e.category).filter(Boolean))
+  return Array.from(set).sort((a, b) => a.localeCompare(b))
+}
+
+/**
+ * Filter catalog by category. Pass `'all'` (or empty) to return everything.
+ */
+export function filterCatalogByCategory(
+  catalog: TemplateCatalogEntry[],
+  category: string
+): TemplateCatalogEntry[] {
+  if (!category || category === 'all') return catalog
+  return catalog.filter(e => e.category === category)
 }

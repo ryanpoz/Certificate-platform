@@ -135,7 +135,8 @@ async function elementToFabric(element: Element): Promise<any | null> {
       field: element.field,
       autoShrink: element.autoShrink,
       minFontSize: element.minFontSize,
-      maxLines: element.maxLines
+      maxLines: element.maxLines,
+      data: { id: element.id }
     } as any)
   }
 

@@ -8,10 +8,10 @@ describe('Fabric.js Editor - Phase 1b Integration', () => {
   it('should use modular fabric utilities', () => {
     // Should use new modular imports
     expect(editorCode).toContain('useFabricCanvas')
-    expect(editorCode).toContain('CanvasHistory')
     expect(editorCode).toContain('loadFonts')
     expect(editorCode).toContain('FieldText')
     expect(editorCode).toContain('designConfigToFabric')
+    expect(editorCode).toContain('collectTextById')
   })
 
   it('should have defensive checks for selectedObject properties in toolbar', () => {
@@ -39,11 +39,13 @@ describe('Fabric.js Editor - Phase 1b Integration', () => {
     expect(editorCode).toContain('restoreFieldContent')
   })
 
-  it('should have thumbnail generation', () => {
+  it('should have thumbnail generation for the start screen catalog', () => {
     // Should generate thumbnails
     expect(editorCode).toContain('generateThumbnails')
     expect(editorCode).toContain('thumbnails')
     expect(editorCode).toContain('toDataURL')
+    expect(editorCode).toContain('getTemplateCatalog')
+    expect(editorCode).not.toContain('Template Thumbnails')
   })
 
   it('should have keyboard shortcuts', () => {
