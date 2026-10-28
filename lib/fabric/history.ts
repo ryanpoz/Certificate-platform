@@ -10,6 +10,7 @@ export class CanvasHistory {
   private history: string[] = []
   private historyIndex = -1
   private isLoading = false
+  private paused = false
   private maxHistory = 50
   private listeners: ((state: HistoryState) => void)[] = []
 
@@ -28,8 +29,18 @@ export class CanvasHistory {
     this.canvas.on('text:editing:exited', () => this.saveState())
   }
 
+  /** Pause automatic history captures (e.g. while swapping templates). */
+  public pause() {
+    this.paused = true
+  }
+
+  /** Resume automatic history captures. */
+  public resume() {
+    this.paused = false
+  }
+
   public async saveState() {
-    if (this.isLoading) return
+    if (this.isLoading || this.paused) return
     
     // Fabric v6 toJSON doesn't accept custom properties parameter
     const json = JSON.stringify(this.canvas.toJSON())

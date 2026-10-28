@@ -1,26 +1,33 @@
-import { Canvas, Gradient, IText, Textbox, Rect, Circle, Image as FabricImage } from 'fabric'
+import { Canvas, StaticCanvas, Gradient, IText, Textbox, Rect, Circle, Image as FabricImage } from 'fabric'
 import type { DesignConfigV3, Element, Page } from '@/lib/design-config/v3-schema'
 import { FieldText } from './objects/FieldText'
+import { resolveFontFamily } from './fonts'
 
 /**
- * Convert Design Config V3 to Fabric canvas
+ * Convert Design Config V3 to Fabric canvas (Canvas or StaticCanvas for thumbnails)
  */
 export async function designConfigToFabric(
   config: DesignConfigV3,
-  canvas: Canvas,
+  canvas: Canvas | StaticCanvas,
   pageIndex = 0
 ): Promise<void> {
   const page = config.pages[pageIndex]
   if (!page) throw new Error(`Page ${pageIndex} not found`)
 
-  // Set canvas dimensions
+  // Set canvas dimensions to page size (caller may zoom/fit afterward)
   canvas.setDimensions({ width: page.width, height: page.height })
+  canvas.setZoom(1)
 
   // Set background
   await applyBackground(canvas, page)
 
-  // Add elements
+  // Add elements — skip duplicate field ids
+  const seenFieldIds = new Set<string>()
   for (const element of page.elements) {
+    if (element.type === 'field') {
+      if (seenFieldIds.has(element.field)) continue
+      seenFieldIds.add(element.field)
+    }
     const obj = await elementToFabric(element)
     if (obj) {
       canvas.add(obj)
@@ -61,7 +68,8 @@ export function fabricToDesignConfig(canvas: Canvas): DesignConfigV3 {
 /**
  * Apply background to canvas
  */
-async function applyBackground(canvas: Canvas, page: Page): Promise<void> {
+async function applyBackground(canvas: Canvas | StaticCanvas, page: Page): Promise<void> {
+  canvas.backgroundImage = undefined
   if (page.background.type === 'color') {
     canvas.set('backgroundColor', page.background.color)
   } else if (page.background.type === 'gradient') {
@@ -91,7 +99,7 @@ async function elementToFabric(element: Element): Promise<any | null> {
       width: element.width,
       height: element.height,
       fontSize: element.fontSize,
-      fontFamily: element.fontFamily,
+      fontFamily: resolveFontFamily(element.fontFamily),
       fontWeight: element.fontWeight,
       fontStyle: element.fontStyle,
       fill: element.fill,
@@ -113,7 +121,7 @@ async function elementToFabric(element: Element): Promise<any | null> {
       width: element.width,
       height: element.height,
       fontSize: element.fontSize,
-      fontFamily: element.fontFamily,
+      fontFamily: resolveFontFamily(element.fontFamily),
       fontWeight: element.fontWeight as any,
       fontStyle: element.fontStyle as any,
       fill: element.fill,
