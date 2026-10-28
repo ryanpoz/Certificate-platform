@@ -57,6 +57,12 @@ describe('Fabric.js Editor - Phase 1b Integration', () => {
     expect(editorCode).toContain('enterEditing')
   })
 
+  it('should retain user-added fields when switching templates', () => {
+    expect(editorCode).toContain('userAddedFieldsRef')
+    expect(editorCode).toContain('selectFieldsToCarry')
+    expect(editorCode).toContain('Add Field')
+  })
+
   it('should have keyboard shortcuts', () => {
     // Should use KeyboardShortcuts class
     expect(editorCode).toContain('KeyboardShortcuts')

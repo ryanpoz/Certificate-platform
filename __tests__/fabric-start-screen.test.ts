@@ -18,6 +18,12 @@ import {
   resolveTextById,
   applyTextById,
 } from '@/lib/fabric/text-by-id'
+import {
+  fieldKeysFromElements,
+  selectFieldsToCarry,
+  clampFieldPosition,
+  type CarryFieldSnapshot,
+} from '@/lib/fabric/carry-fields'
 
 describe('Blank landscape template', () => {
   it('exposes a stable blank id', () => {
@@ -166,5 +172,78 @@ describe('Text-by-id preservation', () => {
       { id: 'description', text: 'Did great' },
       { id: 'unknown', text: 'Leave' },
     ])
+  })
+})
+
+describe('Carry user-added fields across template switches', () => {
+  const snap = (field: string, text = 'x'): CarryFieldSnapshot => ({
+    field,
+    text,
+    left: 100,
+    top: 100,
+    width: 200,
+    height: 50,
+    fontSize: 24,
+    fontFamily: 'Inter',
+    fill: '#000',
+    textAlign: 'center',
+    autoShrink: true,
+    minFontSize: 12,
+    maxLines: 1,
+    angle: 0,
+    scaleX: 1,
+    scaleY: 1,
+    originX: 'left',
+    originY: 'top',
+  })
+
+  it('collects field keys from design elements', () => {
+    expect(
+      fieldKeysFromElements([
+        { type: 'field', field: 'recipient_name' },
+        { type: 'text' },
+        { type: 'field', field: 'custom_1' },
+      ])
+    ).toEqual(new Set(['recipient_name', 'custom_1']))
+  })
+
+  it('carries only user-added fields missing from the destination', () => {
+    const snapshots = [
+      snap('recipient_name', 'Alex'),
+      snap('custom_1', 'Extra A'),
+      snap('custom_2', 'Extra B'),
+    ]
+    const alreadyOnCanvas = new Set(['recipient_name', 'custom_1'])
+    const userAdded = new Set(['custom_1', 'custom_2'])
+
+    const carried = selectFieldsToCarry(snapshots, alreadyOnCanvas, userAdded)
+    expect(carried.map(c => c.field)).toEqual(['custom_2'])
+    expect(carried[0].text).toBe('Extra B')
+  })
+
+  it('does not duplicate field keys when carrying', () => {
+    const snapshots = [snap('custom_2'), snap('custom_2')]
+    const carried = selectFieldsToCarry(
+      snapshots,
+      new Set(['recipient_name']),
+      new Set(['custom_2'])
+    )
+    expect(carried).toHaveLength(1)
+  })
+
+  it('skips non-user-added fields even if missing on destination', () => {
+    const carried = selectFieldsToCarry(
+      [snap('description')],
+      new Set(['recipient_name']),
+      new Set(['custom_1'])
+    )
+    expect(carried).toEqual([])
+  })
+
+  it('clamps carried field positions into the page', () => {
+    expect(clampFieldPosition(-50, 900, 200, 1123, 794)).toEqual({
+      left: 24,
+      top: 770,
+    })
   })
 })
