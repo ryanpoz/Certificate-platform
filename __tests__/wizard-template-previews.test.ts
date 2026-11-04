@@ -86,6 +86,8 @@ describe('Template Preview Display', () => {
     const wizard = readFileSync(join(process.cwd(), 'app/dashboard/wizard/wizard.tsx'), 'utf-8')
     
     expect(wizard).toContain('initialConfig={customDesign}')
-    expect(wizard).toContain('templateConfig?.version === 3')
+    // Draft/edit load restores DesignConfigV3 via applyV3Design(config?.version === 3)
+    expect(wizard).toContain('config?.version === 3')
+    expect(wizard).toContain('applyV3Design(draft.templateConfig)')
   })
 })
