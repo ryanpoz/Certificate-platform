@@ -8,10 +8,10 @@ import { revalidatePath } from 'next/cache'
 import { checkCanIssue, getAcademyPlan, getEmailBranding } from '@/lib/billing/usage'
 import { effectiveValidityMonths } from '@/lib/billing/entitlements'
 import { findOrCreateLearner } from '@/lib/learners'
-import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
+import { accountFor, getWritableAccount, NOT_FOUND } from '@/lib/auth/ownership'
 
 export async function getExistingLearnerEmails(academyId: string, courseId: string): Promise<string[]> {
-  if (!(await accountFor(academyId))) return []
+  if (!(await accountFor(academyId, { read: true }))) return []
   const existing = await db
     .select({
       email: learners.emailNormalised,
@@ -213,7 +213,7 @@ export async function publishCertificates(
   }
 
   // Only the signed-in account's own certificates can be published
-  const account = await getSessionAccount()
+  const account = await getWritableAccount()
   if (!account) {
     return { published: 0, error: NOT_FOUND }
   }

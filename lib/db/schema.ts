@@ -141,6 +141,29 @@ export const academyPlans = pgTable('academy_plans', {
   plan: text('plan').notNull().default('free'),
   customLimit: integer('custom_limit'),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  // sql/006 (optional): always select these explicitly and fall back if missing
+  seatLimit: integer('seat_limit'),
+  brandLimit: integer('brand_limit'),
+  pendingPlan: text('pending_plan'),
+  pendingPlanAt: timestamp('pending_plan_at', { withTimezone: true }),
+  billingPeriodEnd: timestamp('billing_period_end', { withTimezone: true }),
+})
+
+/** sql/006 (optional): top-up certificates for the plan year they were bought in */
+export const academyTopUps = pgTable('academy_top_ups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  academyId: uuid('academy_id').notNull().references(() => academies.id, { onDelete: 'cascade' }),
+  certificates: integer('certificates').notNull(),
+  purchasedAt: timestamp('purchased_at', { withTimezone: true }).notNull().defaultNow(),
+  source: text('source').notNull().default('manual'),
+  note: text('note'),
+})
+
+/** sql/006 (optional): custom domains (Business) */
+export const academyDomains = pgTable('academy_domains', {
+  hostname: text('hostname').primaryKey(),
+  academyId: uuid('academy_id').notNull().references(() => academies.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
 export const academiesRelations = relations(academies, ({ many }) => ({

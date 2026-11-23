@@ -97,8 +97,14 @@ export interface UsageStatus {
   level: UsageLevel
 }
 
-export function evaluateUsage(used: number, limit: number): UsageStatus {
-  const cap = hardCap(limit)
+/**
+ * Usage against a plan limit. `topUps` (certificates bought for this plan year)
+ * are added on top; the 10% grace applies to the plan limit only.
+ */
+export function evaluateUsage(used: number, planLimit: number, topUps: number = 0): UsageStatus {
+  const extra = Math.max(0, topUps)
+  const limit = planLimit + extra
+  const cap = hardCap(planLimit) + extra
   const safeUsed = Math.max(0, used)
   const percent = limit > 0 ? Math.round((safeUsed / limit) * 100) : 100
   let level: UsageLevel = 'ok'
@@ -135,14 +141,16 @@ export function checkIssueAllowance(
   used: number,
   requested: number,
   plan: PlanDefinition,
-  resetsOn: Date
+  resetsOn: Date,
+  topUps: number = 0
 ): IssueCheck {
-  const status = evaluateUsage(used, plan.yearlyLimit)
+  const status = evaluateUsage(used, plan.yearlyLimit, topUps)
   if (requested <= status.remaining) {
     return { allowed: true, remaining: status.remaining }
   }
   const reset = formatResetDate(resetsOn)
-  const base = `Your ${plan.name} plan includes ${plan.yearlyLimit.toLocaleString('en-US')} certificates per year (plus 10% grace)`
+  const extra = topUps > 0 ? ` and ${topUps.toLocaleString('en-US')} top-up certificates` : ''
+  const base = `Your ${plan.name} plan includes ${plan.yearlyLimit.toLocaleString('en-US')} certificates per year (plus 10% grace${extra})`
   const message = status.remaining === 0
     ? `${base}, and you've used them all. Upgrade at ${UPGRADE_URL} to keep issuing, or wait until your limit resets on ${reset}.`
     : `${base}. You can issue ${status.remaining.toLocaleString('en-US')} more this plan year, but tried to issue ${requested.toLocaleString('en-US')}. Upgrade at ${UPGRADE_URL} or issue fewer certificates. Your limit resets on ${reset}.`

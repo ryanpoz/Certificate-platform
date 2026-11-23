@@ -3,12 +3,12 @@
 import { db } from '@/lib/db'
 import { templates } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
-import { getSessionAccount } from '@/lib/auth/ownership'
+import { getWritableAccount } from '@/lib/auth/ownership'
 import { revalidatePath } from 'next/cache'
 
 export async function saveTemplateDesign(templateId: string, design: any) {
   try {
-    const account = await getSessionAccount()
+    const account = await getWritableAccount()
     if (!account) {
       return { error: 'Template not found' }
     }

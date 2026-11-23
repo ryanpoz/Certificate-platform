@@ -6,7 +6,7 @@ import { eq, inArray, and, like, or, gte, lte } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { getCurrentUser } from '@/lib/utils/session'
 import { recordBillableDeletions, accountCan } from '@/lib/billing/usage'
-import { accountFor, requireAccountFor, NOT_FOUND } from '@/lib/auth/ownership'
+import { accountFor, requireAccountFor, NOT_FOUND, isViewOnly, VIEW_ONLY } from '@/lib/auth/ownership'
 
 /**
  * Delete a certificate program (course) and all related issued certificates,
@@ -17,6 +17,9 @@ export async function deleteCertificateProgram(courseId: string, academyId: stri
     const user = await getCurrentUser()
     if (!user || user.academyId !== academyId) {
       return { error: 'Certificate not found' }
+    }
+    if (await isViewOnly(user.id, user.academyId)) {
+      return { error: VIEW_ONLY }
     }
 
     const [course] = await db
@@ -162,7 +165,7 @@ export async function revokeCertificatesFiltered(academyId: string, filters: any
 }
 
 export async function exportCertificatesToCSVFiltered(academyId: string, filters: any): Promise<string> {
-  await requireAccountFor(academyId)
+  await requireAccountFor(academyId, { read: true })
   const includeClicks = await accountCan(academyId, 'shareAnalytics')
   let query = db
     .select({
@@ -295,7 +298,7 @@ export async function revokeCertificates(certificateIds: string[], reason: strin
 }
 
 export async function exportCertificatesToCSV(certificateIds: string[]): Promise<string> {
-  const account = await requireAccountFor()
+  const account = await requireAccountFor(undefined, { read: true })
   const results = await db
     .select({
       certificate: certificates,

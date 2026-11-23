@@ -32,7 +32,7 @@
  * storage don't exist yet; wire them to planDowngrade / topUpAllowance when
  * they do.
  */
-import { evaluateUsage, hardCap, planRank, type PlanId, type UsageStatus } from './plans'
+import { PLANS, evaluateUsage, hardCap, planRank, type PlanId, type UsageStatus } from './plans'
 import {
   FEATURES,
   FEATURE_KEYS,
@@ -289,3 +289,223 @@ export function topUpAllowance(
     remaining: Math.max(0, cap - safeUsed),
   }
 }
+
+// ---------------------------------------------------------------------------
+// Scheduling plan changes
+// ---------------------------------------------------------------------------
+
+/**
+ * Default end of the billing period when billing hasn't set one: the next
+ * monthly anniversary of signup strictly after `now` (31st -> last day of month).
+ */
+export function nextMonthlyBoundary(signup: Date, now: Date = new Date()): Date {
+  const day = signup.getUTCDate()
+  const at = (year: number, month: number) => {
+    const last = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+    return new Date(Date.UTC(year, month, Math.min(day, last), signup.getUTCHours(), signup.getUTCMinutes(), signup.getUTCSeconds()))
+  }
+  let candidate = at(now.getUTCFullYear(), now.getUTCMonth())
+  if (candidate.getTime() <= now.getTime()) {
+    candidate = at(now.getUTCFullYear(), now.getUTCMonth() + 1)
+  }
+  return candidate
+}
+
+export type PlanChangeAction = 'apply_now' | 'schedule' | 'cancel_pending' | 'refuse'
+
+export interface PlanChangeDecision {
+  action: PlanChangeAction
+  effectiveAt: Date
+  reason?: string
+}
+
+/**
+ * What to do when an account asks to move to `to`:
+ * - upgrade: apply now
+ * - same plan while a downgrade is pending: cancel the pending change
+ * - downgrade/cancel: schedule for the end of the billing period, unless the
+ *   target is a paid plan whose yearly limit is below this year's usage (refuse)
+ */
+export function decidePlanChange(input: {
+  from: AccountLike
+  to: AccountLike
+  certificatesThisYear: number
+  billingPeriodEnd: Date
+  now?: Date
+}): PlanChangeDecision {
+  const now = input.now ?? new Date()
+  const fromId = planIdOf(input.from)
+  const toId = planIdOf(input.to)
+  if (fromId === toId) return { action: 'cancel_pending', effectiveAt: now }
+  if (!isDowngrade(fromId, toId)) return { action: 'apply_now', effectiveAt: now }
+  const check = canChangePlan(input.to, input.certificatesThisYear)
+  if (!check.allowed) return { action: 'refuse', effectiveAt: input.billingPeriodEnd, reason: check.reason }
+  return { action: 'schedule', effectiveAt: input.billingPeriodEnd }
+}
+
+export interface StoredPlanState {
+  plan: PlanId
+  pendingPlan?: PlanId | null
+  pendingPlanAt?: Date | null
+}
+
+export interface EffectivePlan {
+  plan: PlanId
+  /** A scheduled change still waiting (not due, or postponed by the volume rule) */
+  pending: { plan: PlanId; at: Date } | null
+  /** Due, but held back because this year's usage is above the target's limit */
+  postponed: boolean
+}
+
+/**
+ * The plan in force now. A scheduled change applies once its date has passed;
+ * a due change to a paid plan is held back while this year's usage is above
+ * that plan's yearly limit (it applies after the plan year resets).
+ * Cancelling to Free is never held back.
+ */
+export function resolveEffectivePlan(state: StoredPlanState, now: Date = new Date(), certificatesThisYear?: number): EffectivePlan {
+  const pendingPlan = state.pendingPlan && planIdOf(state.pendingPlan) === state.pendingPlan ? state.pendingPlan : null
+  if (!pendingPlan || !state.pendingPlanAt) return { plan: state.plan, pending: null, postponed: false }
+  const pending = { plan: pendingPlan, at: state.pendingPlanAt }
+  if (state.pendingPlanAt.getTime() > now.getTime()) return { plan: state.plan, pending, postponed: false }
+  if (pendingPlan !== 'free' && certificatesThisYear !== undefined && !canChangePlan(pendingPlan, certificatesThisYear).allowed) {
+    return { plan: state.plan, pending, postponed: true }
+  }
+  return { plan: pendingPlan, pending: null, postponed: false }
+}
+
+// ---------------------------------------------------------------------------
+// Seats
+// ---------------------------------------------------------------------------
+
+export type SeatAccess = 'admin' | 'view_only'
+
+/**
+ * Seat access for a user. Users are ranked oldest first (the account creator
+ * keeps admin); the first `seatLimit` are admins, the rest are view-only.
+ * Nobody is removed, and access comes back when the limit rises.
+ */
+export function seatAccess(userIdsOldestFirst: string[], userId: string, seatLimit: number): SeatAccess {
+  const index = userIdsOldestFirst.indexOf(userId)
+  if (index === -1) return 'admin'
+  return index < Math.max(1, seatLimit) ? 'admin' : 'view_only'
+}
+
+export function viewOnlyUsers(userIdsOldestFirst: string[], seatLimit: number): string[] {
+  return userIdsOldestFirst.slice(Math.max(1, seatLimit))
+}
+
+// ---------------------------------------------------------------------------
+// Downgrade preview
+// ---------------------------------------------------------------------------
+
+export interface DowngradeConsequence {
+  key: Feature | LimitKey | 'volume'
+  label: string
+  /** What happens, in plain words */
+  effect: string
+  /** When: at the change, or at the end of the billing period after a warning */
+  when: 'at_change' | 'period_end'
+}
+
+export interface DowngradePreview {
+  from: PlanId
+  to: PlanId
+  isDowngrade: boolean
+  allowed: boolean
+  blockedReason?: string
+  effectiveAt: Date
+  /** What the issuer loses or what changes */
+  losses: DowngradeConsequence[]
+  /** What always stays */
+  keeps: string[]
+}
+
+const LOSS_EFFECT: Partial<Record<Feature, string>> = {
+  customDomain: 'Links on your custom domain permanently redirect (301) to the same page on our domain, so shared links keep working while your DNS points at us.',
+  pageAddress: 'Your page address (for example /acme) keeps resolving.',
+  issueApi: 'API access stops. Your API keys are kept and work again when you upgrade.',
+  webhooks: 'Webhooks stop sending. Your webhook settings are kept.',
+  zapier: 'Zapier actions stop. Your connection settings are kept.',
+  shareAnalytics: 'Share and click analytics are still collected, but hidden until you upgrade.',
+  auditLog: 'The audit log is kept, but hidden until you upgrade.',
+  customCta: 'Certificate pages show our "Create your first certificate" button instead of yours. Your saved button label and link are kept.',
+  brandedEmail: 'Certificate emails come from our name with no custom reply-to. Your saved sender name and reply-to are kept.',
+  expiry: "New certificates won't get an expiry date. Expiry dates on certificates already issued stay as they are.",
+  expiryReminders: 'Expiry reminder emails stop.',
+  expiringSoonView: 'The expiring-soon view locks.',
+  whiteLabel: 'The "Verified by" mark returns on certificate pages and emails.',
+  sso: 'SSO sign-in turns off; admins sign in with email or Google.',
+  multipleBrands: 'Extra brands switch off at the end of the billing period. Nothing is deleted.',
+  recertificationCampaigns: 'Recertification campaigns stop. Campaign settings are kept.',
+}
+
+/** What moving from `from` to `to` would mean for this account */
+export function previewDowngrade(
+  from: AccountLike,
+  to: AccountLike,
+  use: CurrentUse,
+  billingPeriodEnd: Date,
+  planYearEnd: Date,
+  now: Date = new Date()
+): DowngradePreview {
+  const fromId = planIdOf(from)
+  const toId = planIdOf(to)
+  const change = planDowngrade(from, to, use, billingPeriodEnd, now)
+  const losses: DowngradeConsequence[] = featuresLost(from, to).map((f) => ({
+    key: f,
+    label: FEATURES[f].label,
+    effect: LOSS_EFFECT[f] ?? `${FEATURES[f].label} locks. Your settings are kept and come back when you upgrade.`,
+    when: FEATURES[f].downgrade === 'period_end' ? 'period_end' : 'at_change',
+  }))
+
+  const seatsInUse = use.adminSeats ?? 0
+  const seatLimit = getLimit(to, 'adminSeats')
+  if (seatsInUse > seatLimit) {
+    const n = seatsInUse - seatLimit
+    losses.push({
+      key: 'adminSeats',
+      label: LIMITS.adminSeats.label,
+      effect: `${n} admin${n === 1 ? '' : 's'} become${n === 1 ? 's' : ''} view-only (not removed). The longest-standing ${seatLimit === 1 ? 'admin keeps' : `${seatLimit} admins keep`} full access.`,
+      when: 'period_end',
+    })
+  }
+  const brandsInUse = use.brands ?? 0
+  const brandLimit = getLimit(to, 'brands')
+  if (brandsInUse > brandLimit) {
+    losses.push({
+      key: 'brands',
+      label: LIMITS.brands.label,
+      effect: `${brandsInUse - brandLimit} extra brand${brandsInUse - brandLimit === 1 ? '' : 's'} switch off. Nothing is deleted.`,
+      when: 'period_end',
+    })
+  }
+
+  const reset = planYearEnd.toISOString().slice(0, 10)
+  if (!change.allowed) {
+    losses.push({ key: 'volume', label: 'Yearly limit', effect: change.blockedReason!, when: 'at_change' })
+  } else if (!change.canIssueNew) {
+    losses.push({
+      key: 'volume',
+      label: 'Yearly limit',
+      effect: `You've issued more this plan year than the ${PLANS[toId].name} plan allows (plus 10% grace), so new issuing is blocked until your plan year resets on ${reset}, or until you upgrade or add a top-up.`,
+      when: 'at_change',
+    })
+  }
+
+  return {
+    from: fromId,
+    to: toId,
+    isDowngrade: change.isDowngrade,
+    allowed: change.allowed,
+    ...(change.blockedReason ? { blockedReason: change.blockedReason } : {}),
+    effectiveAt: change.isDowngrade ? billingPeriodEnd : now,
+    losses,
+    keeps: [
+      'Every certificate you have issued stays live and verifiable.',
+      'You can still revoke certificates.',
+      'Your data and settings are kept and come back when you upgrade.',
+    ],
+  }
+}
+

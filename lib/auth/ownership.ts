@@ -1,4 +1,5 @@
 import { getCurrentUser } from '@/lib/utils/session'
+import { getSeatAccess } from '@/lib/billing/seats'
 
 /**
  * Account ownership checks for server actions.
@@ -26,19 +27,41 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
   return user ? { userId: user.id, academyId: user.academyId } : null
 }
 
+/** Shown to admins whose seat is view-only because the plan has fewer admin seats */
+export const VIEW_ONLY = 'Your seat is view-only on this plan. Ask an account admin to upgrade for more admin seats.'
+
+export interface AccessOptions {
+  /** Read-only use (viewing, exporting): allowed for view-only seats */
+  read?: boolean
+}
+
+/** Is this signed-in user on a view-only seat? (extra admins after a downgrade) */
+export async function isViewOnly(userId: string, academyId: string): Promise<boolean> {
+  return (await getSeatAccess(userId, academyId)) === 'view_only'
+}
+
 /**
  * The signed-in account if it owns `academyId` (or if no academyId is given), else null.
+ * Writes (the default) also need an admin seat; pass { read: true } for read-only use.
  */
-export async function accountFor(academyId?: string | null): Promise<SessionAccount | null> {
+export async function accountFor(academyId?: string | null, options: AccessOptions = {}): Promise<SessionAccount | null> {
   const account = await getSessionAccount()
   if (!account) return null
   if (academyId !== undefined && academyId !== null && !isSameAccount(account.academyId, academyId)) return null
+  if (!options.read && (await isViewOnly(account.userId, account.academyId))) return null
   return account
 }
 
+/** The signed-in account for a write, or null (signed out or view-only seat) */
+export async function getWritableAccount(): Promise<SessionAccount | null> {
+  return accountFor(undefined)
+}
+
 /** Like accountFor, but throws (for actions whose callers expect a throw on failure) */
-export async function requireAccountFor(academyId?: string | null): Promise<SessionAccount> {
-  const account = await accountFor(academyId)
+export async function requireAccountFor(academyId?: string | null, options: AccessOptions = {}): Promise<SessionAccount> {
+  const account = await getSessionAccount()
   if (!account) throw new Error(NOT_FOUND)
+  if (academyId !== undefined && academyId !== null && !isSameAccount(account.academyId, academyId)) throw new Error(NOT_FOUND)
+  if (!options.read && (await isViewOnly(account.userId, account.academyId))) throw new Error(VIEW_ONLY)
   return account
 }

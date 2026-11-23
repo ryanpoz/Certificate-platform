@@ -66,7 +66,7 @@ export default async function UsageBanner({ academyId }: { academyId: string }) 
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-white px-4 py-3 text-sm">
         <span className="font-medium text-gray-900">
-          {status.used.toLocaleString('en-US')} of {plan.yearlyLimit.toLocaleString('en-US')} certificates this year
+          {status.used.toLocaleString('en-US')} of {status.limit.toLocaleString('en-US')} certificates this year
         </span>
         <div className="h-2 flex-1 min-w-[120px] max-w-xs rounded-full bg-gray-100 overflow-hidden" aria-hidden>
           <div className={`h-full ${barColor}`} style={{ width: `${barWidth}%` }} />

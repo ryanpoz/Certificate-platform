@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { templates, courses } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { accountFor, getSessionAccount } from '@/lib/auth/ownership'
+import { accountFor, getWritableAccount } from '@/lib/auth/ownership'
 
 export async function duplicateTemplateAction(templateId: string, academyId: string) {
   try {
@@ -46,7 +46,7 @@ export async function duplicateTemplateAction(templateId: string, academyId: str
 
 export async function deleteTemplateAction(templateId: string) {
   try {
-    const account = await getSessionAccount()
+    const account = await getWritableAccount()
     if (!account) {
       return { error: 'Template not found' }
     }
@@ -122,7 +122,7 @@ export async function renameTemplateAction(templateId: string, newName: string) 
       return { error: 'Template name cannot be empty' }
     }
 
-    const account = await getSessionAccount()
+    const account = await getWritableAccount()
     if (!account) {
       return { error: 'Template not found' }
     }

@@ -9,7 +9,7 @@ import { sendCertificateEmail } from '@/lib/email/resend'
 import { getCurrentUser } from '@/lib/utils/session'
 import { checkCanIssue, getEmailBranding, recordBillableDeletions } from '@/lib/billing/usage'
 import { findOrCreateLearner } from '@/lib/learners'
-import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
+import { accountFor, getSessionAccount, NOT_FOUND, isViewOnly, VIEW_ONLY } from '@/lib/auth/ownership'
 
 interface CreateCertificateWizardData {
   academyId: string
@@ -257,6 +257,9 @@ export async function deleteDraft(draftId: string, academyId?: string) {
     if (academyId && academyId !== user.academyId) {
       return { error: 'Draft not found' }
     }
+    if (await isViewOnly(user.id, user.academyId)) {
+      return { error: VIEW_ONLY }
+    }
 
     const [course] = await db
       .select()
@@ -327,6 +330,9 @@ export async function createCertificateFromWizard(data: CreateCertificateWizardD
     const user = await getCurrentUser()
     if (!user || user.academyId !== academyId) {
       return { error: 'Not authorised to issue for this account' }
+    }
+    if (await isViewOnly(user.id, user.academyId)) {
+      return { error: VIEW_ONLY }
     }
 
     // Get academy details for email
@@ -514,7 +520,7 @@ export async function parseCsvRecipients(csvText: string): Promise<Array<{ name:
 }
 
 export async function checkFirstTimeUser(academyId: string): Promise<boolean> {
-  if (!(await accountFor(academyId))) return false
+  if (!(await accountFor(academyId, { read: true }))) return false
   const [result] = await db
     .select({ count: sql<number>`cast(count(*) as int)` })
     .from(certificates)

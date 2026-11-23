@@ -3,7 +3,7 @@
 import { db } from '@/lib/db'
 import { courses, templates, customFields } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
-import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
+import { accountFor, getWritableAccount, NOT_FOUND } from '@/lib/auth/ownership'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { slugify, validateUrl } from '@/lib/utils/helpers'
@@ -90,7 +90,7 @@ export async function updateCourse(courseId: string, data: {
     return { error: 'Name and code are required' }
   }
 
-  const account = await getSessionAccount()
+  const account = await getWritableAccount()
   if (!account) {
     return { error: NOT_FOUND }
   }
@@ -132,7 +132,7 @@ export async function updateTemplate(templateId: string, data: {
   emailSubject: string
   emailBody: string
 }) {
-  const account = await getSessionAccount()
+  const account = await getWritableAccount()
   if (!account) {
     return { error: NOT_FOUND }
   }
@@ -175,7 +175,7 @@ export async function createCustomField(academyId: string, data: {
 }
 
 export async function deleteCustomField(fieldId: string) {
-  const account = await getSessionAccount()
+  const account = await getWritableAccount()
   if (!account) {
     return { error: NOT_FOUND }
   }

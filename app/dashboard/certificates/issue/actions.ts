@@ -1,5 +1,6 @@
 'use server'
 
+import { isViewOnly, VIEW_ONLY } from '@/lib/auth/ownership'
 import { db } from '@/lib/db'
 import { courses, learners, certificates, templates, academies } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
@@ -26,6 +27,9 @@ export async function issueSingleCertificateAction(data: {
     const user = await getCurrentUser()
     if (!user || user.academyId !== data.academyId) {
       return { error: 'Not authorised to issue for this account' }
+    }
+    if (await isViewOnly(user.id, user.academyId)) {
+      return { error: VIEW_ONLY }
     }
 
     const allowance = await checkCanIssue(data.academyId, 1)

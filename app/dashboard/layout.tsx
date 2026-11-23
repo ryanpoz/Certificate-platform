@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { academies } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import UsageBanner from '@/components/dashboard/usage-banner'
+import { getSeatAccess } from '@/lib/billing/seats'
 
 async function logout() {
   'use server'
@@ -26,6 +27,9 @@ export default async function DashboardLayout({
     .from(academies)
     .where(eq(academies.id, user.academyId))
     .limit(1)
+
+  // Seats over the plan's limit are view-only (never removed)
+  const viewOnly = (await getSeatAccess(user.id, user.academyId)) === 'view_only'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,6 +76,13 @@ export default async function DashboardLayout({
         </div>
       </nav>
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {viewOnly && (
+          <div role="status" className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Your account has more admins than its plan includes, so your access is view-only. You can still view and
+            export certificates. An admin can upgrade on the{' '}
+            <Link href="/pricing" className="font-medium underline">plans page</Link> to restore editing.
+          </div>
+        )}
         <UsageBanner academyId={user.academyId} />
         {children}
       </main>
