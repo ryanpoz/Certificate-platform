@@ -3,11 +3,20 @@ import { db } from '@/lib/db'
 import { certificates, events } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { isbot } from 'isbot'
+import { isShareChannel, isTrackableEvent, resolveViewSource } from '@/lib/growth/tracking'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { certificateNumber, type, referrer, isRecipient } = body
+    const { certificateNumber, type, referrer, isRecipient, channel, utmSource, utmMedium } = body
+
+    // Only lightweight growth-loop events are accepted from the public page
+    if (!isTrackableEvent(type) || typeof certificateNumber !== 'string') {
+      return NextResponse.json({ error: 'Invalid event' }, { status: 400 })
+    }
+    if (type === 'share_click' && !isShareChannel(channel)) {
+      return NextResponse.json({ error: 'Invalid share channel' }, { status: 400 })
+    }
 
     const [cert] = await db
       .select()
@@ -30,16 +39,31 @@ export async function POST(request: NextRequest) {
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown'
     const visitorHash = await hashString(ip + userAgent)
 
+    const safeReferrer = typeof referrer === 'string' && referrer ? referrer.slice(0, 500) : null
+    const source = type === 'page_view' ? resolveViewSource(utmSource, safeReferrer) : undefined
+    const meta = {
+      ...(isRecipient ? { isRecipient: true } : {}),
+      ...(source ? { source } : {}),
+      ...(type === 'share_click' ? { channel } : {}),
+    }
+    const utmData = typeof utmSource === 'string' && utmSource
+      ? {
+          utm_source: utmSource.slice(0, 40),
+          ...(typeof utmMedium === 'string' && utmMedium ? { utm_medium: utmMedium.slice(0, 40) } : {}),
+        }
+      : null
+
     await db.insert(events).values({
       certificateId: cert.id,
       academyId: cert.academyId,
       type,
       at: new Date(),
-      referrer: referrer || null,
+      referrer: safeReferrer,
+      utmData,
       userAgent,
       isBot: isBotRequest,
       visitorHash,
-      meta: isRecipient ? { isRecipient: true } : null,
+      meta: Object.keys(meta).length > 0 ? meta : null,
     })
 
     return NextResponse.json({ success: true })

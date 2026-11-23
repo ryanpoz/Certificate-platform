@@ -7,11 +7,15 @@ import { createMagicLinkToken } from '@/lib/utils/auth'
 import { sendMagicLink } from '@/lib/email/magic-link'
 import { normalizeEmail } from '@/lib/utils/helpers'
 import { createSampleCertificate } from '@/app/dashboard/wizard/actions'
+import { cookies } from 'next/headers'
+import { recordAttributedSignup } from '@/lib/growth/attribution'
+import { REF_COOKIE } from '@/lib/growth/tracking'
 
 export async function signupAction(data: {
   name: string
   email: string
   academyName: string
+  certRef?: string | null
 }) {
   const emailNorm = normalizeEmail(data.email)
   
@@ -64,6 +68,18 @@ export async function signupAction(data: {
     .update(users)
     .set({ magicLinkToken: actualToken })
     .where(eq(users.id, user.id))
+
+  // Growth loop: attribute the signup to the certificate that referred it
+  try {
+    const cookieStore = await cookies()
+    const ref = data.certRef || cookieStore.get(REF_COOKIE)?.value
+    if (ref) {
+      await recordAttributedSignup(ref, academy.id, 'email')
+      cookieStore.delete(REF_COOKIE)
+    }
+  } catch (attributionError) {
+    console.error('Signup attribution failed:', attributionError)
+  }
 
   // Create sample certificate
   try {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import SharePanel from './share-panel'
 import { firstName, type ShareChannel } from '@/lib/growth/share'
+import { tagCertificateUrl } from '@/lib/growth/tracking'
 
 interface ClaimPromptProps {
   certificateNumber: string
@@ -45,7 +46,7 @@ export default function ClaimPrompt(props: ClaimPromptProps) {
   }
 
   async function copyText() {
-    await navigator.clipboard.writeText(text)
+    await navigator.clipboard.writeText(text.split(certificateUrl).join(tagCertificateUrl(certificateUrl, 'copy')))
     onShare('copy_text')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)

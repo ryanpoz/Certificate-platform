@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { signupAction } from './actions'
 import { BRAND } from '@/lib/config/brand'
 import { GoogleSignInButton } from '@/components/auth/google-signin-button'
+import { REF_COOKIE, REF_COOKIE_MAX_AGE, normalizeRef } from '@/lib/growth/tracking'
 
 export default function SignupForm() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,16 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [certRef, setCertRef] = useState<string | null>(null)
+
+  // Signup attribution: remember the certificate that sent this visitor (?ref=...)
+  useEffect(() => {
+    const ref = normalizeRef(new URLSearchParams(window.location.search).get('ref'))
+    if (ref) {
+      setCertRef(ref)
+      document.cookie = `${REF_COOKIE}=${ref}; Max-Age=${REF_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -21,7 +32,7 @@ export default function SignupForm() {
     setError(null)
 
     try {
-      const result = await signupAction(formData)
+      const result = await signupAction({ ...formData, certRef })
       
       if (result.error) {
         setError(result.error)

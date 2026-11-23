@@ -1,3 +1,5 @@
+import { tagCertificateUrl, type ViewSource } from './tracking'
+
 /**
  * Share helpers for the public certificate page (pure, safe for client and server).
  */
@@ -27,12 +29,15 @@ export function buildShareLinks(params: {
 }): Record<Exclude<ShareChannel, 'copy_link' | 'copy_text'>, string> {
   const { certificateUrl, postText, courseName, academyName } = params
   const enc = encodeURIComponent
+  // Every outbound link carries a source tag so visits can be attributed
+  const tagged = (source: ViewSource) => tagCertificateUrl(certificateUrl, source)
+  const withTaggedUrl = (source: ViewSource) => postText.split(certificateUrl).join(tagged(source))
   return {
     // LinkedIn opens the post composer with the text prefilled
-    linkedin_post: `https://www.linkedin.com/feed/?shareActive=true&text=${enc(postText)}`,
-    x: `https://twitter.com/intent/tweet?text=${enc(`I earned the ${courseName} certificate from ${academyName}.`)}&url=${enc(certificateUrl)}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${enc(certificateUrl)}`,
-    email: `mailto:?subject=${enc(`My ${courseName} certificate`)}&body=${enc(postText)}`,
+    linkedin_post: `https://www.linkedin.com/feed/?shareActive=true&text=${enc(withTaggedUrl('linkedin_post'))}`,
+    x: `https://twitter.com/intent/tweet?text=${enc(`I earned the ${courseName} certificate from ${academyName}.`)}&url=${enc(tagged('x'))}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${enc(tagged('facebook'))}`,
+    email: `mailto:?subject=${enc(`My ${courseName} certificate`)}&body=${enc(withTaggedUrl('email'))}`,
   }
 }
 

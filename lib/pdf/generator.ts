@@ -9,6 +9,7 @@ import { type DesignConfigV3 } from '../design-config/v3-schema'
 // @ts-ignore
 import QRCode from 'qrcode'
 import { shortVerifyLink } from '../growth/share'
+import { tagCertificateUrl } from '../growth/tracking'
 
 export interface GeneratePDFParams {
   certificateNumber: string
@@ -35,7 +36,7 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
   }
 
   // Fall back to v1 PDF generation
-  const qrCodeDataUrl = await QRCode.toDataURL(params.certificateUrl, {
+  const qrCodeDataUrl = await QRCode.toDataURL(tagCertificateUrl(params.certificateUrl, 'qr'), {
     width: 200,
     margin: 2,
   })
@@ -268,7 +269,7 @@ async function generateV3PDF(params: GeneratePDFParams): Promise<Buffer> {
     issuerName: params.academyName,
   })
 
-  const qrCodeDataUrl = await QRCode.toDataURL(params.certificateUrl, { width: 256, margin: 1 })
+  const qrCodeDataUrl = await QRCode.toDataURL(tagCertificateUrl(params.certificateUrl, 'qr'), { width: 256, margin: 1 })
   const htmlWithVerify = injectBeforeBodyEnd(html, buildVerifyStrip(qrCodeDataUrl, params.certificateUrl))
 
   const pdfHtml = htmlWithVerify.replace(
@@ -309,7 +310,7 @@ async function generateV2PDF(params: GeneratePDFParams): Promise<Buffer> {
   const design = params.designConfig as CertificateDesignV2
 
   // Generate QR code
-  const qrCodeDataUrl = await QRCode.toDataURL(params.certificateUrl, {
+  const qrCodeDataUrl = await QRCode.toDataURL(tagCertificateUrl(params.certificateUrl, 'qr'), {
     width: 256,
     margin: 1,
   })

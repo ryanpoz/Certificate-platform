@@ -4,6 +4,7 @@ import { courses } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { FilterSelect, FilterInput } from '@/components/dashboard/filters'
 import ShareImpact from './share-impact'
+import LoopActivity from './loop-activity'
 
 export default async function ResultsDashboardPage({
   searchParams,
@@ -68,6 +69,13 @@ export default async function ResultsDashboardPage({
           />
         </div>
       </div>
+
+      <LoopActivity
+        academyId={user.academyId}
+        startDate={startDate}
+        endDate={endDate}
+        courseFilter={params.course}
+      />
 
       <ShareImpact
         academyId={user.academyId}

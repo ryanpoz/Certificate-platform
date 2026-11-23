@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { buildShareLinks, type ShareChannel } from '@/lib/growth/share'
+import { tagCertificateUrl } from '@/lib/growth/tracking'
 
 interface SharePanelProps {
   certificateUrl: string
@@ -24,7 +25,7 @@ export default function SharePanel({ certificateUrl, postText, courseName, acade
   const links = buildShareLinks({ certificateUrl, postText, courseName, academyName })
 
   async function copyLink() {
-    await navigator.clipboard.writeText(certificateUrl)
+    await navigator.clipboard.writeText(tagCertificateUrl(certificateUrl, 'copy'))
     onShare('copy_link')
     setCopied('link')
     setTimeout(() => setCopied(null), 2000)

@@ -5,6 +5,8 @@ import { users, academies } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { createSessionToken } from '@/lib/utils/auth'
 import { normalizeEmail } from '@/lib/utils/helpers'
+import { recordAttributedSignup } from '@/lib/growth/attribution'
+import { REF_COOKIE } from '@/lib/growth/tracking'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
@@ -145,6 +147,13 @@ export async function GET(request: NextRequest) {
 
       userId = user.id
       academyId = academy.id
+
+      // Growth loop: attribute the signup to the certificate that referred it
+      const ref = cookieStore.get(REF_COOKIE)?.value
+      if (ref) {
+        await recordAttributedSignup(ref, academy.id, 'google')
+        cookieStore.delete(REF_COOKIE)
+      }
     }
 
     // Create session

@@ -8,6 +8,7 @@ import SharePanel from './share-panel'
 import ClaimPrompt from './claim-prompt'
 import VerifiedByFooter from './verified-by-footer'
 import { buildSharePostText, shortVerifyLink, type ShareChannel } from '@/lib/growth/share'
+import { tagCertificateUrl, signupRefUrl } from '@/lib/growth/tracking'
 import { type CertificateDesignV2 } from '@/lib/certificate-builder/design-v2'
 import type { DesignConfigV3 } from '@/lib/design-config/v3-schema'
 import V2CertificateRenderer from '@/components/certificate/v2-renderer'
@@ -71,6 +72,8 @@ export default function CertificateView(props: CertificateViewProps) {
           type: 'page_view',
           referrer: document.referrer,
           isRecipient: recipient,
+          utmSource: urlParams.get('utm_source'),
+          utmMedium: urlParams.get('utm_medium'),
         }),
       })
     }
@@ -93,17 +96,17 @@ export default function CertificateView(props: CertificateViewProps) {
     expirationYear: certificate.expiryDate?.getFullYear(),
     expirationMonth: certificate.expiryDate ? certificate.expiryDate.getMonth() + 1 : undefined,
     certId: certificate.number,
-    certUrl: certificateUrl,
+    certUrl: tagCertificateUrl(certificateUrl, 'linkedin', 'profile'),
   })
 
   const ctaUrl = course.ctaUrl ? addUTMParams(course.ctaUrl, course.code, certificate.number) : null
   const postText = buildSharePostText({ courseName: course.name, academyName: academy.name, certificateUrl })
   const verifyLink = shortVerifyLink(certificateUrl)
-  const qrUrl = certificateUrl
-  const signupUrl = '/signup'
+  const qrUrl = tagCertificateUrl(certificateUrl, 'qr')
+  const signupUrl = signupRefUrl('', certificate.number)
 
   async function handleCopyLink() {
-    await navigator.clipboard.writeText(certificateUrl)
+    await navigator.clipboard.writeText(tagCertificateUrl(certificateUrl, 'copy'))
     trackAction('share_click', { channel: 'copy_link' })
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
