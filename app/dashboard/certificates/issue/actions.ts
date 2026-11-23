@@ -2,8 +2,10 @@
 
 import { db } from '@/lib/db'
 import { courses, learners, certificates, templates, academies } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
-import { generateCertificateNumber, normalizeEmail } from '@/lib/utils/helpers'
+import { and, eq } from 'drizzle-orm'
+import { generateCertificateNumber } from '@/lib/utils/helpers'
+import { getCurrentUser } from '@/lib/utils/session'
+import { findOrCreateLearner } from '@/lib/learners'
 import { sendCertificateEmail } from '@/lib/email/resend'
 import { checkCanIssue } from '@/lib/billing/usage'
 
@@ -18,6 +20,12 @@ export async function issueSingleCertificateAction(data: {
   userId: string
 }) {
   try {
+    // Only issue for the signed-in user's own account
+    const user = await getCurrentUser()
+    if (!user || user.academyId !== data.academyId) {
+      return { error: 'Not authorised to issue for this account' }
+    }
+
     const allowance = await checkCanIssue(data.academyId, 1)
     if (!allowance.allowed) {
       return { error: allowance.message, limitReached: true }
@@ -54,7 +62,7 @@ export async function issueSingleCertificateAction(data: {
     const [course] = await db
       .select()
       .from(courses)
-      .where(eq(courses.id, courseId))
+      .where(and(eq(courses.id, courseId), eq(courses.academyId, data.academyId)))
       .limit(1)
 
     if (!course) {
@@ -64,7 +72,11 @@ export async function issueSingleCertificateAction(data: {
     let template = null
     try {
       if ('templateId' in course && course.templateId) {
-        const [tmpl] = await db.select().from(templates).where(eq(templates.id, course.templateId)).limit(1)
+        const [tmpl] = await db
+          .select()
+          .from(templates)
+          .where(and(eq(templates.id, course.templateId), eq(templates.academyId, data.academyId)))
+          .limit(1)
         template = tmpl || null
       }
       if (!template) {
@@ -79,24 +91,8 @@ export async function issueSingleCertificateAction(data: {
       return { error: 'No template found' }
     }
 
-    const emailNorm = normalizeEmail(data.learnerEmail)
-    let [learner] = await db
-      .select()
-      .from(learners)
-      .where(eq(learners.emailNormalised, emailNorm))
-      .limit(1)
-
-    if (!learner) {
-      ;[learner] = await db
-        .insert(learners)
-        .values({
-          academyId: data.academyId,
-          fullName: data.learnerName,
-          email: data.learnerEmail,
-          emailNormalised: emailNorm,
-        })
-        .returning()
-    }
+    // Scoped to this account: never match another account's learner by email
+    const learner = await findOrCreateLearner(data.academyId, data.learnerName, data.learnerEmail)
 
     const certificateNumber = generateCertificateNumber(course.code)
 

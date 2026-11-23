@@ -89,7 +89,7 @@ export default function SignupForm() {
             <p>{error}</p>
             {error.includes('Google') && hasGoogleOAuth && (
               <button
-                onClick={() => window.location.href = '/api/auth/google'}
+                onClick={() => window.location.href = '/auth/google'}
                 className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-800 underline"
               >
                 Try Google sign-in →

@@ -8,6 +8,7 @@ import { nanoid } from 'nanoid'
 import { sendCertificateEmail } from '@/lib/email/resend'
 import { getCurrentUser } from '@/lib/utils/session'
 import { checkCanIssue, recordBillableDeletions } from '@/lib/billing/usage'
+import { findOrCreateLearner } from '@/lib/learners'
 
 interface CreateCertificateWizardData {
   academyId: string
@@ -282,6 +283,12 @@ export async function createCertificateFromWizard(data: CreateCertificateWizardD
   try {
     const { academyId, userId, certificateName, templateConfig, recipients, description, programName, draftId } = data
 
+    // Only issue for the signed-in user's own account
+    const user = await getCurrentUser()
+    if (!user || user.academyId !== academyId) {
+      return { error: 'Not authorised to issue for this account' }
+    }
+
     // Get academy details for email
     const [academy] = await db
       .select()
@@ -334,8 +341,11 @@ Certificate #{{certificateNumber}}`
           templateId: template.id,
           draftData: null, // Clear draft data on publish
         })
-        .where(eq(courses.id, draftId))
+        .where(and(eq(courses.id, draftId), eq(courses.academyId, academyId)))
         .returning()
+      if (!updated) {
+        return { error: 'Draft not found' }
+      }
       course = updated
     } else {
       const courseCode = `CERT-${nanoid(6).toUpperCase()}`
@@ -358,30 +368,8 @@ Certificate #{{certificateNumber}}`
 
     for (const recipient of recipients) {
       try {
-        // Create or find learner
-        const emailNormalised = recipient.email.toLowerCase().trim()
-        let learner
-
-        const [existingLearner] = await db
-          .select()
-          .from(learners)
-          .where(and(eq(learners.academyId, academyId), eq(learners.emailNormalised, emailNormalised)))
-          .limit(1)
-
-        if (existingLearner) {
-          learner = existingLearner
-        } else {
-          const [newLearner] = await db
-            .insert(learners)
-            .values({
-              academyId,
-              fullName: recipient.name,
-              email: recipient.email,
-              emailNormalised,
-            })
-            .returning()
-          learner = newLearner
-        }
+        // Create or find learner (scoped to this account)
+        const learner = await findOrCreateLearner(academyId, recipient.name, recipient.email)
 
         // Create certificate
         const certificateNumber = `${course.code}-${nanoid(8).toUpperCase()}`

@@ -6,6 +6,7 @@ import { eq, and, inArray, sql } from 'drizzle-orm'
 import { normalizeEmail, generateCertificateNumber, calculateExpiryDate } from '@/lib/utils/helpers'
 import { revalidatePath } from 'next/cache'
 import { checkCanIssue } from '@/lib/billing/usage'
+import { findOrCreateLearner } from '@/lib/learners'
 
 export async function getExistingLearnerEmails(academyId: string, courseId: string): Promise<string[]> {
   const existing = await db
@@ -40,7 +41,7 @@ export async function createDraftsFromValidation(
   const [course] = await db
     .select()
     .from(courses)
-    .where(eq(courses.id, courseId))
+    .where(and(eq(courses.id, courseId), eq(courses.academyId, academyId)))
     .limit(1)
 
   if (!course) {
@@ -145,38 +146,15 @@ export async function createSingleCertificate(
   const [course] = await db
     .select()
     .from(courses)
-    .where(eq(courses.id, courseId))
+    .where(and(eq(courses.id, courseId), eq(courses.academyId, academyId)))
     .limit(1)
 
   if (!course) {
     throw new Error('Course not found')
   }
 
-  const emailNormalised = normalizeEmail(data.email)
-
-  let learner = await db
-    .select()
-    .from(learners)
-    .where(
-      and(
-        eq(learners.academyId, academyId),
-        eq(learners.emailNormalised, emailNormalised)
-      )
-    )
-    .limit(1)
-
-  if (learner.length === 0) {
-    const [newLearner] = await db
-      .insert(learners)
-      .values({
-        academyId,
-        fullName: data.name,
-        email: data.email,
-        emailNormalised,
-      })
-      .returning()
-    learner = [newLearner]
-  }
+  // Scoped to this account: never match another account's learner by email
+  const learner = [await findOrCreateLearner(academyId, data.name, data.email)]
 
   const expiryDate = calculateExpiryDate(data.issueDate, course.validityMonths)
   const certNumber = generateCertificateNumber(course.code)
