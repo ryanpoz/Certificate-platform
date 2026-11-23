@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { academies } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import SettingsForm from './form'
+import { accountCan } from '@/lib/billing/usage'
 
 export default async function SettingsPage() {
   const user = await requireAuth()
@@ -12,6 +13,8 @@ export default async function SettingsPage() {
     .from(academies)
     .where(eq(academies.id, user.academyId))
     .limit(1)
+
+  const canBrandEmail = await accountCan(user.academyId, 'brandedEmail')
 
   return (
     <div className="px-4 sm:px-0">
@@ -24,7 +27,7 @@ export default async function SettingsPage() {
 
       <div className="bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
-          <SettingsForm academy={academy} />
+          <SettingsForm academy={academy} canBrandEmail={canBrandEmail} />
         </div>
       </div>
     </div>

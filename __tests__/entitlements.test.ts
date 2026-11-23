@@ -99,6 +99,7 @@ describe('no behaviour change for gates that were live before', () => {
   // The 5de9a48 gate table, frozen here
   const BEFORE: Record<string, PlanId> = {
     expiry: 'starter',
+    brandedEmail: 'starter',
     shareAnalytics: 'growth',
     expiryReminders: 'growth',
     expiringSoonView: 'growth',
@@ -111,7 +112,7 @@ describe('no behaviour change for gates that were live before', () => {
 
   it('only the previously enforced gates are marked enforced', () => {
     const enforced = FEATURE_KEYS.filter((f) => FEATURES[f].enforced).sort()
-    expect(enforced).toEqual(['expiry', 'shareAnalytics'])
+    expect(enforced).toEqual(['brandedEmail', 'expiry', 'shareAnalytics'])
   })
 
   it('usage metering reads the yearly limit through getLimit', () => {

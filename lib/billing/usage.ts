@@ -22,6 +22,7 @@ import {
   type LimitKey,
   type PlanEntitlements,
 } from './entitlements'
+import { emailBrandingFor, type EmailBranding } from '@/lib/email/branding'
 
 export const BILLABLE_DELETED_EVENT = 'billable_certificate_deleted'
 
@@ -164,6 +165,11 @@ export async function getAccountEntitlements(academyId: string): Promise<PlanEnt
 /** Server-side can(account, feature) (defaults to Free if the plan can't be read) */
 export async function accountCan(academyId: string, feature: Feature): Promise<boolean> {
   return can(await getAcademyPlan(academyId), feature)
+}
+
+/** Email branding for an account (unbranded if the plan can't be read) */
+export async function getEmailBranding(academyId: string): Promise<EmailBranding> {
+  return emailBrandingFor(await getAcademyPlan(academyId))
 }
 
 /** Server-side limit getter for an account (defaults to Free if the plan can't be read) */

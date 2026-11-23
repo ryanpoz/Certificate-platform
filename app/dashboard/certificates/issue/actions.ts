@@ -9,7 +9,7 @@ import { findOrCreateLearner } from '@/lib/learners'
 import { getAcademyPlan } from '@/lib/billing/usage'
 import { effectiveValidityMonths } from '@/lib/billing/entitlements'
 import { sendCertificateEmail } from '@/lib/email/resend'
-import { checkCanIssue } from '@/lib/billing/usage'
+import { checkCanIssue, getEmailBranding } from '@/lib/billing/usage'
 
 export async function issueSingleCertificateAction(data: {
   learnerName: string
@@ -140,6 +140,7 @@ export async function issueSingleCertificateAction(data: {
       emailSubject: template.emailSubject,
       emailBody: template.emailBody,
       certificateUrl,
+      branding: await getEmailBranding(data.academyId),
     })
 
     return { success: true, certificateUrl }

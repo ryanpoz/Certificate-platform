@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { validateUrl } from '@/lib/utils/helpers'
 import { accountFor, NOT_FOUND } from '@/lib/auth/ownership'
+import { accountCan } from '@/lib/billing/usage'
 
 export async function updateAcademySettings(academyId: string, data: {
   name: string
@@ -19,7 +20,15 @@ export async function updateAcademySettings(academyId: string, data: {
     return { error: NOT_FOUND }
   }
 
-  if (!data.name || !data.senderName || !data.replyTo) {
+  // Branded email (sender name, reply-to) is a Starter+ feature. Below Starter
+  // the saved values are kept untouched (never overwritten or cleared) and are
+  // not applied to emails; they come back on upgrade.
+  const canBrandEmail = await accountCan(account.academyId, 'brandedEmail')
+
+  if (!data.name) {
+    return { error: 'Academy name is required' }
+  }
+  if (canBrandEmail && (!data.senderName || !data.replyTo)) {
     return { error: 'Name, sender name, and reply-to email are required' }
   }
 
@@ -33,11 +42,10 @@ export async function updateAcademySettings(academyId: string, data: {
       name: data.name,
       brandColor: data.brandColor,
       website: data.website,
-      senderName: data.senderName,
-      replyTo: data.replyTo,
+      ...(canBrandEmail ? { senderName: data.senderName, replyTo: data.replyTo } : {}),
     })
     .where(eq(academies.id, account.academyId))
 
   revalidatePath('/dashboard/settings')
-  return { success: true }
+  return { success: true, emailBrandingLocked: !canBrandEmail }
 }

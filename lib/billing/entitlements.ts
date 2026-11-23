@@ -45,7 +45,7 @@ export interface FeatureDefinition {
 export const FEATURES = {
   // Starter
   expiry: { label: 'Expiry dates', minPlan: 'starter', status: 'live', enforced: true, downgrade: 'lock' },
-  brandedEmail: { label: 'Branded email (sender name, reply-to, logo)', minPlan: 'starter', status: 'live', enforced: false, downgrade: 'lock' },
+  brandedEmail: { label: 'Branded email (sender name, reply-to, logo)', minPlan: 'starter', status: 'live', enforced: true, downgrade: 'lock' },
   issueApi: { label: 'Issue API', minPlan: 'starter', status: 'coming_soon', enforced: false, downgrade: 'lock' },
   webhooks: { label: 'Webhook', minPlan: 'starter', status: 'coming_soon', enforced: false, downgrade: 'lock' },
   zapier: { label: 'Zapier', minPlan: 'starter', status: 'coming_soon', enforced: false, downgrade: 'lock' },

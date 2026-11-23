@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { nanoid } from 'nanoid'
 import { sendCertificateEmail } from '@/lib/email/resend'
 import { getCurrentUser } from '@/lib/utils/session'
-import { checkCanIssue, recordBillableDeletions } from '@/lib/billing/usage'
+import { checkCanIssue, getEmailBranding, recordBillableDeletions } from '@/lib/billing/usage'
 import { findOrCreateLearner } from '@/lib/learners'
 import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
 
@@ -405,6 +405,7 @@ Certificate #{{certificateNumber}}`
     // Process recipients
     const issuedCertificates = []
     const emailErrors = []
+    const emailBranding = await getEmailBranding(academyId)
 
     for (const recipient of recipients) {
       try {
@@ -453,6 +454,7 @@ Certificate #{{certificateNumber}}`
             academyReplyTo: academy.replyTo,
             emailSubject: template.emailSubject,
             emailBody: template.emailBody,
+            branding: emailBranding,
           })
         } catch (emailError) {
           console.error(`Email delivery failed for ${learner.email}:`, emailError)

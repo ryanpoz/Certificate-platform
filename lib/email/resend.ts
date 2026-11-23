@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 import { renderMergeFields } from '../utils/helpers'
 import { BRAND } from '../config/brand'
 import { tagCertificateUrl, signupRefUrl } from '../growth/tracking'
+import { emailIdentity, type EmailBranding } from './branding'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
@@ -18,6 +19,8 @@ export interface SendCertificateEmailParams {
   emailSubject: string
   emailBody: string
   certificateUrl: string
+  /** From getEmailBranding(academyId): whether the account's sender name / reply-to apply */
+  branding: EmailBranding
 }
 
 export async function sendCertificateEmail(params: SendCertificateEmailParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
@@ -28,6 +31,12 @@ export async function sendCertificateEmail(params: SendCertificateEmailParams): 
     expiryDate: params.expiryDate,
     certificateNumber: params.certificateNumber,
   }
+
+  const identity = emailIdentity(params.branding, {
+    name: params.academyName,
+    senderName: params.academySenderName,
+    replyTo: params.academyReplyTo,
+  })
 
   const subject = renderMergeFields(params.emailSubject, mergeData)
   const bodyText = renderMergeFields(params.emailBody, mergeData)
@@ -73,7 +82,7 @@ export async function sendCertificateEmail(params: SendCertificateEmailParams): 
   
   <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 40px; font-size: 14px; color: #6b7280;">
     <p>Certificate Number: <strong>${params.certificateNumber}</strong></p>
-    <p style="margin: 0;">Questions? Reply to this email or contact ${params.academyReplyTo}</p>
+    <p style="margin: 0;">${identity.contactLine}</p>
   </div>
 
   <div style="margin-top: 24px; font-size: 12px; color: #9ca3af; text-align: center;">
@@ -86,11 +95,11 @@ export async function sendCertificateEmail(params: SendCertificateEmailParams): 
   if (resend) {
     try {
       const result = await resend.emails.send({
-        from: `${params.academySenderName} <onboarding@resend.dev>`,
+        from: `${identity.fromName} <onboarding@resend.dev>`,
         to: params.to,
         subject,
         html: htmlBody,
-        replyTo: params.academyReplyTo,
+        ...(identity.replyTo ? { replyTo: identity.replyTo } : {}),
       })
 
       if (result.error) {
@@ -106,6 +115,7 @@ export async function sendCertificateEmail(params: SendCertificateEmailParams): 
   } else {
     console.log('\n=== CERTIFICATE EMAIL (Resend API key not set) ===')
     console.log('To:', params.to)
+    console.log('From:', identity.fromName, identity.replyTo ? `(reply-to ${identity.replyTo})` : '(no reply-to)')
     console.log('Subject:', subject)
     console.log('Certificate URL:', params.certificateUrl)
     console.log('LinkedIn URL:', linkedInUrl)

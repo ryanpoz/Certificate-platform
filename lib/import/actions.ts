@@ -5,7 +5,7 @@ import { learners, certificates, batches, courses, academies, templates, events 
 import { eq, and, inArray, sql } from 'drizzle-orm'
 import { normalizeEmail, generateCertificateNumber, calculateExpiryDate } from '@/lib/utils/helpers'
 import { revalidatePath } from 'next/cache'
-import { checkCanIssue, getAcademyPlan } from '@/lib/billing/usage'
+import { checkCanIssue, getAcademyPlan, getEmailBranding } from '@/lib/billing/usage'
 import { effectiveValidityMonths } from '@/lib/billing/entitlements'
 import { findOrCreateLearner } from '@/lib/learners'
 import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
@@ -248,6 +248,8 @@ export async function publishCertificates(
   }
 
   let published = 0
+  const emailBranding = await getEmailBranding(account.academyId)
+
   for (const certId of certificateIds) {
     const [cert] = await db
       .select({
@@ -296,6 +298,7 @@ export async function publishCertificates(
         emailSubject: cert.template?.emailSubject || 'Your Certificate is Ready',
         emailBody: cert.template?.emailBody || 'Congratulations! Your certificate is ready.',
         certificateUrl,
+        branding: emailBranding,
       })
 
       await db.insert(events).values({
