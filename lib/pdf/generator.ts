@@ -8,6 +8,7 @@ import { type DesignConfigV3 } from '../design-config/v3-schema'
 
 // @ts-ignore
 import QRCode from 'qrcode'
+import { shortVerifyLink } from '../growth/share'
 
 export interface GeneratePDFParams {
   certificateNumber: string
@@ -234,6 +235,25 @@ export async function generateCertificatePDF(params: GeneratePDFParams): Promise
   }
 }
 
+/**
+ * Small verification strip (QR + short verify link) placed in the bottom-right
+ * corner of designed certificates that don't carry their own QR code.
+ */
+export function buildVerifyStrip(qrCodeDataUrl: string, certificateUrl: string): string {
+  const shortLink = shortVerifyLink(certificateUrl)
+  return `<div data-verify-strip style="position: fixed; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(255,255,255,0.92); border: 1px solid #e5e7eb; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; z-index: 9999;">
+  <img src="${qrCodeDataUrl}" alt="Verify" style="width: 56px; height: 56px;" />
+  <div style="line-height: 1.3;">
+    <div style="font-size: 9px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px;">Verify</div>
+    <div style="font-size: 10px; color: #111827;">${shortLink}</div>
+  </div>
+</div>`
+}
+
+function injectBeforeBodyEnd(html: string, fragment: string): string {
+  return html.includes('</body>') ? html.replace('</body>', `${fragment}</body>`) : html + fragment
+}
+
 async function generateV3PDF(params: GeneratePDFParams): Promise<Buffer> {
   const design = params.designConfig as DesignConfigV3
   const { width, height } = getV3PageSize(design)
@@ -248,7 +268,10 @@ async function generateV3PDF(params: GeneratePDFParams): Promise<Buffer> {
     issuerName: params.academyName,
   })
 
-  const pdfHtml = html.replace(
+  const qrCodeDataUrl = await QRCode.toDataURL(params.certificateUrl, { width: 256, margin: 1 })
+  const htmlWithVerify = injectBeforeBodyEnd(html, buildVerifyStrip(qrCodeDataUrl, params.certificateUrl))
+
+  const pdfHtml = htmlWithVerify.replace(
     '<head>',
     `<head>
     <style>
@@ -306,8 +329,13 @@ async function generateV2PDF(params: GeneratePDFParams): Promise<Buffer> {
     `<img src="${qrCodeDataUrl}" style="width: 100%; height: 100%; object-fit: contain;" />`
   )
 
+  // Designs without their own QR code get the small verification strip
+  const htmlWithVerify = htmlWithQR === html
+    ? injectBeforeBodyEnd(html, buildVerifyStrip(qrCodeDataUrl, params.certificateUrl))
+    : htmlWithQR
+
   // Wrap in @page styles for PDF
-  const pdfHtml = htmlWithQR.replace(
+  const pdfHtml = htmlWithVerify.replace(
     '<head>',
     `<head>
     <style>

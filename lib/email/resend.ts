@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { renderMergeFields } from '../utils/helpers'
+import { BRAND } from '../config/brand'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
@@ -41,6 +42,14 @@ export async function sendCertificateEmail(params: SendCertificateEmailParams): 
     certUrl: params.certificateUrl,
   })
 
+  let appOrigin = BRAND.url
+  try {
+    appOrigin = new URL(params.certificateUrl).origin
+  } catch {
+    // keep BRAND.url
+  }
+  const verifiedBySignupUrl = `${appOrigin}/signup`
+
   const htmlBody = `
 <!DOCTYPE html>
 <html>
@@ -64,6 +73,10 @@ export async function sendCertificateEmail(params: SendCertificateEmailParams): 
   <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 40px; font-size: 14px; color: #6b7280;">
     <p>Certificate Number: <strong>${params.certificateNumber}</strong></p>
     <p style="margin: 0;">Questions? Reply to this email or contact ${params.academyReplyTo}</p>
+  </div>
+
+  <div style="margin-top: 24px; font-size: 12px; color: #9ca3af; text-align: center;">
+    Verified by ${BRAND.name} · <a href="${verifiedBySignupUrl}" style="color: #6b7280;">Create your first certificate</a>
   </div>
 </body>
 </html>

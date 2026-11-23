@@ -5,21 +5,21 @@ import { useEffect, useRef } from 'react'
 // @ts-ignore
 import QRCode from 'qrcode'
 
-export default function QRCodeDisplay({ url }: { url: string }) {
+export default function QRCodeDisplay({ url, size = 120 }: { url: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     if (canvasRef.current) {
       QRCode.toCanvas(canvasRef.current, url, {
-        width: 120,
-        margin: 2,
+        width: size,
+        margin: 1,
         color: {
-          dark: '#000000',
+          dark: '#111827',
           light: '#FFFFFF',
         },
       })
     }
-  }, [url])
+  }, [url, size])
 
-  return <canvas ref={canvasRef} className="border border-gray-200 rounded" />
+  return <canvas ref={canvasRef} aria-label="QR code to verify this certificate" className="rounded-md" />
 }
