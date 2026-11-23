@@ -5,7 +5,15 @@ import { useRouter } from 'next/navigation'
 import { createCourse } from '../actions'
 import { PlanBadgeLink } from '@/components/dashboard/locked-feature'
 
-export default function CourseForm({ academyId, canUseExpiry = false }: { academyId: string; canUseExpiry?: boolean }) {
+export default function CourseForm({
+  academyId,
+  canUseExpiry = false,
+  canUseCta = false,
+}: {
+  academyId: string
+  canUseExpiry?: boolean
+  canUseCta?: boolean
+}) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,7 +31,10 @@ export default function CourseForm({ academyId, canUseExpiry = false }: { academ
     setSaving(true)
     setError(null)
 
-    const result = await createCourse(academyId, formData)
+    const result = await createCourse(
+      academyId,
+      canUseCta ? formData : { ...formData, ctaLabel: '', ctaUrl: '' }
+    )
     
     if (result.error) {
       setError(result.error)
@@ -105,8 +116,15 @@ export default function CourseForm({ academyId, canUseExpiry = false }: { academ
       </div>
 
       <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Call-to-Action (Optional)</h3>
-        
+        <h3 className="flex items-center gap-2 text-lg font-medium text-gray-900 mb-4">
+          Call-to-Action (Optional) {!canUseCta && <PlanBadgeLink feature="customCta" />}
+        </h3>
+        {!canUseCta && (
+          <p className="-mt-2 mb-4 text-sm text-gray-500" data-locked-feature="customCta">
+            Your own button on certificate pages is on the Growth plan. Until then, certificate pages show our default &ldquo;Create your first certificate&rdquo; button.
+          </p>
+        )}
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <label htmlFor="ctaLabel" className="block text-sm font-medium text-gray-700">
@@ -115,9 +133,10 @@ export default function CourseForm({ academyId, canUseExpiry = false }: { academ
             <input
               type="text"
               id="ctaLabel"
+              disabled={!canUseCta}
               value={formData.ctaLabel}
               onChange={(e) => setFormData({ ...formData, ctaLabel: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border disabled:bg-gray-100 disabled:text-gray-500"
               placeholder="Try Motion Free"
             />
           </div>
@@ -129,9 +148,10 @@ export default function CourseForm({ academyId, canUseExpiry = false }: { academ
             <input
               type="url"
               id="ctaUrl"
+              disabled={!canUseCta}
               value={formData.ctaUrl}
               onChange={(e) => setFormData({ ...formData, ctaUrl: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border disabled:bg-gray-100 disabled:text-gray-500"
               placeholder="https://motionapp.com"
             />
           </div>

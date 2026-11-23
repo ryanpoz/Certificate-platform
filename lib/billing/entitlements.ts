@@ -55,7 +55,7 @@ export const FEATURES = {
   shareAnalytics: { label: 'Share and click analytics', minPlan: 'growth', status: 'live', enforced: true, downgrade: 'lock' },
   expiryReminders: { label: 'Expiry reminder emails', minPlan: 'growth', status: 'coming_soon', enforced: false, downgrade: 'lock' },
   expiringSoonView: { label: 'Expiring-soon view', minPlan: 'growth', status: 'coming_soon', enforced: false, downgrade: 'lock' },
-  customCta: { label: 'Your own call to action on certificate pages', minPlan: 'growth', status: 'coming_soon', enforced: false, downgrade: 'lock' },
+  customCta: { label: 'Your own call to action on certificate pages', minPlan: 'growth', status: 'live', enforced: true, downgrade: 'lock' },
   pageAddress: { label: 'Your own page address on our domain (e.g. /acme)', minPlan: 'growth', status: 'coming_soon', enforced: false, downgrade: 'lock' },
   // Business
   customDomain: { label: 'Custom domain', minPlan: 'business', status: 'coming_soon', enforced: false, downgrade: 'period_end' },

@@ -36,6 +36,7 @@ export default async function CourseDetailPage({
   const plan = await getAcademyPlan(user.academyId)
   const canSeeShareAnalytics = can(plan, 'shareAnalytics')
   const canUseExpiry = can(plan, 'expiry')
+  const canUseCta = can(plan, 'customCta')
 
   let template = null
   try {
@@ -128,6 +129,11 @@ export default async function CourseDetailPage({
                   <dt className="text-sm font-medium text-gray-500">Call-to-Action</dt>
                   <dd className="mt-1 text-sm text-gray-900">
                     {course.ctaLabel} → {course.ctaUrl}
+                    {!canUseCta && (
+                      <span className="ml-2 text-xs text-gray-500">
+                        (saved, not shown on certificate pages on your plan) <PlanBadgeLink feature="customCta" />
+                      </span>
+                    )}
                   </dd>
                 </div>
               )}

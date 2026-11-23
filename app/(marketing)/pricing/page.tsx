@@ -79,7 +79,7 @@ const plans: Plan[] = [
       { text: 'Everything in Starter, plus:' },
       { text: 'Expiry reminder emails and an expiring-soon view', comingSoon: true },
       { text: 'Share and click analytics' },
-      { text: 'Your own call to action on certificate pages', comingSoon: true },
+      { text: 'Your own call to action on certificate pages' },
       { text: 'Your own page address on our domain (e.g. /acme)', comingSoon: true },
       { text: '5 admin seats', comingSoon: true },
     ],
@@ -307,7 +307,7 @@ export default function PricingPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">What counts as a certificate?</h3>
               <p className="text-gray-600">
-                Each certificate you issue in your plan year counts toward your plan limit, including renewals and reissues. Tests, duplicates (the same person and program again) and certificates you delete within 7 days of issuing don&apos;t count. Your plan year starts on the day you sign up and resets on that date each year.
+                Each certificate you issue in your plan year counts toward your plan limit, including renewals, reissues and certificates imported from another platform. Tests, duplicates (the same person and program again) and certificates you delete within 7 days of issuing don&apos;t count. Your plan year starts on the day you sign up and resets on that date each year.
               </p>
             </div>
             <div>

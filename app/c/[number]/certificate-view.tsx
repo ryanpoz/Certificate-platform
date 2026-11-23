@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { BRAND } from '@/lib/config/brand'
 import { formatDate, renderMergeFields } from '@/lib/utils/helpers'
 import { generateLinkedInUrl } from '@/lib/email/resend'
 import QRCodeDisplay from './qr-code'
@@ -46,10 +47,12 @@ interface CertificateViewProps {
   }
   certificateUrl: string
   isPreviewMode: boolean
+  /** Below Growth: show our default growth-loop CTA in place of the issuer's */
+  showPlatformCta?: boolean
 }
 
 export default function CertificateView(props: CertificateViewProps) {
-  const { certificate, learner, course, academy, template, certificateUrl, isPreviewMode } = props
+  const { certificate, learner, course, academy, template, certificateUrl, isPreviewMode, showPlatformCta = false } = props
   const [copied, setCopied] = useState(false)
   const [isRecipient, setIsRecipient] = useState(false)
 
@@ -342,13 +345,25 @@ export default function CertificateView(props: CertificateViewProps) {
                   </div>
                 </div>
 
-                {ctaUrl && course.ctaLabel && (
-                  <div className="border-t pt-8 mb-8">
+                {showPlatformCta && (
+                  <div className="border-t pt-8 mb-8" data-cta="platform">
+                    <a
+                      href={signupUrl}
+                      onClick={() => trackAction('cta_click', { cta: 'platform' })}
+                      className="block w-full text-center px-6 py-4 rounded-xl shadow-sm text-base font-semibold text-white bg-gray-900 hover:bg-gray-700 transition-colors"
+                    >
+                      Verified by {BRAND.name} &middot; Create your first certificate →
+                    </a>
+                  </div>
+                )}
+
+                {!showPlatformCta && ctaUrl && course.ctaLabel && (
+                  <div className="border-t pt-8 mb-8" data-cta="issuer">
                     <a
                       href={ctaUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => trackAction('cta_click')}
+                      onClick={() => trackAction('cta_click', { cta: 'issuer' })}
                       className="block w-full text-center px-6 py-4 rounded-xl shadow-sm text-base font-semibold text-white hover:opacity-90 transition-opacity"
                       style={{ backgroundColor: academy.brandColor }}
                     >

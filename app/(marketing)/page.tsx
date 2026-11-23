@@ -205,10 +205,10 @@ export default function HomePage() {
       <div className="py-24 sm:py-32 bg-blue-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4">
-            Switch from Accredible for free
+            Switching from Accredible? We&apos;ll help you move
           </h2>
           <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
-            We import and reissue every certificate as a fresh round of LinkedIn shares—at no cost.
+            We&apos;ll help you import your existing certificates and reissue them with a fresh Add to LinkedIn button. Migration help is free; imported certificates count toward your plan&apos;s yearly allowance.
           </p>
           <div className="flex justify-center gap-4">
             <Link

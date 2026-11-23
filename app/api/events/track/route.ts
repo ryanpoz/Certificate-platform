@@ -3,12 +3,12 @@ import { db } from '@/lib/db'
 import { certificates, events } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { isbot } from 'isbot'
-import { isShareChannel, isTrackableEvent, resolveViewSource } from '@/lib/growth/tracking'
+import { isCtaSource, isShareChannel, isTrackableEvent, resolveViewSource } from '@/lib/growth/tracking'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { certificateNumber, type, referrer, isRecipient, channel, utmSource, utmMedium } = body
+    const { certificateNumber, type, referrer, isRecipient, channel, utmSource, utmMedium, cta } = body
 
     // Only lightweight growth-loop events are accepted from the public page
     if (!isTrackableEvent(type) || typeof certificateNumber !== 'string') {
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       ...(isRecipient ? { isRecipient: true } : {}),
       ...(source ? { source } : {}),
       ...(type === 'share_click' ? { channel } : {}),
+      ...(type === 'cta_click' && isCtaSource(cta) ? { cta } : {}),
     }
     const utmData = typeof utmSource === 'string' && utmSource
       ? {

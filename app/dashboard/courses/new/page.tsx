@@ -5,6 +5,7 @@ import { accountCan } from '@/lib/billing/usage'
 export default async function NewCoursePage() {
   const user = await requireAuth()
   const canUseExpiry = await accountCan(user.academyId, 'expiry')
+  const canUseCta = await accountCan(user.academyId, 'customCta')
 
   return (
     <div className="px-4 sm:px-0">
@@ -17,7 +18,7 @@ export default async function NewCoursePage() {
 
       <div className="bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
-          <CourseForm academyId={user.academyId} canUseExpiry={canUseExpiry} />
+          <CourseForm academyId={user.academyId} canUseExpiry={canUseExpiry} canUseCta={canUseCta} />
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { isIssuerCtaClick } from '@/lib/growth/tracking'
 import { certificates, courses, events } from '@/lib/db/schema'
 import { eq, and, sql, gte, lte } from 'drizzle-orm'
 import Link from 'next/link'
@@ -90,6 +91,7 @@ export default async function ShareImpact({
   // CTA clicks from audience (not recipients)
   const audienceCtaClicks = allEvents.filter(e => 
     e.type === 'cta_click' &&
+    isIssuerCtaClick(e.meta) &&
     (!e.meta || !(e.meta as any).isRecipient)
   ).length
 
@@ -116,6 +118,7 @@ export default async function ShareImpact({
     
     const certCtaClicks = certEvents.filter(e => 
       e.type === 'cta_click' &&
+      isIssuerCtaClick(e.meta) &&
       (!e.meta || !(e.meta as any).isRecipient)
     ).length
 

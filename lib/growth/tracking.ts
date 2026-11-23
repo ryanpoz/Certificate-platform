@@ -32,6 +32,23 @@ export const TRACKABLE_EVENTS = [
 ] as const
 export type TrackableEvent = (typeof TRACKABLE_EVENTS)[number]
 
+/**
+ * Which call to action a cta_click came from: the issuer's own button (Growth+)
+ * or our default "Create your first certificate" button shown on lower plans.
+ */
+export const CTA_SOURCES = ['issuer', 'platform'] as const
+export type CtaSource = (typeof CTA_SOURCES)[number]
+
+export function isCtaSource(value: unknown): value is CtaSource {
+  return typeof value === 'string' && (CTA_SOURCES as readonly string[]).includes(value)
+}
+
+/** Issuer CTA click? (older events have no source and were always the issuer's button) */
+export function isIssuerCtaClick(meta: unknown): boolean {
+  const cta = meta && typeof meta === 'object' ? (meta as Record<string, unknown>).cta : undefined
+  return cta !== 'platform'
+}
+
 export const SIGNUP_ATTRIBUTED_EVENT = 'signup_attributed'
 export const REF_COOKIE = 'cert_ref'
 export const REF_COOKIE_MAX_AGE = 60 * 60 * 24 * 30

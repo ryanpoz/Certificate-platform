@@ -91,8 +91,9 @@ describe('pricing page states the plan rules', () => {
     expect(pricing).toContain('On Starter and above, certificate emails come from your sender name')
   })
 
-  it('Growth lists its own call to action as coming soon', () => {
-    expect(pricing).toContain("{ text: 'Your own call to action on certificate pages', comingSoon: true }")
+  it('Growth lists its own call to action as built (not coming soon)', () => {
+    expect(pricing).toContain("{ text: 'Your own call to action on certificate pages' },")
+    expect(pricing).not.toContain("{ text: 'Your own call to action on certificate pages', comingSoon: true }")
   })
 })
 

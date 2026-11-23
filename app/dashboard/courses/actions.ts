@@ -27,12 +27,14 @@ export async function createCourse(academyId: string, data: {
     return { error: 'Name and code are required' }
   }
 
-  if (data.ctaUrl && !validateUrl(data.ctaUrl)) {
-    return { error: 'Please enter a valid CTA URL' }
-  }
-
   // Expiry is a Starter+ feature: ignored on Free
   const plan = await getAcademyPlan(academyId)
+  // The program's own call to action is a Growth+ feature: ignored below Growth
+  const canSetCta = can(plan, 'customCta')
+
+  if (canSetCta && data.ctaUrl && !validateUrl(data.ctaUrl)) {
+    return { error: 'Please enter a valid CTA URL' }
+  }
   const validityMonths = effectiveValidityMonths(plan, data.validityMonths ? parseInt(data.validityMonths) : null)
 
   const [template] = await db
@@ -66,8 +68,8 @@ ${validityMonths ? 'Expiry Date: {{expiry_date}}' : ''}`,
       code: data.code,
       description: data.description,
       validityMonths,
-      ctaLabel: data.ctaLabel || null,
-      ctaUrl: data.ctaUrl || null,
+      ctaLabel: canSetCta ? data.ctaLabel || null : null,
+      ctaUrl: canSetCta ? data.ctaUrl || null : null,
       templateId: template.id,
     })
     .returning()
@@ -88,10 +90,6 @@ export async function updateCourse(courseId: string, data: {
     return { error: 'Name and code are required' }
   }
 
-  if (data.ctaUrl && !validateUrl(data.ctaUrl)) {
-    return { error: 'Please enter a valid CTA URL' }
-  }
-
   const account = await getSessionAccount()
   if (!account) {
     return { error: NOT_FOUND }
@@ -107,6 +105,11 @@ export async function updateCourse(courseId: string, data: {
     return { error: NOT_FOUND }
   }
   const canSetExpiry = can(await getAcademyPlan(existing.academyId), 'expiry')
+  // Growth+: below Growth the saved CTA label/link are kept untouched (they return on upgrade)
+  const canSetCta = can(await getAcademyPlan(existing.academyId), 'customCta')
+  if (canSetCta && data.ctaUrl && !validateUrl(data.ctaUrl)) {
+    return { error: 'Please enter a valid CTA URL' }
+  }
   const validityMonths = data.validityMonths ? parseInt(data.validityMonths) : null
 
   await db
@@ -116,8 +119,7 @@ export async function updateCourse(courseId: string, data: {
       code: data.code,
       description: data.description,
       ...(canSetExpiry ? { validityMonths } : {}),
-      ctaLabel: data.ctaLabel || null,
-      ctaUrl: data.ctaUrl || null,
+      ...(canSetCta ? { ctaLabel: data.ctaLabel || null, ctaUrl: data.ctaUrl || null } : {}),
     })
     .where(and(eq(courses.id, courseId), eq(courses.academyId, account.academyId)))
 

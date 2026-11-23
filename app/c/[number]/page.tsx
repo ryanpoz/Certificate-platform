@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import { formatDate } from '@/lib/utils/helpers'
 import CertificateView from './certificate-view'
+import { getAcademyPlan } from '@/lib/billing/usage'
+import { can } from '@/lib/billing/entitlements'
 
 export default async function CertificatePage({
   params,
@@ -40,6 +42,10 @@ export default async function CertificatePage({
   const isExpired = certificate.expiryDate && new Date() > certificate.expiryDate
   const status = certificate.status === 'revoked' ? 'revoked' : isExpired ? 'expired' : 'valid'
 
+  // The program's own call to action is Growth+. Below Growth the issuer's
+  // saved label/link never reach the page; our default growth-loop CTA shows instead.
+  const showIssuerCta = can(await getAcademyPlan(academy.id), 'customCta')
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const certificateUrl = `${appUrl}/c/${certificate.number}`
 
@@ -63,8 +69,8 @@ export default async function CertificatePage({
           id: course.id,
           name: course.name,
           code: course.code,
-          ctaLabel: course.ctaLabel,
-          ctaUrl: course.ctaUrl,
+          ctaLabel: showIssuerCta ? course.ctaLabel : null,
+          ctaUrl: showIssuerCta ? course.ctaUrl : null,
         }}
         academy={{
           name: academy.name,
@@ -77,6 +83,7 @@ export default async function CertificatePage({
         }}
         certificateUrl={certificateUrl}
         isPreviewMode={preview === 'true'}
+        showPlatformCta={!showIssuerCta}
       />
     </>
   )
