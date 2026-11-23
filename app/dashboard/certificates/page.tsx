@@ -7,7 +7,7 @@ import { checkFirstTimeUser } from '../wizard/actions'
 import { redirect } from 'next/navigation'
 import { DraftActions } from './draft-actions'
 import { ProgramActions } from './program-actions'
-import { academyHasFeature } from '@/lib/billing/usage'
+import { accountCan } from '@/lib/billing/usage'
 import { PlanBadgeLink } from '@/components/dashboard/locked-feature'
 
 function isDraftProgram(
@@ -30,7 +30,7 @@ export default async function CertificatesPage() {
   }
 
   // Views and LinkedIn clicks are share/click analytics (Growth and up)
-  const canSeeShareAnalytics = await academyHasFeature(user.academyId, 'shareAnalytics')
+  const canSeeShareAnalytics = await accountCan(user.academyId, 'shareAnalytics')
 
   // Get all programs (courses) with certificate counts and metrics
   const allPrograms = await db

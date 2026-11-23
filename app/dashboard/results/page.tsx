@@ -7,7 +7,7 @@ import ShareImpact from './share-impact'
 import LoopActivity from './loop-activity'
 import BasicCounts from './basic-counts'
 import { LockedFeatureCard } from '@/components/dashboard/locked-feature'
-import { academyHasFeature } from '@/lib/billing/usage'
+import { accountCan } from '@/lib/billing/usage'
 
 export default async function ResultsDashboardPage({
   searchParams,
@@ -28,7 +28,7 @@ export default async function ResultsDashboardPage({
   const endDate = params.endDate ? new Date(params.endDate) : new Date()
 
   // Share and click analytics are a Growth feature; data is only queried when included
-  const canSeeShareAnalytics = await academyHasFeature(user.academyId, 'shareAnalytics')
+  const canSeeShareAnalytics = await accountCan(user.academyId, 'shareAnalytics')
 
   const allCourses = await db
     .select()

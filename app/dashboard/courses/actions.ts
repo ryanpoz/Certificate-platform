@@ -8,7 +8,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { slugify, validateUrl } from '@/lib/utils/helpers'
 import { getAcademyPlan } from '@/lib/billing/usage'
-import { effectiveValidityMonths, planIncludes } from '@/lib/billing/plans'
+import { effectiveValidityMonths, can } from '@/lib/billing/entitlements'
 
 export async function createCourse(academyId: string, data: {
   name: string
@@ -106,7 +106,7 @@ export async function updateCourse(courseId: string, data: {
   if (!existing) {
     return { error: NOT_FOUND }
   }
-  const canSetExpiry = planIncludes(await getAcademyPlan(existing.academyId), 'expiry')
+  const canSetExpiry = can(await getAcademyPlan(existing.academyId), 'expiry')
   const validityMonths = data.validityMonths ? parseInt(data.validityMonths) : null
 
   await db

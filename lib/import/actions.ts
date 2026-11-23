@@ -6,7 +6,7 @@ import { eq, and, inArray, sql } from 'drizzle-orm'
 import { normalizeEmail, generateCertificateNumber, calculateExpiryDate } from '@/lib/utils/helpers'
 import { revalidatePath } from 'next/cache'
 import { checkCanIssue, getAcademyPlan } from '@/lib/billing/usage'
-import { effectiveValidityMonths } from '@/lib/billing/plans'
+import { effectiveValidityMonths } from '@/lib/billing/entitlements'
 import { findOrCreateLearner } from '@/lib/learners'
 import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
 

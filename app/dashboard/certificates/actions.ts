@@ -5,7 +5,7 @@ import { certificates, events, learners, courses, academies, batches, templates 
 import { eq, inArray, and, like, or, gte, lte } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { getCurrentUser } from '@/lib/utils/session'
-import { recordBillableDeletions, academyHasFeature } from '@/lib/billing/usage'
+import { recordBillableDeletions, accountCan } from '@/lib/billing/usage'
 import { accountFor, requireAccountFor, NOT_FOUND } from '@/lib/auth/ownership'
 
 /**
@@ -163,7 +163,7 @@ export async function revokeCertificatesFiltered(academyId: string, filters: any
 
 export async function exportCertificatesToCSVFiltered(academyId: string, filters: any): Promise<string> {
   await requireAccountFor(academyId)
-  const includeClicks = await academyHasFeature(academyId, 'shareAnalytics')
+  const includeClicks = await accountCan(academyId, 'shareAnalytics')
   let query = db
     .select({
       certificate: certificates,
@@ -307,7 +307,7 @@ export async function exportCertificatesToCSV(certificateIds: string[]): Promise
     .innerJoin(courses, eq(certificates.courseId, courses.id))
     .where(and(inArray(certificates.id, certificateIds), eq(certificates.academyId, account.academyId)))
 
-  const includeClicks = await academyHasFeature(account.academyId, 'shareAnalytics')
+  const includeClicks = await accountCan(account.academyId, 'shareAnalytics')
 
   const certIds = results.map(r => r.certificate.id)
   const engagementData = certIds.length > 0 ? await db
@@ -528,7 +528,7 @@ export async function reissueCertificate(certificateId: string) {
   const newNumber = generateCertificateNumber(cert.course.code)
   const newIssueDate = new Date()
   const { getAcademyPlan } = await import('@/lib/billing/usage')
-  const { effectiveValidityMonths } = await import('@/lib/billing/plans')
+  const { effectiveValidityMonths } = await import('@/lib/billing/entitlements')
   // Expiry is a Starter+ feature: reissued certificates on Free don't expire
   const newExpiryDate = calculateExpiryDate(
     newIssueDate,

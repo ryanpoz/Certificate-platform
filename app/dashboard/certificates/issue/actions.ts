@@ -7,7 +7,7 @@ import { generateCertificateNumber } from '@/lib/utils/helpers'
 import { getCurrentUser } from '@/lib/utils/session'
 import { findOrCreateLearner } from '@/lib/learners'
 import { getAcademyPlan } from '@/lib/billing/usage'
-import { effectiveValidityMonths } from '@/lib/billing/plans'
+import { effectiveValidityMonths } from '@/lib/billing/entitlements'
 import { sendCertificateEmail } from '@/lib/email/resend'
 import { checkCanIssue } from '@/lib/billing/usage'
 

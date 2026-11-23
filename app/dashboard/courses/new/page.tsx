@@ -1,10 +1,10 @@
 import { requireAuth } from '@/lib/utils/session'
 import CourseForm from './form'
-import { academyHasFeature } from '@/lib/billing/usage'
+import { accountCan } from '@/lib/billing/usage'
 
 export default async function NewCoursePage() {
   const user = await requireAuth()
-  const canUseExpiry = await academyHasFeature(user.academyId, 'expiry')
+  const canUseExpiry = await accountCan(user.academyId, 'expiry')
 
   return (
     <div className="px-4 sm:px-0">

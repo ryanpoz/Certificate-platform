@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { UPGRADE_URL, requiredPlanName, type Feature } from '@/lib/billing/plans'
+import { UPGRADE_URL } from '@/lib/billing/plans'
+import { requiredPlanName, type Feature } from '@/lib/billing/entitlements'
 
 /**
  * Locked preview shown in place of a plan-gated panel. Renders placeholder

@@ -3,17 +3,17 @@
  */
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { PLANS } from '@/lib/billing/plans'
 import {
   FEATURE_MIN_PLAN,
-  PLANS,
   effectiveValidityMonths,
-  planIncludes,
+  can as planIncludes,
   requiredPlanName,
-} from '@/lib/billing/plans'
+} from '@/lib/billing/entitlements'
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), 'utf-8')
 
-describe('planIncludes', () => {
+describe('can (feature gates)', () => {
   it('gates expiry to Starter and up', () => {
     expect(planIncludes('free', 'expiry')).toBe(false)
     expect(planIncludes('starter', 'expiry')).toBe(true)
@@ -62,7 +62,7 @@ describe('expiry is enforced server-side', () => {
 
   it('program update leaves the stored validity untouched without expiry', () => {
     const src = read('app/dashboard/courses/actions.ts')
-    expect(src).toContain("planIncludes(await getAcademyPlan(existing.academyId), 'expiry')")
+    expect(src).toContain("can(await getAcademyPlan(existing.academyId), 'expiry')")
     expect(src).toContain('...(canSetExpiry ? { validityMonths } : {})')
   })
 
@@ -87,7 +87,7 @@ describe('expiry is enforced server-side', () => {
     const form = read('app/dashboard/courses/new/form.tsx')
     expect(form).toContain('disabled={!canUseExpiry}')
     expect(form).toContain('<PlanBadgeLink feature="expiry" />')
-    expect(read('app/dashboard/courses/new/page.tsx')).toContain("academyHasFeature(user.academyId, 'expiry')")
+    expect(read('app/dashboard/courses/new/page.tsx')).toContain("accountCan(user.academyId, 'expiry')")
   })
 })
 
@@ -95,7 +95,7 @@ describe('share and click analytics are gated to Growth', () => {
   const results = read('app/dashboard/results/page.tsx')
 
   it('Results only renders the analytics panels on Growth+, else a locked card', () => {
-    expect(results).toContain("academyHasFeature(user.academyId, 'shareAnalytics')")
+    expect(results).toContain("accountCan(user.academyId, 'shareAnalytics')")
     const gated = results.slice(results.indexOf('{canSeeShareAnalytics ? ('))
     expect(gated.indexOf('<LoopActivity')).toBeGreaterThan(-1)
     expect(gated.indexOf('<ShareImpact')).toBeGreaterThan(-1)
@@ -134,12 +134,13 @@ describe('share and click analytics are gated to Growth', () => {
   it('CSV exports only include click columns on Growth+', () => {
     const actions = read('app/dashboard/certificates/actions.ts')
     expect(actions).toContain("...(includeClicks ? ['LinkedIn Clicked', 'CTA Clicked'] : [])")
-    expect(actions.match(/academyHasFeature\([^)]*'shareAnalytics'\)/g)?.length).toBe(2)
+    expect(actions.match(/accountCan\([^)]*'shareAnalytics'\)/g)?.length).toBe(2)
   })
 
   it('event tracking keeps running for every plan', () => {
     const route = read('app/api/events/track/route.ts')
-    expect(route).not.toContain('academyHasFeature')
-    expect(route).not.toContain('planIncludes')
+    expect(route).not.toContain('accountCan')
+    expect(route).not.toContain('@/lib/billing/entitlements')
+    expect(route).not.toContain('getAcademyPlan')
   })
 })

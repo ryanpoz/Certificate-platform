@@ -13,9 +13,15 @@ import {
   type IssueCheck,
   type PlanDefinition,
   type UsageStatus,
-  type Feature,
-  planIncludes,
 } from './plans'
+import {
+  can,
+  entitlementsFor,
+  getLimit,
+  type Feature,
+  type LimitKey,
+  type PlanEntitlements,
+} from './entitlements'
 
 export const BILLABLE_DELETED_EVENT = 'billable_certificate_deleted'
 
@@ -95,7 +101,7 @@ export async function getAcademyUsage(academyId: string, now: Date = new Date())
     periodStart: start,
     periodEnd: end,
     counts,
-    status: evaluateUsage(totalBillable(counts), plan.yearlyLimit),
+    status: evaluateUsage(totalBillable(counts), getLimit(plan, 'certificatesPerYear')),
   }
 }
 
@@ -150,8 +156,17 @@ export async function recordBillableDeletions(
   return markers.length
 }
 
-/** Server-side feature check for an account (defaults to Free if the plan can't be read) */
-export async function academyHasFeature(academyId: string, feature: Feature): Promise<boolean> {
-  const plan = await getAcademyPlan(academyId)
-  return planIncludes(plan, feature)
+/** Entitlements (limits + feature flags) for an account; Free if the plan can't be read */
+export async function getAccountEntitlements(academyId: string): Promise<PlanEntitlements> {
+  return entitlementsFor(await getAcademyPlan(academyId))
+}
+
+/** Server-side can(account, feature) (defaults to Free if the plan can't be read) */
+export async function accountCan(academyId: string, feature: Feature): Promise<boolean> {
+  return can(await getAcademyPlan(academyId), feature)
+}
+
+/** Server-side limit getter for an account (defaults to Free if the plan can't be read) */
+export async function accountLimit(academyId: string, limit: LimitKey): Promise<number> {
+  return getLimit(await getAcademyPlan(academyId), limit)
 }

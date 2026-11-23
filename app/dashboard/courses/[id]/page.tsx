@@ -7,7 +7,7 @@ import Link from 'next/link'
 import TemplateEditor from './template-editor'
 import RecipientProgress from './recipient-progress'
 import { getAcademyPlan } from '@/lib/billing/usage'
-import { planIncludes } from '@/lib/billing/plans'
+import { can } from '@/lib/billing/entitlements'
 import { PlanBadgeLink } from '@/components/dashboard/locked-feature'
 
 export default async function CourseDetailPage({
@@ -34,8 +34,8 @@ export default async function CourseDetailPage({
   }
 
   const plan = await getAcademyPlan(user.academyId)
-  const canSeeShareAnalytics = planIncludes(plan, 'shareAnalytics')
-  const canUseExpiry = planIncludes(plan, 'expiry')
+  const canSeeShareAnalytics = can(plan, 'shareAnalytics')
+  const canUseExpiry = can(plan, 'expiry')
 
   let template = null
   try {
