@@ -290,7 +290,7 @@ export default function ProductPage() {
           <div className="order-1 lg:order-2">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Your branding</h2>
             <p className="text-lg text-gray-600 mb-6">
-              Customize certificate pages with your academy colors and branding. On Growth and Scale plans, use your own domain.
+              Customize certificate pages with your academy colors and branding. On the Business plan, use your own domain.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
@@ -309,7 +309,7 @@ export default function ProductPage() {
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">Custom domains (Growth & Scale plans)</span>
+                <span className="text-gray-700">Custom domains (Business plan)</span>
               </li>
             </ul>
           </div>

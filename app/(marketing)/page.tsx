@@ -187,10 +187,10 @@ export default function HomePage() {
       <div className="py-24 sm:py-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-4">
-            A flat price that doesn&apos;t grow with your learners
+            Simple plans with a yearly certificate limit
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Start free with 250 certificates per year. Growth and Scale plans for academies that certify thousands.
+            Start free with 250 certificates per year. Move up to Starter, Growth or Business when you need more volume or features.
           </p>
           <Link
             href="/pricing"
