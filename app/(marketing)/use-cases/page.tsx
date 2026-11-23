@@ -43,7 +43,7 @@ export default function UseCasesPage() {
             <div className="bg-green-50 rounded-lg p-8 border border-green-200">
               <h3 className="font-semibold text-gray-900 mb-3">The {BRAND.name} outcome</h3>
               <p className="text-gray-700">
-                Certificates land in email with a one-click LinkedIn button. Each share reaches their network with your product name and certification URL—tracked back to your signup page.
+                Certificates land in email with a one-click LinkedIn button. Each share reaches their network with your product name and certification URL. On Growth, those clicks can be tracked back to your signup page.
               </p>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function UseCasesPage() {
             <div className="bg-green-50 rounded-lg p-8 border border-green-200">
               <h3 className="font-semibold text-gray-900 mb-3">The {BRAND.name} outcome</h3>
               <p className="text-gray-700">
-                Partners add certifications to LinkedIn with one click. You see who shares, how many views each partner drives, and which training cohorts generate the most reach.
+                Partners add certifications to LinkedIn with one click. On Growth, you can see who shares, how many views each partner drives, and which cohorts generate the most reach.
               </p>
             </div>
           </div>
