@@ -16,7 +16,7 @@ export default function ProductPage() {
             Everything you need to issue certificates that prove impact
           </h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            From CSV upload to LinkedIn shares in minutes. Track every view, share, and click back to your academy.
+            From CSV upload to a verification page, QR code, and LinkedIn shares in minutes. Share and click analytics are on the Growth plan.
           </p>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function ProductPage() {
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">LinkedIn sharing</h2>
             <p className="text-lg text-gray-600 mb-6">
-              One-click &quot;Add to LinkedIn&quot; button pre-filled with course name, dates, and certificate URL. Every share is tracked.
+              One-click &quot;Add to LinkedIn&quot; button pre-filled with the certificate name, dates, and verification URL. Share tracking is on the Growth plan.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
@@ -146,7 +146,7 @@ export default function ProductPage() {
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">Track clicks back to your academy</span>
+                <span className="text-gray-700">Track clicks back to your site (Growth plan)</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -190,9 +190,9 @@ export default function ProductPage() {
             </div>
           </div>
           <div className="order-1 lg:order-2">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Free analytics</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Share and click analytics</h2>
             <p className="text-lg text-gray-600 mb-6">
-              See exactly how your certificates perform. Issued, delivered, viewed, shared to LinkedIn, and clicks back to your site.
+              On the Growth and Business plans, see exactly how your certificates perform. Issued, delivered, viewed, shared to LinkedIn, and clicks back to your site.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">

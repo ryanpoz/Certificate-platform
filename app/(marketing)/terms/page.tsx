@@ -22,7 +22,7 @@ export default function TermsPage() {
         <h2>User Responsibilities</h2>
         <p>You are responsible for the accuracy of certificate information and compliance with applicable laws.</p>
         <h2>Pricing and Payment</h2>
-        <p>Pricing is as stated on our pricing page. Monthly billing, cancel anytime.</p>
+        <p>Pricing is as stated on our pricing page. Monthly or annual billing, cancel anytime.</p>
         <h2>Contact</h2>
         <p>For questions about these terms, contact us at {BRAND.supportEmail}</p>
       </div>

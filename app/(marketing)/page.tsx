@@ -17,7 +17,7 @@ export default function HomePage() {
               Certificates that show what your academy actually drives
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-              Minutes after completion, when learners are proudest to share. Every LinkedIn add tracked back to your academy. Free analytics that prove impact.
+              Design certificates, send them by CSV, and let people share a verification page with a QR code and Add to LinkedIn. Share and click analytics are on the Growth plan.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
@@ -64,7 +64,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">They share instantly</h3>
               <p className="text-gray-600">
-                Email lands with a one-click &quot;Add to LinkedIn&quot; button. Every share is tracked with your academy&apos;s branding.
+                Email lands with a one-click &quot;Add to LinkedIn&quot; button and a verification page with a QR code.
               </p>
             </div>
             <div className="text-center">
@@ -73,7 +73,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Watch the reach grow</h3>
               <p className="text-gray-600">
-                Free analytics show issued, viewed, shared, and clicks back to your site—no guessing what&apos;s working.
+                On Growth, share and click analytics show issued, viewed, shared, and clicks back to your site—no guessing what&apos;s working.
               </p>
             </div>
           </div>
@@ -102,13 +102,13 @@ export default function HomePage() {
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Track who clicked through from LinkedIn to your site</span>
+                  <span className="text-gray-700">Track who clicked through from LinkedIn to your site (Growth plan)</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">See exactly which courses drive the most reach</span>
+                  <span className="text-gray-700">See which certificates drive the most reach (Growth plan)</span>
                 </li>
               </ul>
             </div>
@@ -146,7 +146,7 @@ export default function HomePage() {
               Analytics that prove impact
             </h2>
             <p className="mt-4 text-lg text-gray-600">
-              Free with every plan. No guessing—just clear numbers on reach and engagement.
+              On the Growth and Business plans. Clear numbers on reach and engagement.
             </p>
           </div>
           <div className="bg-gray-50 rounded-lg p-8 border border-gray-200">
