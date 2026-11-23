@@ -14,7 +14,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Certificates that show what your academy actually drives
+              Certificates that show what your training actually drives
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
               Design certificates, send them by CSV, and let people share a verification page with a QR code and Add to LinkedIn. Share and click analytics are on the Growth plan.
@@ -53,7 +53,7 @@ export default function HomePage() {
               <div className="mx-auto h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg mb-4">
                 1
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload your graduates</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload your recipients</h3>
               <p className="text-gray-600">
                 Import a CSV with names and emails. We validate, deduplicate, and create certificates in seconds.
               </p>
@@ -89,14 +89,14 @@ export default function HomePage() {
                 LinkedIn shares = signups
               </h2>
               <p className="text-lg text-gray-600 mb-4">
-                Every certificate your learners add to LinkedIn becomes a verified signal to their network: your course works.
+                Every certificate your recipients add to LinkedIn becomes a verified signal to their network: your training works.
               </p>
               <ul className="space-y-4">
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Pre-filled with your course name, dates, and certificate URL</span>
+                  <span className="text-gray-700">Pre-filled with your program name, dates, and certificate URL</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -116,8 +116,8 @@ export default function HomePage() {
               <div className="text-sm text-gray-500 mb-4">Example: Certificate page</div>
               <div className="space-y-4">
                 <div className="border-b border-gray-200 pb-4">
-                  <div className="font-semibold text-gray-900 mb-1">Creative Strategy Bootcamp</div>
-                  <div className="text-sm text-gray-600">Motion Academy</div>
+                  <div className="font-semibold text-gray-900 mb-1">Creative Strategy Certification</div>
+                  <div className="text-sm text-gray-600">Northwind Training</div>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -177,7 +177,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="mt-6 text-xs text-gray-500 text-center">
-              Example data • Your dashboard shows real-time metrics per course
+              Example data • On Growth, your dashboard shows these metrics per program
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function HomePage() {
             Simple plans with a yearly certificate limit
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Start free with 250 certificates per year. Move up to Starter, Growth or Business when you need more volume or features.
+            Start free with 250 certificates per year. Move up to Starter, Growth or Business when you need more volume or features. Your full yearly allowance is available up front, billed monthly or annually.
           </p>
           <Link
             href="/pricing"

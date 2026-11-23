@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: `Use Cases - ${BRAND.name}`,
-  description: 'Certificate solutions for customer education, partner enablement, and course creators',
+  description: 'Certificate solutions for customer education, partner enablement, trainers and associations',
 }
 
 export default function UseCasesPage() {
@@ -13,7 +13,7 @@ export default function UseCasesPage() {
       <div className="bg-gradient-to-b from-blue-50 to-white py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl mb-6">
-            Certificates that drive outcomes for every academy
+            Certificates that drive outcomes for every certification program
           </h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             From customer education to partner enablement, turn your certification program into a LinkedIn-powered growth engine.
@@ -56,7 +56,7 @@ export default function UseCasesPage() {
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Bulk import of course graduates</span>
+                  <span className="text-gray-700">Bulk import of everyone who completes your program</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -88,7 +88,7 @@ export default function UseCasesPage() {
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">A yearly certificate limit on each plan, with top-up packs if you need more</span>
+                  <span className="text-gray-700">A yearly certificate limit on each plan, available up front, with 500-certificate top-ups for bursts (coming soon)</span>
                 </li>
               </ul>
             </div>
@@ -133,7 +133,7 @@ export default function UseCasesPage() {
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Expiry dates and recertification</span>
+                  <span className="text-gray-700">Expiry dates (Starter plan)</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -153,25 +153,25 @@ export default function UseCasesPage() {
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Bulk reissuance for renewals</span>
+                  <span className="text-gray-700">Reissue certificates for renewals</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Recertification campaigns (Business plan)</span>
+                  <span className="text-gray-700">Recertification campaigns (Business plan, coming soon)</span>
                 </li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* Course Creators / Academies */}
-        <div id="academies">
+        {/* Trainers & Associations */}
+        <div id="trainers-associations">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Course Creators & Academies</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Trainers & Associations</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Run a paid academy, bootcamp, or certification program. Turn every graduate into a referral channel with certificates they&apos;re proud to share.
+              Run professional training or a membership certification. Give everyone you certify a credential they&apos;re proud to share.
             </p>
           </div>
           
@@ -179,38 +179,38 @@ export default function UseCasesPage() {
             <div className="bg-blue-50 rounded-lg p-8 border border-blue-200">
               <h3 className="font-semibold text-gray-900 mb-3">The challenge</h3>
               <p className="text-gray-700">
-                You run a premium academy and need certificates that feel as polished as your brand. You want to know if graduates share them and whether that drives signups.
+                You certify professionals or members and need certificates that look as credible as your organisation. You want to know if people share them and whether that brings new people to you.
               </p>
             </div>
             <div className="bg-green-50 rounded-lg p-8 border border-green-200">
               <h3 className="font-semibold text-gray-900 mb-3">The {BRAND.name} outcome</h3>
               <p className="text-gray-700">
-                Branded certificates with your colors and logo, delivered the moment learners finish. On Growth, LinkedIn shares can be tracked to your landing page, and analytics show which cohorts drive the most reach.
+                Certificate pages in your brand colors, issued one at a time or in bulk by CSV. On Growth, LinkedIn shares can be tracked to your site, and analytics show which cohorts drive the most reach.
               </p>
             </div>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-lg p-8">
-            <h3 className="font-semibold text-gray-900 mb-4">What academy operators get</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">What trainers and associations get</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Custom branding and colors</span>
+                  <span className="text-gray-700">Custom brand colors on certificate pages</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Instant issuance after course completion</span>
+                  <span className="text-gray-700">Issue one at a time or in bulk by CSV</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-gray-700">Custom email templates</span>
+                  <span className="text-gray-700">Custom email templates, sent from your sender name (Starter plan)</span>
                 </li>
               </ul>
               <ul className="space-y-3">

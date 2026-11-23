@@ -1,7 +1,7 @@
 // Brand configuration - centralized for easy renaming
 export const BRAND = {
   name: 'Credentially', // TODO: Replace with final product name
-  tagline: 'Certificates that show what your academy actually drives',
+  tagline: 'Certificates that show what your training actually drives',
   description: 'A lower-cost alternative to Accredible for companies that certify external learners.',
   url: process.env.NEXT_PUBLIC_APP_URL || 'https://certificate-platform-eta.vercel.app',
   

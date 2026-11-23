@@ -74,8 +74,8 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 bg-white rounded-lg shadow-lg p-6 border border-gray-200">
             <div className="border-b border-gray-200 pb-4 mb-4">
-              <div className="font-semibold text-gray-900 mb-1">Creative Strategy Bootcamp</div>
-              <div className="text-sm text-gray-600">Motion Academy</div>
+              <div className="font-semibold text-gray-900 mb-1">Creative Strategy Certification</div>
+              <div className="text-sm text-gray-600">Northwind Training</div>
             </div>
             <div className="space-y-2 text-sm mb-4">
               <div className="flex justify-between">
@@ -104,7 +104,7 @@ export default function ProductPage() {
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">Branded verification pages with your academy colors</span>
+                <span className="text-gray-700">Verification pages in your brand colors</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -159,8 +159,8 @@ export default function ProductPage() {
           <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
             <div className="text-sm text-gray-600 mb-4">Example: LinkedIn certification</div>
             <div className="space-y-2 text-sm">
-              <div><strong>Name:</strong> Creative Strategy Bootcamp</div>
-              <div><strong>Organization:</strong> Motion Academy</div>
+              <div><strong>Name:</strong> Creative Strategy Certification</div>
+              <div><strong>Organization:</strong> Northwind Training</div>
               <div><strong>Issue date:</strong> January 2026</div>
               <div><strong>Credential URL:</strong> certificate-platform.../CSB-2026-0123</div>
             </div>
@@ -205,7 +205,7 @@ export default function ProductPage() {
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">Per-course breakdown</span>
+                <span className="text-gray-700">Per-program breakdown</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -241,13 +241,13 @@ export default function ProductPage() {
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">Filter by course, status, date, engagement</span>
+                <span className="text-gray-700">Filter by program, status, date, engagement</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">Edit, reissue, or revoke individual certificates</span>
+                <span className="text-gray-700">Edit, reissue, or revoke individual certificates (revoking is available on every plan)</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -281,8 +281,8 @@ export default function ProductPage() {
           <div className="order-2 lg:order-1">
             <div className="bg-white rounded-lg shadow-lg p-6 border-4 border-purple-600">
               <div className="border-b border-gray-200 pb-4 mb-4">
-                <div className="font-semibold text-gray-900 mb-1">Your Course Name</div>
-                <div className="text-sm" style={{ color: '#8b5cf6' }}>Your Academy Name</div>
+                <div className="font-semibold text-gray-900 mb-1">Your Program Name</div>
+                <div className="text-sm" style={{ color: '#8b5cf6' }}>Your Organisation</div>
               </div>
               <div className="text-sm text-gray-600">Your branding, your colors</div>
             </div>
@@ -290,7 +290,7 @@ export default function ProductPage() {
           <div className="order-1 lg:order-2">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Your branding</h2>
             <p className="text-lg text-gray-600 mb-6">
-              Customize certificate pages with your academy colors and branding. On the Business plan, use your own domain.
+              Customize certificate pages with your brand colors. Branded email (your sender name and reply-to) is on Starter and above. A custom domain is coming soon on Business.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
@@ -309,7 +309,13 @@ export default function ProductPage() {
                 <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-700">Custom domains (Business plan)</span>
+                <span className="text-gray-700">Emails from your sender name and reply-to (Starter plan)</span>
+              </li>
+              <li className="flex items-start">
+                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-gray-700">Custom domains (Business plan, coming soon)</span>
               </li>
             </ul>
           </div>

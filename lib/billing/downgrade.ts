@@ -2,11 +2,18 @@
  * Downgrade and top-up rules (pure logic, no database, billing or email).
  *
  * Rules:
+ * 0. Plan changes (downgrades and cancellations) take effect at the end of the
+ *    current billing period; upgrades take effect straight away.
  * 1. Nothing already issued breaks. Certificates, verification pages, PDFs and
  *    LinkedIn links keep working on every plan, including expiry dates set
- *    while the account was on a plan with expiry.
- * 2. Features lock instead of disappearing. A feature the new plan lacks is
- *    shown as a locked preview with an upgrade link (FEATURES[f].downgrade = 'lock').
+ *    while the account was on a plan with expiry. Revoking is always allowed.
+ * 2. Features lock instead of disappearing. When the change takes effect, a
+ *    feature the new plan lacks is shown as a locked preview with an upgrade
+ *    link (FEATURES[f].downgrade = 'lock'). Data and settings are kept.
+ * 2b. You can't move to a paid plan whose yearly limit is below what you've
+ *    already issued this plan year until the plan year resets. Cancelling to
+ *    Free is always allowed; new issuing is then blocked until the reset, an
+ *    upgrade or a top-up.
  * 3. Over the yearly limit: certificates already issued this plan year still
  *    count, against the NEW plan's limit, and new issuing is blocked once usage
  *    passes the limit plus the 10% grace (checkIssueAllowance). Nothing is
@@ -15,6 +22,8 @@
  *    the current billing period, after a warning email, then switch off.
  *    Nothing is deleted: extra seats lose dashboard access, extra brands and the
  *    custom domain stop being used, and everything comes back on upgrade.
+ *    Custom-domain links redirect to our domain (while DNS still points at us)
+ *    so shared links don't break.
  * 5. Unused top-up certificates carry over across plan changes until the
  *    plan-year reset, then expire.
  *
@@ -78,8 +87,13 @@ export interface DowngradePlan {
   isDowngrade: boolean
   /** Always true: issued certificates, pages, PDFs and links are never affected */
   issuedCertificatesUnaffected: true
-  /** Features that lock straight away and show as locked previews */
-  lockNow: Feature[]
+  /** Can the account make this change now? (false: limit below this year's usage) */
+  allowed: boolean
+  blockedReason?: string
+  /** When the change takes effect: end of billing period for downgrades, now for upgrades */
+  effectiveAt: Date
+  /** Features that lock (as locked previews) when the change takes effect */
+  locks: Feature[]
   /** Seats, brands and custom domain: keep working until the period end, then switch off */
   atPeriodEnd: PeriodEndChange[]
   /** Set when a warning email is needed before atPeriodEnd takes effect */
@@ -88,6 +102,23 @@ export interface DowngradePlan {
   usage: UsageStatus
   /** False when usage is already past the new limit plus grace: new issuing is blocked */
   canIssueNew: boolean
+}
+
+/**
+ * Can the account move to `to` given what it has issued this plan year?
+ * Free (cancel) is always allowed; paid plans need a yearly limit at or above usage.
+ */
+export function canChangePlan(to: AccountLike, certificatesThisYear: number): { allowed: boolean; reason?: string } {
+  const toId = planIdOf(to)
+  if (toId === 'free') return { allowed: true }
+  const limit = getLimit(to, 'certificatesPerYear')
+  if (certificatesThisYear > limit) {
+    return {
+      allowed: false,
+      reason: `You've issued ${certificatesThisYear.toLocaleString('en-US')} certificates this plan year, more than the ${limit.toLocaleString('en-US')} on that plan. You can move to it after your plan year resets, or cancel to Free.`,
+    }
+  }
+  return { allowed: true }
 }
 
 /** Features lost on `to` that `from` had */
@@ -110,7 +141,9 @@ export function planDowngrade(
   const toId = planIdOf(to)
   const lost = featuresLost(from, to)
 
-  const lockNow = lost.filter((f) => FEATURES[f].downgrade === 'lock')
+  const locks = lost.filter((f) => FEATURES[f].downgrade === 'lock')
+  const downgrade = isDowngrade(fromId, toId)
+  const check = canChangePlan(to, use.certificatesThisYear)
 
   const atPeriodEnd: PeriodEndChange[] = []
   for (const key of ['adminSeats', 'brands'] as const) {
@@ -140,9 +173,12 @@ export function planDowngrade(
   return {
     from: fromId,
     to: toId,
-    isDowngrade: isDowngrade(fromId, toId),
+    isDowngrade: downgrade,
+    allowed: check.allowed,
+    ...(check.reason ? { blockedReason: check.reason } : {}),
+    effectiveAt: downgrade ? billingPeriodEnd : now,
     issuedCertificatesUnaffected: true,
-    lockNow,
+    locks,
     atPeriodEnd,
     warning,
     usage,

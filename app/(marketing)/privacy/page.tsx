@@ -16,7 +16,7 @@ export default function PrivacyPage() {
       <div className="prose prose-blue max-w-none">
         <p className="text-gray-600">Last updated: {new Date().toLocaleDateString()}</p>
         <h2>Information We Collect</h2>
-        <p>We collect information you provide when creating an academy and issuing certificates, including names, email addresses, and certificate details.</p>
+        <p>We collect information you provide when creating an account and issuing certificates, including names, email addresses, and certificate details.</p>
         <h2>How We Use Your Information</h2>
         <p>We use your information to provide the certificate platform service, send email notifications, and display public certificate verification pages.</p>
         <h2>Data Security</h2>

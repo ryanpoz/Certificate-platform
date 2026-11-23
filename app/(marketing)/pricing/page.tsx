@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { BRAND } from '@/lib/config/brand'
+import { PLANS, PLAN_ORDER, type PlanId } from '@/lib/billing/plans'
+import { FEATURES, FEATURE_KEYS, LIMITS, can } from '@/lib/billing/entitlements'
 
 export const metadata = {
   title: `Pricing - ${BRAND.name}`,
   description:
-    'Simple certificate pricing in CA$. Start free with 250 certificates a year, then move up a plan for more volume or features.',
+    'Simple certificate pricing in CA$. Start free with 250 certificates a year. Your full yearly allowance is available up front, billed monthly or annually.',
 }
 
 type FeatureItem = {
@@ -39,6 +41,7 @@ const plans: Plan[] = [
       { text: 'Verification page' },
       { text: 'QR code' },
       { text: 'Add to LinkedIn' },
+      { text: 'Basic counts: issued, emails sent, claimed' },
       { text: 'Includes a \u201cVerified by\u201d link' },
     ],
     cta: 'Start free',
@@ -58,7 +61,7 @@ const plans: Plan[] = [
       { text: 'Zapier', comingSoon: true },
       { text: 'Pass-score rule', comingSoon: true },
       { text: 'Expiry dates' },
-      { text: 'Branded email (sender name, reply-to, logo)' },
+      { text: 'Branded email (your sender name and reply-to)' },
       { text: 'Badgr / Open Badges import', comingSoon: true },
       { text: '2 admin seats', comingSoon: true },
     ],
@@ -76,6 +79,7 @@ const plans: Plan[] = [
       { text: 'Everything in Starter, plus:' },
       { text: 'Expiry reminder emails and an expiring-soon view', comingSoon: true },
       { text: 'Share and click analytics' },
+      { text: 'Your own call to action on certificate pages', comingSoon: true },
       { text: 'Your own page address on our domain (e.g. /acme)', comingSoon: true },
       { text: '5 admin seats', comingSoon: true },
     ],
@@ -139,6 +143,88 @@ function Feature({ text, comingSoon }: FeatureItem) {
   )
 }
 
+const EVERY_PLAN = [
+  'Certificate designer and templates',
+  'CSV sending',
+  'PDF, verification page and QR code',
+  'Add to LinkedIn',
+  'Basic counts: issued, emails sent, claimed',
+  'Revoke certificates at any time',
+]
+
+function ComingSoonBadge() {
+  return (
+    <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 align-middle">
+      Coming soon
+    </span>
+  )
+}
+
+function Included({ on }: { on: boolean }) {
+  return on ? (
+    <span className="text-blue-600 font-semibold" aria-label="Included">&#10003;</span>
+  ) : (
+    <span className="text-gray-300" aria-label="Not included">&mdash;</span>
+  )
+}
+
+/** Plan comparison built from the entitlements map, so it always matches what the app enforces */
+function ComparisonTable() {
+  const certificates = (plan: PlanId) => {
+    const n = LIMITS.certificatesPerYear.perPlan[plan].toLocaleString('en-US')
+    return LIMITS.certificatesPerYear.contractPlans.includes(plan) ? `${n}+` : n
+  }
+  const seats = (plan: PlanId) =>
+    LIMITS.adminSeats.contractPlans.includes(plan) ? 'Custom' : String(LIMITS.adminSeats.perPlan[plan])
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-sm" data-comparison-table>
+        <thead>
+          <tr className="border-b border-gray-200">
+            <th className="py-3 pr-4 text-left font-semibold text-gray-900">Feature</th>
+            {PLAN_ORDER.map((plan) => (
+              <th key={plan} className="py-3 px-4 text-center font-semibold text-gray-900">{PLANS[plan].name}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          <tr>
+            <td className="py-3 pr-4 text-gray-700">Certificates per year</td>
+            {PLAN_ORDER.map((plan) => (
+              <td key={plan} className="py-3 px-4 text-center text-gray-900">{certificates(plan)}</td>
+            ))}
+          </tr>
+          <tr>
+            <td className="py-3 pr-4 text-gray-700">Admin seats<ComingSoonBadge /></td>
+            {PLAN_ORDER.map((plan) => (
+              <td key={plan} className="py-3 px-4 text-center text-gray-900">{seats(plan)}</td>
+            ))}
+          </tr>
+          {EVERY_PLAN.map((label) => (
+            <tr key={label}>
+              <td className="py-3 pr-4 text-gray-700">{label}</td>
+              {PLAN_ORDER.map((plan) => (
+                <td key={plan} className="py-3 px-4 text-center"><Included on /></td>
+              ))}
+            </tr>
+          ))}
+          {FEATURE_KEYS.map((feature) => (
+            <tr key={feature} data-feature={feature}>
+              <td className="py-3 pr-4 text-gray-700">
+                {FEATURES[feature].label}
+                {FEATURES[feature].status === 'coming_soon' ? <ComingSoonBadge /> : null}
+              </td>
+              {PLAN_ORDER.map((plan) => (
+                <td key={plan} className="py-3 px-4 text-center"><Included on={can(plan, feature)} /></td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export default function PricingPage() {
   return (
     <div className="bg-white py-24 sm:py-32">
@@ -148,7 +234,7 @@ export default function PricingPage() {
             Pricing
           </h1>
           <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            Prices in CA$, billed monthly. Pay annually at 10x the monthly price and get two months free. Cancel anytime.
+            Prices in CA$. Pay monthly, or pay annually at 10x the monthly price and get two months free. Either way, your full yearly certificate allowance is available from day one.
           </p>
         </div>
 
@@ -200,11 +286,19 @@ export default function PricingPage() {
 
         <div className="mt-12 text-center max-w-3xl mx-auto space-y-3">
           <p className="text-gray-600">
-            Need more? Add 500 certificates for CA$49 on Starter, or CA$39 on Growth and Business. A small 10% grace applies over your plan limit. Tests and duplicates don&apos;t count.
+            A 10% grace applies over your plan limit. Tests and duplicates don&apos;t count. For bursts, top-ups of 500 certificates will be CA$49 on Starter, or CA$39 on Growth and Business.{' '}
+            <span className="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 align-middle">
+              Coming soon
+            </span>
           </p>
           <p className="text-sm text-gray-500">
             Features marked coming soon are included in that plan and are still rolling out.
           </p>
+        </div>
+
+        <div className="mt-24">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Compare plans</h2>
+          <ComparisonTable />
         </div>
 
         <div className="mt-24 max-w-3xl mx-auto">
@@ -213,13 +307,19 @@ export default function PricingPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">What counts as a certificate?</h3>
               <p className="text-gray-600">
-                Each certificate you issue in a 12-month period counts toward your plan limit. Tests and duplicates don&apos;t count.
+                Each certificate you issue in your plan year counts toward your plan limit, including renewals and reissues. Tests, duplicates (the same person and program again) and certificates you delete within 7 days of issuing don&apos;t count. Your plan year starts on the day you sign up and resets on that date each year.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Do I get my whole yearly allowance on monthly billing?</h3>
+              <p className="text-gray-600">
+                Yes. On monthly or annual billing, your full yearly certificate allowance is available from the start of your plan year, so you can issue a big cohort in one go.
               </p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">What if I go over my limit?</h3>
               <p className="text-gray-600">
-                A small 10% grace applies over your plan limit. After that, add a 500-certificate pack or move up to the next plan. Certificates you have already issued stay verifiable.
+                A 10% grace applies over your plan limit. After that, new issuing pauses until your plan year resets or you move up a plan. Top-ups of 500 certificates for bursts are coming soon. Certificates you have already issued stay live and verifiable.
               </p>
             </div>
             <div>
@@ -229,15 +329,35 @@ export default function PricingPage() {
               </p>
             </div>
             <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">What happens if I downgrade or cancel?</h3>
+              <ul className="list-disc pl-5 space-y-2 text-gray-600">
+                <li>Certificates you have issued always stay live and verifiable, and you can always revoke a certificate, on any plan.</li>
+                <li>Plan changes and cancellations take effect at the end of your current billing period.</li>
+                <li>
+                  You can&apos;t move to a plan whose yearly limit is below what you&apos;ve already issued this plan year until your plan year resets. You can still cancel to Free, but new issuing is paused until your plan year resets or you upgrade (or add a top-up, once top-ups are available).
+                </li>
+                <li>Features above your new plan lock rather than disappear. Your data and settings are kept and come back when you upgrade.</li>
+                <li>
+                  If you use a custom domain, links on it redirect to our domain after you leave Business, so shared links don&apos;t break, as long as you keep your DNS pointed at us.
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">What does branded email include?</h3>
+              <p className="text-gray-600">
+                On Starter and above, certificate emails come from your sender name, and replies go to your reply-to address. On Free, emails come from {BRAND.name} and include a small &ldquo;Verified by&rdquo; footer.
+              </p>
+            </div>
+            <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">How do share analytics work?</h3>
               <p className="text-gray-600">
-                On Growth and Business, we count shares and views of each verification page, so you can see which certificates get reach and which clicks come back to you.
+                On Growth and Business, we count shares and views of each verification page, so you can see which certificates get reach and which clicks come back to you. Basic counts (issued, emails sent, claimed) are on every plan.
               </p>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Can I white-label and use my own domain?</h3>
               <p className="text-gray-600">
-                A custom domain and full white-label, including removal of our branding, are on Business. Growth includes a page address on our domain, such as /acme, with a small &ldquo;Verified by&rdquo; mark in the footer.
+                A custom domain and full white-label, including removal of our branding, are on Business and coming soon. Growth will include a page address on our domain, such as /acme, with a small &ldquo;Verified by&rdquo; mark in the footer.
               </p>
             </div>
           </div>

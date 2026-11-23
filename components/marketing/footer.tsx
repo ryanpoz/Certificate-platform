@@ -19,7 +19,7 @@ export default function MarketingFooter() {
             <ul className="mt-4 space-y-3">
               <li><Link href="/use-cases#customer-education" className="text-base text-gray-600 hover:text-gray-900">Customer Education</Link></li>
               <li><Link href="/use-cases#partner-enablement" className="text-base text-gray-600 hover:text-gray-900">Partner Enablement</Link></li>
-              <li><Link href="/use-cases#academies" className="text-base text-gray-600 hover:text-gray-900">Course Creators</Link></li>
+              <li><Link href="/use-cases#trainers-associations" className="text-base text-gray-600 hover:text-gray-900">Trainers &amp; Associations</Link></li>
             </ul>
           </div>
           <div>

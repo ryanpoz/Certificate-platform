@@ -24,6 +24,7 @@ import {
 } from '@/lib/billing/entitlements'
 import {
   DOWNGRADE_WARNING_DAYS,
+  canChangePlan,
   featuresLost,
   isDowngrade,
   noopDowngradeHooks,
@@ -163,6 +164,7 @@ describe('coming-soon features sit at their pricing-page tiers', () => {
     shareAnalytics: 'Share and click analytics',
     expiryReminders: 'Expiry reminder emails',
     expiringSoonView: 'expiring-soon view',
+    customCta: 'Your own call to action on certificate pages',
     pageAddress: 'Your own page address',
     customDomain: 'Custom domain',
     whiteLabel: 'Full white-label',
@@ -242,7 +244,7 @@ describe('can() and getLimit()', () => {
   })
 
   it('featuresUnlockedBy lists what an upgrade adds', () => {
-    expect(featuresUnlockedBy('starter', 'growth').sort()).toEqual(['expiringSoonView', 'expiryReminders', 'pageAddress', 'shareAnalytics'])
+    expect(featuresUnlockedBy('starter', 'growth').sort()).toEqual(['customCta', 'expiringSoonView', 'expiryReminders', 'pageAddress', 'shareAnalytics'])
     expect(featuresUnlockedBy('business', 'free')).toEqual([])
   })
 
@@ -295,21 +297,40 @@ describe('downgrade rules', () => {
 
   it('locks lost features straight away (as previews), except period-end ones', () => {
     const plan = planDowngrade('growth', 'free', { certificatesThisYear: 0 }, periodEnd, now)
-    expect(plan.lockNow.sort()).toEqual(
-      ['brandedEmail', 'expiringSoonView', 'expiry', 'expiryReminders', 'issueApi', 'openBadgesImport', 'pageAddress', 'passScoreRule', 'shareAnalytics', 'webhooks', 'zapier'].sort()
+    expect(plan.locks.sort()).toEqual(
+      ['brandedEmail', 'customCta', 'expiringSoonView', 'expiry', 'expiryReminders', 'issueApi', 'openBadgesImport', 'pageAddress', 'passScoreRule', 'shareAnalytics', 'webhooks', 'zapier'].sort()
     )
-    for (const f of plan.lockNow) expect(featureAccess('free', f).state).toBe('locked')
+    for (const f of plan.locks) expect(featureAccess('free', f).state).toBe('locked')
     const fromBusiness = planDowngrade('business', 'growth', { certificatesThisYear: 0 }, periodEnd, now)
-    expect(fromBusiness.lockNow).not.toContain('customDomain')
-    expect(fromBusiness.lockNow).not.toContain('multipleBrands')
-    expect(fromBusiness.lockNow).toEqual(expect.arrayContaining(['whiteLabel', 'sso', 'auditLog']))
+    expect(fromBusiness.locks).not.toContain('customDomain')
+    expect(fromBusiness.locks).not.toContain('multipleBrands')
+    expect(fromBusiness.locks).toEqual(expect.arrayContaining(['whiteLabel', 'sso', 'auditLog']))
+  })
+
+  it('downgrades take effect at the end of the billing period; upgrades straight away', () => {
+    expect(planDowngrade('growth', 'starter', { certificatesThisYear: 0 }, periodEnd, now).effectiveAt).toEqual(periodEnd)
+    expect(planDowngrade('starter', 'growth', { certificatesThisYear: 0 }, periodEnd, now).effectiveAt).toEqual(now)
+  })
+
+  it("can't move to a paid plan whose yearly limit is below this year's usage; cancelling to Free is allowed", () => {
+    expect(canChangePlan('starter', 1000)).toEqual({ allowed: true })
+    expect(canChangePlan('starter', 1001).allowed).toBe(false)
+    expect(canChangePlan('starter', 1001).reason).toContain('cancel to Free')
+    expect(canChangePlan('free', 4000)).toEqual({ allowed: true })
+    const blocked = planDowngrade('growth', 'starter', { certificatesThisYear: 3000 }, periodEnd, now)
+    expect(blocked.allowed).toBe(false)
+    expect(blocked.blockedReason).toBeDefined()
+    const cancel = planDowngrade('growth', 'free', { certificatesThisYear: 3000 }, periodEnd, now)
+    expect(cancel.allowed).toBe(true)
+    expect(cancel.canIssueNew).toBe(false)
+    expect(cancel.issuedCertificatesUnaffected).toBe(true)
   })
 
   it('featuresLost is empty on upgrade', () => {
     expect(featuresLost('free', 'growth')).toEqual([])
     const plan = planDowngrade('free', 'growth', { certificatesThisYear: 10 }, periodEnd, now)
     expect(plan.isDowngrade).toBe(false)
-    expect(plan.lockNow).toEqual([])
+    expect(plan.locks).toEqual([])
     expect(plan.warning).toBeNull()
   })
 
