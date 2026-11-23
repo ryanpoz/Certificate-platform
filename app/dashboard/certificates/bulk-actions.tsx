@@ -42,6 +42,11 @@ export default function BulkActions({
     setLoading(true)
     try {
       const result = await revokeCertificatesFiltered(academyId, filters, reason)
+      if ('error' in result && result.error) {
+        alert(result.error)
+        setLoading(false)
+        return
+      }
       alert(`${result.count} certificate${result.count !== 1 ? 's' : ''} revoked!`)
       window.location.reload()
     } catch (error) {

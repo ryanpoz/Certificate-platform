@@ -2,7 +2,8 @@
 
 import { db } from '@/lib/db'
 import { templates } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { getSessionAccount } from '@/lib/auth/ownership'
 
 export async function updateTemplateAction(
   templateId: string,
@@ -13,7 +14,11 @@ export async function updateTemplateAction(
   }
 ) {
   try {
-    await db
+    const account = await getSessionAccount()
+    if (!account) {
+      return { error: 'Template not found' }
+    }
+    const updated = await db
       .update(templates)
       .set({
         name: data.name,
@@ -21,7 +26,11 @@ export async function updateTemplateAction(
         bodyText: data.bodyText,
         updatedAt: new Date(),
       })
-      .where(eq(templates.id, templateId))
+      .where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
+      .returning({ id: templates.id })
+    if (updated.length === 0) {
+      return { error: 'Template not found' }
+    }
 
     return { success: true }
   } catch (error) {

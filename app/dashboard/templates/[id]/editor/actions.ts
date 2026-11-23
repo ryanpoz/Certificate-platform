@@ -2,18 +2,27 @@
 
 import { db } from '@/lib/db'
 import { templates } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { getSessionAccount } from '@/lib/auth/ownership'
 import { revalidatePath } from 'next/cache'
 
 export async function saveTemplateDesign(templateId: string, design: any) {
   try {
-    await db
+    const account = await getSessionAccount()
+    if (!account) {
+      return { error: 'Template not found' }
+    }
+    const updated = await db
       .update(templates)
       .set({
         designConfig: design,
         updatedAt: new Date(),
       })
-      .where(eq(templates.id, templateId))
+      .where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
+      .returning({ id: templates.id })
+    if (updated.length === 0) {
+      return { error: 'Template not found' }
+    }
 
     revalidatePath(`/dashboard/templates/${templateId}`)
     revalidatePath('/dashboard/templates')

@@ -6,6 +6,7 @@ import { eq, inArray, and, like, or, gte, lte } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { getCurrentUser } from '@/lib/utils/session'
 import { recordBillableDeletions, academyHasFeature } from '@/lib/billing/usage'
+import { accountFor, requireAccountFor, NOT_FOUND } from '@/lib/auth/ownership'
 
 /**
  * Delete a certificate program (course) and all related issued certificates,
@@ -114,6 +115,9 @@ async function buildFilteredQuery(academyId: string, filters: any) {
 }
 
 export async function publishCertificatesFiltered(academyId: string, filters: any) {
+  if (!(await accountFor(academyId))) {
+    return { count: 0, error: NOT_FOUND }
+  }
   const certIds = await buildFilteredQuery(academyId, { ...filters, status: 'unpublished' })
   
   if (certIds.length === 0) {
@@ -131,6 +135,9 @@ export async function publishCertificatesFiltered(academyId: string, filters: an
 }
 
 export async function revokeCertificatesFiltered(academyId: string, filters: any, reason: string) {
+  if (!(await accountFor(academyId))) {
+    return { count: 0, error: NOT_FOUND }
+  }
   const certIds = await buildFilteredQuery(academyId, filters)
   
   if (certIds.length === 0) {
@@ -147,7 +154,7 @@ export async function revokeCertificatesFiltered(academyId: string, filters: any
         revokedAt,
         revokeReason: reason,
       })
-      .where(eq(certificates.id, certId))
+      .where(and(eq(certificates.id, certId), eq(certificates.academyId, academyId)))
   }
 
   revalidatePath('/dashboard/certificates')
@@ -155,6 +162,7 @@ export async function revokeCertificatesFiltered(academyId: string, filters: any
 }
 
 export async function exportCertificatesToCSVFiltered(academyId: string, filters: any): Promise<string> {
+  await requireAccountFor(academyId)
   const includeClicks = await academyHasFeature(academyId, 'shareAnalytics')
   let query = db
     .select({
@@ -265,24 +273,29 @@ export async function exportCertificatesToCSVFiltered(academyId: string, filters
 }
 
 export async function revokeCertificates(certificateIds: string[], reason: string) {
+  const account = await requireAccountFor()
   const revokedAt = new Date()
+  let revoked = 0
   
   for (const certId of certificateIds) {
-    await db
+    const rows = await db
       .update(certificates)
       .set({
         status: 'revoked',
         revokedAt,
         revokeReason: reason,
       })
-      .where(eq(certificates.id, certId))
+      .where(and(eq(certificates.id, certId), eq(certificates.academyId, account.academyId)))
+      .returning({ id: certificates.id })
+    revoked += rows.length
   }
 
   revalidatePath('/dashboard/certificates')
-  return { revoked: certificateIds.length }
+  return { revoked }
 }
 
 export async function exportCertificatesToCSV(certificateIds: string[]): Promise<string> {
+  const account = await requireAccountFor()
   const results = await db
     .select({
       certificate: certificates,
@@ -292,10 +305,9 @@ export async function exportCertificatesToCSV(certificateIds: string[]): Promise
     .from(certificates)
     .innerJoin(learners, eq(certificates.learnerId, learners.id))
     .innerJoin(courses, eq(certificates.courseId, courses.id))
-    .where(inArray(certificates.id, certificateIds))
+    .where(and(inArray(certificates.id, certificateIds), eq(certificates.academyId, account.academyId)))
 
-  const academyIds = Array.from(new Set(results.map(r => r.certificate.academyId)))
-  const includeClicks = academyIds.length === 1 ? await academyHasFeature(academyIds[0], 'shareAnalytics') : false
+  const includeClicks = await academyHasFeature(account.academyId, 'shareAnalytics')
 
   const certIds = results.map(r => r.certificate.id)
   const engagementData = certIds.length > 0 ? await db
@@ -368,10 +380,11 @@ export async function editCertificate(certificateId: string, data: {
   issueDate: Date
   custom: Record<string, any>
 }) {
+  const account = await requireAccountFor()
   const [cert] = await db
     .select()
     .from(certificates)
-    .where(eq(certificates.id, certificateId))
+    .where(and(eq(certificates.id, certificateId), eq(certificates.academyId, account.academyId)))
     .limit(1)
 
   if (!cert) {
@@ -396,7 +409,7 @@ export async function editCertificate(certificateId: string, data: {
         issueDate: data.issueDate,
         custom: data.custom,
       })
-      .where(eq(certificates.id, certificateId))
+      .where(and(eq(certificates.id, certificateId), eq(certificates.academyId, account.academyId)))
 
     revalidatePath(`/dashboard/certificates/${certificateId}`)
     revalidatePath('/dashboard/certificates')
@@ -412,7 +425,7 @@ export async function editCertificate(certificateId: string, data: {
         custom: data.custom,
       }
     })
-    .where(eq(certificates.id, certificateId))
+    .where(and(eq(certificates.id, certificateId), eq(certificates.academyId, account.academyId)))
 
   revalidatePath(`/dashboard/certificates/${certificateId}`)
   revalidatePath('/dashboard/certificates')
@@ -420,10 +433,11 @@ export async function editCertificate(certificateId: string, data: {
 }
 
 export async function discardPendingChanges(certificateId: string) {
+  const account = await requireAccountFor()
   await db
     .update(certificates)
     .set({ pendingChanges: null })
-    .where(eq(certificates.id, certificateId))
+    .where(and(eq(certificates.id, certificateId), eq(certificates.academyId, account.academyId)))
 
   revalidatePath(`/dashboard/certificates/${certificateId}`)
   revalidatePath('/dashboard/certificates')
@@ -431,6 +445,7 @@ export async function discardPendingChanges(certificateId: string) {
 }
 
 export async function republishCertificate(certificateId: string, sendEmail: boolean = false) {
+  const account = await requireAccountFor()
   const [cert] = await db
     .select({
       certificate: certificates,
@@ -438,7 +453,7 @@ export async function republishCertificate(certificateId: string, sendEmail: boo
     })
     .from(certificates)
     .innerJoin(learners, eq(certificates.learnerId, learners.id))
-    .where(eq(certificates.id, certificateId))
+    .where(and(eq(certificates.id, certificateId), eq(certificates.academyId, account.academyId)))
     .limit(1)
 
   if (!cert) {
@@ -491,6 +506,7 @@ export async function republishCertificate(certificateId: string, sendEmail: boo
 }
 
 export async function reissueCertificate(certificateId: string) {
+  const account = await requireAccountFor()
   const [cert] = await db
     .select({
       certificate: certificates,
@@ -500,7 +516,7 @@ export async function reissueCertificate(certificateId: string) {
     .from(certificates)
     .innerJoin(courses, eq(certificates.courseId, courses.id))
     .innerJoin(learners, eq(certificates.learnerId, learners.id))
-    .where(eq(certificates.id, certificateId))
+    .where(and(eq(certificates.id, certificateId), eq(certificates.academyId, account.academyId)))
     .limit(1)
 
   if (!cert) {
@@ -541,6 +557,7 @@ export async function reissueCertificate(certificateId: string) {
 }
 
 export async function revokeSingleCertificate(certificateId: string, reason: string) {
+  const account = await requireAccountFor()
   await db
     .update(certificates)
     .set({
@@ -548,7 +565,7 @@ export async function revokeSingleCertificate(certificateId: string, reason: str
       revokedAt: new Date(),
       revokeReason: reason,
     })
-    .where(eq(certificates.id, certificateId))
+    .where(and(eq(certificates.id, certificateId), eq(certificates.academyId, account.academyId)))
 
   revalidatePath(`/dashboard/certificates/${certificateId}`)
   revalidatePath('/dashboard/certificates')

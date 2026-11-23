@@ -4,13 +4,18 @@ import { db } from '@/lib/db'
 import { templates, courses } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { accountFor, getSessionAccount } from '@/lib/auth/ownership'
 
 export async function duplicateTemplateAction(templateId: string, academyId: string) {
   try {
+    const account = await accountFor(academyId)
+    if (!account) {
+      return { error: 'Template not found' }
+    }
     const [original] = await db
       .select()
       .from(templates)
-      .where(and(eq(templates.id, templateId), eq(templates.academyId, academyId)))
+      .where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
       .limit(1)
 
     if (!original) {
@@ -41,6 +46,19 @@ export async function duplicateTemplateAction(templateId: string, academyId: str
 
 export async function deleteTemplateAction(templateId: string) {
   try {
+    const account = await getSessionAccount()
+    if (!account) {
+      return { error: 'Template not found' }
+    }
+    const [owned] = await db
+      .select({ id: templates.id })
+      .from(templates)
+      .where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
+      .limit(1)
+    if (!owned) {
+      return { error: 'Template not found' }
+    }
+
     let usage = null
     try {
       const [result] = await db
@@ -57,7 +75,7 @@ export async function deleteTemplateAction(templateId: string) {
       return { error: 'Cannot delete template that is in use by programs' }
     }
 
-    await db.delete(templates).where(eq(templates.id, templateId))
+    await db.delete(templates).where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
 
     revalidatePath('/dashboard/templates')
     return { success: true }
@@ -69,13 +87,26 @@ export async function deleteTemplateAction(templateId: string) {
 
 export async function setDefaultTemplateAction(templateId: string, academyId: string) {
   try {
+    const account = await accountFor(academyId)
+    if (!account) {
+      return { error: 'Template not found' }
+    }
+    const [owned] = await db
+      .select({ id: templates.id })
+      .from(templates)
+      .where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
+      .limit(1)
+    if (!owned) {
+      return { error: 'Template not found' }
+    }
+
     await db.update(templates)
       .set({ isDefault: false })
-      .where(eq(templates.academyId, academyId))
+      .where(eq(templates.academyId, account.academyId))
 
     await db.update(templates)
       .set({ isDefault: true })
-      .where(eq(templates.id, templateId))
+      .where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
 
     revalidatePath('/dashboard/templates')
     return { success: true }
@@ -91,9 +122,14 @@ export async function renameTemplateAction(templateId: string, newName: string) 
       return { error: 'Template name cannot be empty' }
     }
 
+    const account = await getSessionAccount()
+    if (!account) {
+      return { error: 'Template not found' }
+    }
+
     await db.update(templates)
       .set({ name: newName.trim() })
-      .where(eq(templates.id, templateId))
+      .where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
 
     revalidatePath('/dashboard/templates')
     return { success: true }

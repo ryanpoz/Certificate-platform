@@ -8,8 +8,10 @@ import { revalidatePath } from 'next/cache'
 import { checkCanIssue, getAcademyPlan } from '@/lib/billing/usage'
 import { effectiveValidityMonths } from '@/lib/billing/plans'
 import { findOrCreateLearner } from '@/lib/learners'
+import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
 
 export async function getExistingLearnerEmails(academyId: string, courseId: string): Promise<string[]> {
+  if (!(await accountFor(academyId))) return []
   const existing = await db
     .select({
       email: learners.emailNormalised,
@@ -39,6 +41,13 @@ export async function createDraftsFromValidation(
   fileName: string,
   columnMap: any
 ) {
+  const account = await accountFor(academyId)
+  if (!account) {
+    throw new Error(NOT_FOUND)
+  }
+  // Batches are always attributed to the signed-in user
+  userId = account.userId
+
   const [course] = await db
     .select()
     .from(courses)
@@ -140,6 +149,11 @@ export async function createSingleCertificate(
     isPreview?: boolean
   }
 ): Promise<{ certificateId: string; number: string; error?: undefined } | { error: string; certificateId?: undefined; number?: undefined }> {
+  const account = await accountFor(academyId)
+  if (!account) {
+    return { error: NOT_FOUND }
+  }
+
   if (data.publish && !data.isPreview) {
     const allowance = await checkCanIssue(academyId, 1)
     if (!allowance.allowed) {
@@ -196,6 +210,19 @@ export async function publishCertificates(
 
   if (certificateIds.length === 0) {
     return { published: 0 }
+  }
+
+  // Only the signed-in account's own certificates can be published
+  const account = await getSessionAccount()
+  if (!account) {
+    return { published: 0, error: NOT_FOUND }
+  }
+  const owned = await db
+    .select({ id: certificates.id })
+    .from(certificates)
+    .where(and(inArray(certificates.id, certificateIds), eq(certificates.academyId, account.academyId)))
+  if (owned.length !== new Set(certificateIds).size) {
+    return { published: 0, error: NOT_FOUND }
   }
 
   // Usage metering: only real (non-preview) certificates that are still unpublished count

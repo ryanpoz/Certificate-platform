@@ -9,6 +9,7 @@ import { sendCertificateEmail } from '@/lib/email/resend'
 import { getCurrentUser } from '@/lib/utils/session'
 import { checkCanIssue, recordBillableDeletions } from '@/lib/billing/usage'
 import { findOrCreateLearner } from '@/lib/learners'
+import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
 
 interface CreateCertificateWizardData {
   academyId: string
@@ -36,6 +37,10 @@ interface SaveDraftData {
 export async function saveDraft(data: SaveDraftData) {
   try {
     const { academyId, userId, draftId, certificateName, templateConfig, currentStep, recipients, description, programName, selectedTemplateId } = data
+    const account = await accountFor(academyId)
+    if (!account) {
+      return { error: NOT_FOUND }
+    }
 
     const draftData = {
       certificateName,
@@ -51,17 +56,21 @@ export async function saveDraft(data: SaveDraftData) {
     let id = draftId
     if (draftId) {
       // Update existing draft
-      await db
+      const updated = await db
         .update(courses)
         .set({ draftData, name: certificateName || 'Untitled Certificate' })
-        .where(eq(courses.id, draftId))
+        .where(and(eq(courses.id, draftId), eq(courses.academyId, account.academyId)))
+        .returning({ id: courses.id })
+      if (updated.length === 0) {
+        return { error: 'Draft not found' }
+      }
     } else {
       // Create new draft
       const courseCode = `DRAFT-${nanoid(6).toUpperCase()}`
       const [course] = await db
         .insert(courses)
         .values({
-          academyId,
+          academyId: account.academyId,
           name: certificateName || 'Untitled Certificate',
           code: courseCode,
           description: description || '',
@@ -83,10 +92,14 @@ export async function saveDraft(data: SaveDraftData) {
 
 export async function loadDraft(draftId: string) {
   try {
+    const account = await getSessionAccount()
+    if (!account) {
+      return { error: 'Draft not found' }
+    }
     const [course] = await db
       .select()
       .from(courses)
-      .where(eq(courses.id, draftId))
+      .where(and(eq(courses.id, draftId), eq(courses.academyId, account.academyId)))
       .limit(1)
 
     if (!course || !course.draftData) {
@@ -103,10 +116,14 @@ export async function loadDraft(draftId: string) {
 /** Load a course for editing — draft data if present, otherwise published template design. */
 export async function loadCourseForEdit(courseId: string) {
   try {
+    const account = await getSessionAccount()
+    if (!account) {
+      return { error: 'Certificate not found' }
+    }
     const [course] = await db
       .select()
       .from(courses)
-      .where(eq(courses.id, courseId))
+      .where(and(eq(courses.id, courseId), eq(courses.academyId, account.academyId)))
       .limit(1)
 
     if (!course) {
@@ -129,7 +146,7 @@ export async function loadCourseForEdit(courseId: string) {
       const [template] = await db
         .select()
         .from(templates)
-        .where(eq(templates.id, course.templateId))
+        .where(and(eq(templates.id, course.templateId), eq(templates.academyId, account.academyId)))
         .limit(1)
       templateConfig = template?.designConfig || null
       templateId = template?.id || null
@@ -161,8 +178,31 @@ export async function savePublishedDesign(data: {
 }) {
   try {
     const { courseId, academyId, certificateName, templateConfig, description, templateId } = data
+    const account = await accountFor(academyId)
+    if (!account) {
+      return { error: NOT_FOUND }
+    }
+
+    const [ownedCourse] = await db
+      .select({ id: courses.id })
+      .from(courses)
+      .where(and(eq(courses.id, courseId), eq(courses.academyId, account.academyId)))
+      .limit(1)
+    if (!ownedCourse) {
+      return { error: 'Certificate not found' }
+    }
 
     let resolvedTemplateId = templateId || null
+    if (resolvedTemplateId) {
+      const [ownedTemplate] = await db
+        .select({ id: templates.id })
+        .from(templates)
+        .where(and(eq(templates.id, resolvedTemplateId), eq(templates.academyId, account.academyId)))
+        .limit(1)
+      if (!ownedTemplate) {
+        return { error: 'Template not found' }
+      }
+    }
 
     if (resolvedTemplateId) {
       await db
@@ -172,12 +212,12 @@ export async function savePublishedDesign(data: {
           designConfig: templateConfig,
           updatedAt: new Date(),
         })
-        .where(eq(templates.id, resolvedTemplateId))
+        .where(and(eq(templates.id, resolvedTemplateId), eq(templates.academyId, account.academyId)))
     } else {
       const [created] = await db
         .insert(templates)
         .values({
-          academyId,
+          academyId: account.academyId,
           name: certificateName,
           isDefault: false,
           designConfig: templateConfig,
@@ -197,7 +237,7 @@ export async function savePublishedDesign(data: {
         description: description || '',
         templateId: resolvedTemplateId,
       })
-      .where(eq(courses.id, courseId))
+      .where(and(eq(courses.id, courseId), eq(courses.academyId, account.academyId)))
 
     revalidatePath('/dashboard/certificates')
     revalidatePath(`/dashboard/courses/${courseId}`)
@@ -472,6 +512,7 @@ export async function parseCsvRecipients(csvText: string): Promise<Array<{ name:
 }
 
 export async function checkFirstTimeUser(academyId: string): Promise<boolean> {
+  if (!(await accountFor(academyId))) return false
   const [result] = await db
     .select({ count: sql<number>`cast(count(*) as int)` })
     .from(certificates)
@@ -479,6 +520,9 @@ export async function checkFirstTimeUser(academyId: string): Promise<boolean> {
 
   return (result?.count || 0) === 0
 }
+
+/** A brand-new account (signup runs before a session exists) can receive its Sample Certificate */
+const SAMPLE_SIGNUP_WINDOW_MS = 15 * 60 * 1000
 
 export async function createSampleCertificate(academyId: string, userId: string) {
   try {
@@ -490,6 +534,20 @@ export async function createSampleCertificate(academyId: string, userId: string)
 
     if (!academy) {
       return { error: 'Academy not found' }
+    }
+
+    // Allowed for the signed-in owner, or during signup for a just-created, empty account
+    const owner = await accountFor(academyId)
+    if (!owner) {
+      const isNewAccount = Date.now() - academy.createdAt.getTime() < SAMPLE_SIGNUP_WINDOW_MS
+      const [existing] = await db
+        .select({ id: courses.id })
+        .from(courses)
+        .where(eq(courses.academyId, academyId))
+        .limit(1)
+      if (!isNewAccount || existing) {
+        return { error: NOT_FOUND }
+      }
     }
 
     // Use the Modern template

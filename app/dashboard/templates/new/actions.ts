@@ -3,9 +3,14 @@
 import { db } from '@/lib/db'
 import { templates } from '@/lib/db/schema'
 import { STARTER_TEMPLATES, getDefaultDesignConfig } from '@/lib/certificate-builder/types'
+import { accountFor, NOT_FOUND } from '@/lib/auth/ownership'
 
 export async function createTemplateFromStarterAction(starterKey: string, academyId: string) {
   try {
+    const account = await accountFor(academyId)
+    if (!account) {
+      return { error: NOT_FOUND }
+    }
     const starterConfig = STARTER_TEMPLATES[starterKey]
     if (!starterConfig) {
       return { error: 'Invalid starter template' }
@@ -26,7 +31,7 @@ export async function createTemplateFromStarterAction(starterKey: string, academ
     const [template] = await db
       .insert(templates)
       .values({
-        academyId,
+        academyId: account.academyId,
         name: starterNames[starterKey] || 'New Template',
         isDefault: false,
         layout: 'letter',

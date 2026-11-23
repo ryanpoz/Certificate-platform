@@ -2,7 +2,8 @@
 
 import { db } from '@/lib/db'
 import { courses, templates, customFields } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { accountFor, getSessionAccount, NOT_FOUND } from '@/lib/auth/ownership'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { slugify, validateUrl } from '@/lib/utils/helpers'
@@ -17,6 +18,11 @@ export async function createCourse(academyId: string, data: {
   ctaLabel: string
   ctaUrl: string
 }) {
+  const account = await accountFor(academyId)
+  if (!account) {
+    return { error: NOT_FOUND }
+  }
+
   if (!data.name || !data.code) {
     return { error: 'Name and code are required' }
   }
@@ -86,13 +92,21 @@ export async function updateCourse(courseId: string, data: {
     return { error: 'Please enter a valid CTA URL' }
   }
 
+  const account = await getSessionAccount()
+  if (!account) {
+    return { error: NOT_FOUND }
+  }
+
   // Expiry is a Starter+ feature: on lower plans the stored value is left untouched
   const [existing] = await db
     .select({ academyId: courses.academyId })
     .from(courses)
-    .where(eq(courses.id, courseId))
+    .where(and(eq(courses.id, courseId), eq(courses.academyId, account.academyId)))
     .limit(1)
-  const canSetExpiry = existing ? planIncludes(await getAcademyPlan(existing.academyId), 'expiry') : false
+  if (!existing) {
+    return { error: NOT_FOUND }
+  }
+  const canSetExpiry = planIncludes(await getAcademyPlan(existing.academyId), 'expiry')
   const validityMonths = data.validityMonths ? parseInt(data.validityMonths) : null
 
   await db
@@ -105,7 +119,7 @@ export async function updateCourse(courseId: string, data: {
       ctaLabel: data.ctaLabel || null,
       ctaUrl: data.ctaUrl || null,
     })
-    .where(eq(courses.id, courseId))
+    .where(and(eq(courses.id, courseId), eq(courses.academyId, account.academyId)))
 
   revalidatePath(`/dashboard/courses/${courseId}`)
   return { success: true }
@@ -116,6 +130,10 @@ export async function updateTemplate(templateId: string, data: {
   emailSubject: string
   emailBody: string
 }) {
+  const account = await getSessionAccount()
+  if (!account) {
+    return { error: NOT_FOUND }
+  }
   await db
     .update(templates)
     .set({
@@ -123,7 +141,7 @@ export async function updateTemplate(templateId: string, data: {
       emailSubject: data.emailSubject,
       emailBody: data.emailBody,
     })
-    .where(eq(templates.id, templateId))
+    .where(and(eq(templates.id, templateId), eq(templates.academyId, account.academyId)))
 
   revalidatePath('/dashboard/courses')
   return { success: true }
@@ -135,10 +153,14 @@ export async function createCustomField(academyId: string, data: {
   type: string
   showOnCertificate: boolean
 }) {
+  const account = await accountFor(academyId)
+  if (!account) {
+    return { error: NOT_FOUND }
+  }
   const [field] = await db
     .insert(customFields)
     .values({
-      academyId,
+      academyId: account.academyId,
       key: slugify(data.key),
       label: data.label,
       type: data.type,
@@ -151,7 +173,13 @@ export async function createCustomField(academyId: string, data: {
 }
 
 export async function deleteCustomField(fieldId: string) {
-  await db.delete(customFields).where(eq(customFields.id, fieldId))
+  const account = await getSessionAccount()
+  if (!account) {
+    return { error: NOT_FOUND }
+  }
+  await db
+    .delete(customFields)
+    .where(and(eq(customFields.id, fieldId), eq(customFields.academyId, account.academyId)))
   revalidatePath('/dashboard/courses')
   return { success: true }
 }
