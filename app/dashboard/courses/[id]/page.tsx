@@ -6,6 +6,9 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import TemplateEditor from './template-editor'
 import RecipientProgress from './recipient-progress'
+import { getAcademyPlan } from '@/lib/billing/usage'
+import { planIncludes } from '@/lib/billing/plans'
+import { PlanBadgeLink } from '@/components/dashboard/locked-feature'
 
 export default async function CourseDetailPage({
   params,
@@ -29,6 +32,10 @@ export default async function CourseDetailPage({
   if (course.draftData) {
     redirect(`/dashboard/wizard?draft=${course.id}`)
   }
+
+  const plan = await getAcademyPlan(user.academyId)
+  const canSeeShareAnalytics = planIncludes(plan, 'shareAnalytics')
+  const canUseExpiry = planIncludes(plan, 'expiry')
 
   let template = null
   try {
@@ -109,6 +116,11 @@ export default async function CourseDetailPage({
                 <dt className="text-sm font-medium text-gray-500">Validity</dt>
                 <dd className="mt-1 text-sm text-gray-900">
                   {course.validityMonths ? `${course.validityMonths} months` : 'No expiry'}
+                  {course.validityMonths && !canUseExpiry && (
+                    <span className="ml-2 text-xs text-gray-500">
+                      (not applied to new certificates on your plan) <PlanBadgeLink feature="expiry" />
+                    </span>
+                  )}
                 </dd>
               </div>
               {course.ctaLabel && course.ctaUrl && (
@@ -151,7 +163,7 @@ export default async function CourseDetailPage({
       </div>
 
       <div className="mt-8">
-        <RecipientProgress courseId={course.id} />
+        <RecipientProgress courseId={course.id} showClickAnalytics={canSeeShareAnalytics} />
       </div>
 
       <div className="mt-8">

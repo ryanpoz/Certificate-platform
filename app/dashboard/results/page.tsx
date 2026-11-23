@@ -5,6 +5,9 @@ import { eq, desc } from 'drizzle-orm'
 import { FilterSelect, FilterInput } from '@/components/dashboard/filters'
 import ShareImpact from './share-impact'
 import LoopActivity from './loop-activity'
+import BasicCounts from './basic-counts'
+import { LockedFeatureCard } from '@/components/dashboard/locked-feature'
+import { academyHasFeature } from '@/lib/billing/usage'
 
 export default async function ResultsDashboardPage({
   searchParams,
@@ -23,6 +26,9 @@ export default async function ResultsDashboardPage({
   
   const startDate = params.startDate ? new Date(params.startDate) : defaultStartDate
   const endDate = params.endDate ? new Date(params.endDate) : new Date()
+
+  // Share and click analytics are a Growth feature; data is only queried when included
+  const canSeeShareAnalytics = await academyHasFeature(user.academyId, 'shareAnalytics')
 
   const allCourses = await db
     .select()
@@ -70,19 +76,36 @@ export default async function ResultsDashboardPage({
         </div>
       </div>
 
-      <LoopActivity
+      <BasicCounts
         academyId={user.academyId}
         startDate={startDate}
         endDate={endDate}
         courseFilter={params.course}
       />
 
-      <ShareImpact
-        academyId={user.academyId}
-        startDate={startDate}
-        endDate={endDate}
-        courseFilter={params.course}
-      />
+      {canSeeShareAnalytics ? (
+        <>
+          <LoopActivity
+            academyId={user.academyId}
+            startDate={startDate}
+            endDate={endDate}
+            courseFilter={params.course}
+          />
+
+          <ShareImpact
+            academyId={user.academyId}
+            startDate={startDate}
+            endDate={endDate}
+            courseFilter={params.course}
+          />
+        </>
+      ) : (
+        <LockedFeatureCard
+          feature="shareAnalytics"
+          title="Share and click analytics"
+          description="See where certificate views come from, how recipients share, LinkedIn adds and visitor clicks. We're already tracking it, so your history is there when you upgrade."
+        />
+      )}
     </div>
   )
 }

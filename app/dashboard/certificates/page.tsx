@@ -7,6 +7,8 @@ import { checkFirstTimeUser } from '../wizard/actions'
 import { redirect } from 'next/navigation'
 import { DraftActions } from './draft-actions'
 import { ProgramActions } from './program-actions'
+import { academyHasFeature } from '@/lib/billing/usage'
+import { PlanBadgeLink } from '@/components/dashboard/locked-feature'
 
 function isDraftProgram(
   program: { draftData: unknown; code: string },
@@ -26,6 +28,9 @@ export default async function CertificatesPage() {
   if (isFirstTime) {
     redirect('/dashboard/wizard')
   }
+
+  // Views and LinkedIn clicks are share/click analytics (Growth and up)
+  const canSeeShareAnalytics = await academyHasFeature(user.academyId, 'shareAnalytics')
 
   // Get all programs (courses) with certificate counts and metrics
   const allPrograms = await db
@@ -56,7 +61,7 @@ export default async function CertificatesPage() {
         )
 
       // Count views
-      const [viewCount] = await db
+      const [viewCount] = !canSeeShareAnalytics ? [{ count: 0 }] : await db
         .select({ count: sql<number>`cast(count(*) as int)` })
         .from(events)
         .innerJoin(certificates, eq(events.certificateId, certificates.id))
@@ -68,7 +73,7 @@ export default async function CertificatesPage() {
         )
 
       // Count LinkedIn clicks
-      const [linkedinCount] = await db
+      const [linkedinCount] = !canSeeShareAnalytics ? [{ count: 0 }] : await db
         .select({ count: sql<number>`cast(count(*) as int)` })
         .from(events)
         .innerJoin(certificates, eq(events.certificateId, certificates.id))
@@ -193,6 +198,7 @@ export default async function CertificatesPage() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Views
+                  {!canSeeShareAnalytics && <span className="ml-2 normal-case tracking-normal"><PlanBadgeLink feature="shareAnalytics" /></span>}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   LinkedIn
@@ -232,10 +238,10 @@ export default async function CertificatesPage() {
                       {metrics.issued}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {metrics.views}
+                      {canSeeShareAnalytics ? metrics.views : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {metrics.linkedinClicks}
+                      {canSeeShareAnalytics ? metrics.linkedinClicks : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
                       <ProgramActions

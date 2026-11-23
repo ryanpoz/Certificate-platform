@@ -167,3 +167,36 @@ export function countsAfterDeletion(issuedAt: Date | null, deletedAt: Date = new
   if (!issuedAt) return false
   return deletedAt.getTime() - issuedAt.getTime() > DELETE_REFUND_DAYS * 24 * 60 * 60 * 1000
 }
+
+/** Plans in upgrade order */
+export const PLAN_ORDER: PlanId[] = ['free', 'starter', 'growth', 'business']
+
+/** Features gated by plan; value is the lowest plan that includes the feature */
+export const FEATURE_MIN_PLAN = {
+  /** Setting expiry on programs / new certificates, and expiry display controls */
+  expiry: 'starter',
+  /** Issuer-facing share and click analytics (Sharing activity, Share Impact, click/source breakdowns) */
+  shareAnalytics: 'growth',
+  /** Expiry reminder emails (not built yet) */
+  expiryReminders: 'growth',
+  /** Expiring-soon view (not built yet) */
+  expiringSoonView: 'growth',
+} as const satisfies Record<string, PlanId>
+
+export type Feature = keyof typeof FEATURE_MIN_PLAN
+
+export function planIncludes(plan: PlanId | PlanDefinition, feature: Feature): boolean {
+  const id = typeof plan === 'string' ? plan : plan.id
+  const rank = PLAN_ORDER.indexOf(isPlanId(id) ? id : DEFAULT_PLAN)
+  return rank >= PLAN_ORDER.indexOf(FEATURE_MIN_PLAN[feature])
+}
+
+export function requiredPlanName(feature: Feature): string {
+  return PLANS[FEATURE_MIN_PLAN[feature]].name
+}
+
+/** Validity months to apply to NEW certificates: none if the plan lacks expiry */
+export function effectiveValidityMonths(plan: PlanId | PlanDefinition, validityMonths: number | null | undefined): number | null {
+  if (!validityMonths) return null
+  return planIncludes(plan, 'expiry') ? validityMonths : null
+}

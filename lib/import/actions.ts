@@ -5,7 +5,8 @@ import { learners, certificates, batches, courses, academies, templates, events 
 import { eq, and, inArray, sql } from 'drizzle-orm'
 import { normalizeEmail, generateCertificateNumber, calculateExpiryDate } from '@/lib/utils/helpers'
 import { revalidatePath } from 'next/cache'
-import { checkCanIssue } from '@/lib/billing/usage'
+import { checkCanIssue, getAcademyPlan } from '@/lib/billing/usage'
+import { effectiveValidityMonths } from '@/lib/billing/plans'
 import { findOrCreateLearner } from '@/lib/learners'
 
 export async function getExistingLearnerEmails(academyId: string, courseId: string): Promise<string[]> {
@@ -63,6 +64,9 @@ export async function createDraftsFromValidation(
     })
     .returning()
 
+  // Expiry is a Starter+ feature: new certificates on Free don't expire
+  const validityMonths = effectiveValidityMonths(await getAcademyPlan(academyId), course.validityMonths)
+
   let created = 0
   const errors: string[] = []
 
@@ -92,7 +96,7 @@ export async function createDraftsFromValidation(
         learner = [newLearner]
       }
 
-      const expiryDate = calculateExpiryDate(row.issueDate, course.validityMonths)
+      const expiryDate = calculateExpiryDate(row.issueDate, validityMonths)
       const certNumber = generateCertificateNumber(course.code)
 
       await db.insert(certificates).values({
@@ -156,7 +160,11 @@ export async function createSingleCertificate(
   // Scoped to this account: never match another account's learner by email
   const learner = [await findOrCreateLearner(academyId, data.name, data.email)]
 
-  const expiryDate = calculateExpiryDate(data.issueDate, course.validityMonths)
+  // Expiry is a Starter+ feature: new certificates on Free don't expire
+  const expiryDate = calculateExpiryDate(
+    data.issueDate,
+    effectiveValidityMonths(await getAcademyPlan(academyId), course.validityMonths)
+  )
   const certNumber = generateCertificateNumber(course.code)
 
   const [certificate] = await db

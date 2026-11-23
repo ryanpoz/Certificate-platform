@@ -5,7 +5,7 @@ import { certificates, events, learners, courses, academies, batches, templates 
 import { eq, inArray, and, like, or, gte, lte } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { getCurrentUser } from '@/lib/utils/session'
-import { recordBillableDeletions } from '@/lib/billing/usage'
+import { recordBillableDeletions, academyHasFeature } from '@/lib/billing/usage'
 
 /**
  * Delete a certificate program (course) and all related issued certificates,
@@ -155,6 +155,7 @@ export async function revokeCertificatesFiltered(academyId: string, filters: any
 }
 
 export async function exportCertificatesToCSVFiltered(academyId: string, filters: any): Promise<string> {
+  const includeClicks = await academyHasFeature(academyId, 'shareAnalytics')
   let query = db
     .select({
       certificate: certificates,
@@ -229,8 +230,8 @@ export async function exportCertificatesToCSVFiltered(academyId: string, filters
     'Status',
     'Email Delivered',
     'Page Viewed',
-    'LinkedIn Clicked',
-    'CTA Clicked',
+    // Click analytics columns are Growth and up
+    ...(includeClicks ? ['LinkedIn Clicked', 'CTA Clicked'] : []),
     'Is Preview',
     'Has Pending Changes',
   ]
@@ -247,8 +248,9 @@ export async function exportCertificatesToCSVFiltered(academyId: string, filters
       certificate.status,
       eng.has('email_delivered') ? 'Yes' : 'No',
       eng.has('page_view') ? 'Yes' : 'No',
-      eng.has('linkedin_add_click') ? 'Yes' : 'No',
-      eng.has('cta_click') ? 'Yes' : 'No',
+      ...(includeClicks
+        ? [eng.has('linkedin_add_click') ? 'Yes' : 'No', eng.has('cta_click') ? 'Yes' : 'No']
+        : []),
       certificate.isPreview ? 'Yes' : 'No',
       certificate.pendingChanges ? 'Yes' : 'No',
     ]
@@ -292,6 +294,9 @@ export async function exportCertificatesToCSV(certificateIds: string[]): Promise
     .innerJoin(courses, eq(certificates.courseId, courses.id))
     .where(inArray(certificates.id, certificateIds))
 
+  const academyIds = Array.from(new Set(results.map(r => r.certificate.academyId)))
+  const includeClicks = academyIds.length === 1 ? await academyHasFeature(academyIds[0], 'shareAnalytics') : false
+
   const certIds = results.map(r => r.certificate.id)
   const engagementData = certIds.length > 0 ? await db
     .select({
@@ -326,8 +331,8 @@ export async function exportCertificatesToCSV(certificateIds: string[]): Promise
     'Status',
     'Email Delivered',
     'Page Viewed',
-    'LinkedIn Clicked',
-    'CTA Clicked',
+    // Click analytics columns are Growth and up
+    ...(includeClicks ? ['LinkedIn Clicked', 'CTA Clicked'] : []),
     'Is Preview',
   ]
 
@@ -343,8 +348,9 @@ export async function exportCertificatesToCSV(certificateIds: string[]): Promise
       certificate.status,
       eng.has('email_delivered') ? 'Yes' : 'No',
       eng.has('page_view') ? 'Yes' : 'No',
-      eng.has('linkedin_add_click') ? 'Yes' : 'No',
-      eng.has('cta_click') ? 'Yes' : 'No',
+      ...(includeClicks
+        ? [eng.has('linkedin_add_click') ? 'Yes' : 'No', eng.has('cta_click') ? 'Yes' : 'No']
+        : []),
       certificate.isPreview ? 'Yes' : 'No',
     ]
   })
@@ -505,7 +511,13 @@ export async function reissueCertificate(certificateId: string) {
   
   const newNumber = generateCertificateNumber(cert.course.code)
   const newIssueDate = new Date()
-  const newExpiryDate = calculateExpiryDate(newIssueDate, cert.course.validityMonths)
+  const { getAcademyPlan } = await import('@/lib/billing/usage')
+  const { effectiveValidityMonths } = await import('@/lib/billing/plans')
+  // Expiry is a Starter+ feature: reissued certificates on Free don't expire
+  const newExpiryDate = calculateExpiryDate(
+    newIssueDate,
+    effectiveValidityMonths(await getAcademyPlan(cert.certificate.academyId), cert.course.validityMonths)
+  )
 
   const [newCert] = await db
     .insert(certificates)

@@ -6,6 +6,8 @@ import { eq } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { slugify, validateUrl } from '@/lib/utils/helpers'
+import { getAcademyPlan } from '@/lib/billing/usage'
+import { effectiveValidityMonths, planIncludes } from '@/lib/billing/plans'
 
 export async function createCourse(academyId: string, data: {
   name: string
@@ -23,7 +25,9 @@ export async function createCourse(academyId: string, data: {
     return { error: 'Please enter a valid CTA URL' }
   }
 
-  const validityMonths = data.validityMonths ? parseInt(data.validityMonths) : null
+  // Expiry is a Starter+ feature: ignored on Free
+  const plan = await getAcademyPlan(academyId)
+  const validityMonths = effectiveValidityMonths(plan, data.validityMonths ? parseInt(data.validityMonths) : null)
 
   const [template] = await db
     .insert(templates)
@@ -82,6 +86,13 @@ export async function updateCourse(courseId: string, data: {
     return { error: 'Please enter a valid CTA URL' }
   }
 
+  // Expiry is a Starter+ feature: on lower plans the stored value is left untouched
+  const [existing] = await db
+    .select({ academyId: courses.academyId })
+    .from(courses)
+    .where(eq(courses.id, courseId))
+    .limit(1)
+  const canSetExpiry = existing ? planIncludes(await getAcademyPlan(existing.academyId), 'expiry') : false
   const validityMonths = data.validityMonths ? parseInt(data.validityMonths) : null
 
   await db
@@ -90,7 +101,7 @@ export async function updateCourse(courseId: string, data: {
       name: data.name,
       code: data.code,
       description: data.description,
-      validityMonths,
+      ...(canSetExpiry ? { validityMonths } : {}),
       ctaLabel: data.ctaLabel || null,
       ctaUrl: data.ctaUrl || null,
     })

@@ -13,6 +13,8 @@ import {
   type IssueCheck,
   type PlanDefinition,
   type UsageStatus,
+  type Feature,
+  planIncludes,
 } from './plans'
 
 export const BILLABLE_DELETED_EVENT = 'billable_certificate_deleted'
@@ -146,4 +148,10 @@ export async function recordBillableDeletions(
     console.error('Failed to record billable deletions:', error)
   }
   return markers.length
+}
+
+/** Server-side feature check for an account (defaults to Free if the plan can't be read) */
+export async function academyHasFeature(academyId: string, feature: Feature): Promise<boolean> {
+  const plan = await getAcademyPlan(academyId)
+  return planIncludes(plan, feature)
 }

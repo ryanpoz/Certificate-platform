@@ -1,12 +1,15 @@
 import { db } from '@/lib/db'
 import { certificates, learners, events } from '@/lib/db/schema'
 import { eq, and, sql, inArray } from 'drizzle-orm'
+import { PlanBadgeLink } from '@/components/dashboard/locked-feature'
 
 interface RecipientProgressProps {
   courseId: string
+  /** Growth+: LinkedIn and PDF click stages. Lower plans see issued, delivered and claimed only. */
+  showClickAnalytics?: boolean
 }
 
-export default async function RecipientProgress({ courseId }: RecipientProgressProps) {
+export default async function RecipientProgress({ courseId, showClickAnalytics = false }: RecipientProgressProps) {
   // Get all issued certificates for this course
   const allCerts = await db
     .select({
@@ -95,8 +98,8 @@ export default async function RecipientProgress({ courseId }: RecipientProgressP
       
       const hasDelivered = certEvents.some(e => e.type === 'email_delivered')
       const hasViewed = certEvents.some(e => e.type === 'page_view' && e.meta && (e.meta as any).isRecipient)
-      const hasLinkedin = certEvents.some(e => e.type === 'linkedin_add_click')
-      const hasPdf = certEvents.some(e => e.type === 'pdf_download')
+      const hasLinkedin = showClickAnalytics && certEvents.some(e => e.type === 'linkedin_add_click')
+      const hasPdf = showClickAnalytics && certEvents.some(e => e.type === 'pdf_download')
 
       let furthestStage = 'Issued'
       if (hasPdf) furthestStage = 'Downloaded PDF'
@@ -137,6 +140,8 @@ export default async function RecipientProgress({ courseId }: RecipientProgressP
             percentage={viewedPct}
             description="Recipients who opened and viewed their certificate page"
           />
+          {showClickAnalytics ? (
+          <>
           <FunnelStage
             label="Added to LinkedIn"
             count={linkedinClicked}
@@ -149,6 +154,13 @@ export default async function RecipientProgress({ courseId }: RecipientProgressP
             percentage={pdfPct}
             description="Recipients who downloaded the certificate PDF"
           />
+          </>
+          ) : (
+            <div className="flex items-center justify-between rounded-md border border-dashed border-gray-200 px-3 py-2 text-sm text-gray-500">
+              <span>LinkedIn adds and PDF downloads</span>
+              <PlanBadgeLink feature="shareAnalytics" />
+            </div>
+          )}
         </div>
 
         {/* Recipient table */}

@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createCourse } from '../actions'
+import { PlanBadgeLink } from '@/components/dashboard/locked-feature'
 
-export default function CourseForm({ academyId }: { academyId: string }) {
+export default function CourseForm({ academyId, canUseExpiry = false }: { academyId: string; canUseExpiry?: boolean }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -81,20 +82,26 @@ export default function CourseForm({ academyId }: { academyId: string }) {
       </div>
 
       <div>
-        <label htmlFor="validityMonths" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="validityMonths" className="flex items-center gap-2 text-sm font-medium text-gray-700">
           Validity (months)
+          {!canUseExpiry && <PlanBadgeLink feature="expiry" />}
         </label>
         <input
           type="number"
           id="validityMonths"
           min="1"
           max="120"
-          value={formData.validityMonths}
+          disabled={!canUseExpiry}
+          value={canUseExpiry ? formData.validityMonths : ''}
           onChange={(e) => setFormData({ ...formData, validityMonths: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
-          placeholder="Leave empty for no expiry"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+          placeholder={canUseExpiry ? 'Leave empty for no expiry' : 'Expiry dates are on the Starter plan'}
         />
-        <p className="mt-1 text-sm text-gray-500">Leave empty if certificates don&apos;t expire</p>
+        <p className="mt-1 text-sm text-gray-500">
+          {canUseExpiry
+            ? "Leave empty if certificates don't expire"
+            : 'Certificates on the Free plan don’t expire. Upgrade to Starter to set expiry dates and renewals.'}
+        </p>
       </div>
 
       <div className="border-t pt-6">

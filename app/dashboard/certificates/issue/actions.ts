@@ -6,6 +6,8 @@ import { and, eq } from 'drizzle-orm'
 import { generateCertificateNumber } from '@/lib/utils/helpers'
 import { getCurrentUser } from '@/lib/utils/session'
 import { findOrCreateLearner } from '@/lib/learners'
+import { getAcademyPlan } from '@/lib/billing/usage'
+import { effectiveValidityMonths } from '@/lib/billing/plans'
 import { sendCertificateEmail } from '@/lib/email/resend'
 import { checkCanIssue } from '@/lib/billing/usage'
 
@@ -94,6 +96,9 @@ export async function issueSingleCertificateAction(data: {
     // Scoped to this account: never match another account's learner by email
     const learner = await findOrCreateLearner(data.academyId, data.learnerName, data.learnerEmail)
 
+    // Expiry is a Starter+ feature: new certificates on Free don't expire
+    const validityMonths = effectiveValidityMonths(await getAcademyPlan(data.academyId), course.validityMonths)
+
     const certificateNumber = generateCertificateNumber(course.code)
 
     const [certificate] = await db
@@ -104,8 +109,8 @@ export async function issueSingleCertificateAction(data: {
         learnerId: learner.id,
         number: certificateNumber,
         issueDate: new Date(data.issueDate),
-        expiryDate: course.validityMonths
-          ? new Date(new Date(data.issueDate).setMonth(new Date(data.issueDate).getMonth() + course.validityMonths))
+        expiryDate: validityMonths
+          ? new Date(new Date(data.issueDate).setMonth(new Date(data.issueDate).getMonth() + validityMonths))
           : null,
         status: 'published',
         source: 'manual',
