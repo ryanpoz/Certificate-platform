@@ -5,6 +5,7 @@ import { certificates, events, learners, courses, academies, batches, templates 
 import { eq, inArray, and, like, or, gte, lte } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { getCurrentUser } from '@/lib/utils/session'
+import { recordBillableDeletions } from '@/lib/billing/usage'
 
 /**
  * Delete a certificate program (course) and all related issued certificates,
@@ -28,12 +29,21 @@ export async function deleteCertificateProgram(courseId: string, academyId: stri
     }
 
     const certRows = await db
-      .select({ id: certificates.id })
+      .select({
+        id: certificates.id,
+        status: certificates.status,
+        isPreview: certificates.isPreview,
+        source: certificates.source,
+        publishedAt: certificates.publishedAt,
+        createdAt: certificates.createdAt,
+      })
       .from(certificates)
       .where(eq(certificates.courseId, courseId))
     const certIds = certRows.map((c) => c.id)
 
     if (certIds.length > 0) {
+      // Certificates issued more than 7 days ago still count toward this plan year
+      await recordBillableDeletions(user.academyId, certRows)
       await db.delete(events).where(inArray(events.certificateId, certIds))
       await db.delete(certificates).where(inArray(certificates.id, certIds))
     }
@@ -111,10 +121,13 @@ export async function publishCertificatesFiltered(academyId: string, filters: an
   }
 
   const { publishCertificates } = await import('@/lib/import/actions')
-  await publishCertificates(certIds)
+  const result = await publishCertificates(certIds)
+  if (result.error) {
+    return { count: 0, error: result.error }
+  }
   
   revalidatePath('/dashboard/certificates')
-  return { count: certIds.length }
+  return { count: result.published }
 }
 
 export async function revokeCertificatesFiltered(academyId: string, filters: any, reason: string) {

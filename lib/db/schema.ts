@@ -132,6 +132,17 @@ export const events = pgTable('events', {
   meta: jsonb('meta'),
 })
 
+/**
+ * Plan per account (academy). No row means the default Free plan.
+ * Lean on purpose: billing is not wired up yet, plans are set manually.
+ */
+export const academyPlans = pgTable('academy_plans', {
+  academyId: uuid('academy_id').primaryKey().references(() => academies.id, { onDelete: 'cascade' }),
+  plan: text('plan').notNull().default('free'),
+  customLimit: integer('custom_limit'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
 export const academiesRelations = relations(academies, ({ many }) => ({
   users: many(users),
   courses: many(courses),

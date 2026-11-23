@@ -13,7 +13,12 @@ export default function PublishButton({ certificateIds }: { certificateIds: stri
 
     setPublishing(true)
     try {
-      await publishCertificates(certificateIds)
+      const result = await publishCertificates(certificateIds)
+      if (result.error) {
+        alert(result.error)
+        setPublishing(false)
+        return
+      }
       alert('Certificates published!')
       window.location.reload()
     } catch (error) {

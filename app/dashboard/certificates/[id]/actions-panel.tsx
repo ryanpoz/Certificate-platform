@@ -128,7 +128,12 @@ export default function CertificateActions({
     }
     setLoading(true)
     try {
-      await publishCertificates([certificateId])
+      const result = await publishCertificates([certificateId])
+      if (result.error) {
+        alert(result.error)
+        setLoading(false)
+        return
+      }
       alert('Certificate published!')
       router.refresh()
     } catch (error) {

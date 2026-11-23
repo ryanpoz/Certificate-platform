@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { academies } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import UsageBanner from '@/components/dashboard/usage-banner'
 
 async function logout() {
   'use server'
@@ -71,6 +72,7 @@ export default async function DashboardLayout({
         </div>
       </nav>
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <UsageBanner academyId={user.academyId} />
         {children}
       </main>
     </div>

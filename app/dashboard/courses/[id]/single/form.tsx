@@ -32,6 +32,12 @@ export default function SingleCertificateForm({ course, academyId, userId }: { c
         isPreview: formData.isPreview,
       })
 
+      if (result.error) {
+        setError(result.error)
+        setSaving(false)
+        return
+      }
+
       alert(`Certificate ${result.number} ${formData.publish ? 'published' : 'created as draft'}!`)
       router.push(`/dashboard/courses/${course.id}`)
     } catch (err) {

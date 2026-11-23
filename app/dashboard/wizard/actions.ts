@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { nanoid } from 'nanoid'
 import { sendCertificateEmail } from '@/lib/email/resend'
 import { getCurrentUser } from '@/lib/utils/session'
+import { checkCanIssue, recordBillableDeletions } from '@/lib/billing/usage'
 
 interface CreateCertificateWizardData {
   academyId: string
@@ -236,11 +237,19 @@ export async function deleteDraft(draftId: string, academyId?: string) {
 
     // Cascade: leftover preview/issued rows can block a plain course delete
     const certRows = await db
-      .select({ id: certificates.id })
+      .select({
+        id: certificates.id,
+        status: certificates.status,
+        isPreview: certificates.isPreview,
+        source: certificates.source,
+        publishedAt: certificates.publishedAt,
+        createdAt: certificates.createdAt,
+      })
       .from(certificates)
       .where(eq(certificates.courseId, draftId))
     const certIds = certRows.map((c) => c.id)
     if (certIds.length > 0) {
+      await recordBillableDeletions(user.academyId, certRows)
       await db.delete(events).where(inArray(events.certificateId, certIds))
       await db.delete(certificates).where(inArray(certificates.id, certIds))
     }
@@ -282,6 +291,13 @@ export async function createCertificateFromWizard(data: CreateCertificateWizardD
 
     if (!academy) {
       return { error: 'Academy not found' }
+    }
+
+    // Usage metering: block before creating anything if this batch would pass the plan cap
+    const uniqueRecipients = new Set(recipients.map((r) => r.email.toLowerCase().trim())).size
+    const allowance = await checkCanIssue(academyId, uniqueRecipients)
+    if (!allowance.allowed) {
+      return { error: allowance.message, limitReached: true }
     }
 
     // Create or find a template for this certificate

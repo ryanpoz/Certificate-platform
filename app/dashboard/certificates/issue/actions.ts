@@ -5,6 +5,7 @@ import { courses, learners, certificates, templates, academies } from '@/lib/db/
 import { eq } from 'drizzle-orm'
 import { generateCertificateNumber, normalizeEmail } from '@/lib/utils/helpers'
 import { sendCertificateEmail } from '@/lib/email/resend'
+import { checkCanIssue } from '@/lib/billing/usage'
 
 export async function issueSingleCertificateAction(data: {
   learnerName: string
@@ -17,6 +18,11 @@ export async function issueSingleCertificateAction(data: {
   userId: string
 }) {
   try {
+    const allowance = await checkCanIssue(data.academyId, 1)
+    if (!allowance.allowed) {
+      return { error: allowance.message, limitReached: true }
+    }
+
     let courseId = data.programId
 
     if (!courseId && data.newProgramName) {
@@ -107,6 +113,7 @@ export async function issueSingleCertificateAction(data: {
           : null,
         status: 'published',
         source: 'manual',
+        publishedAt: new Date(),
       })
       .returning()
 

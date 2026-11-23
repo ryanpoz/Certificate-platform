@@ -22,6 +22,11 @@ export default function BulkActions({
     setLoading(true)
     try {
       const result = await publishCertificatesFiltered(academyId, filters)
+      if (result.error) {
+        alert(result.error)
+        setLoading(false)
+        return
+      }
       alert(`${result.count} certificate${result.count !== 1 ? 's' : ''} published!`)
       window.location.reload()
     } catch (error) {
