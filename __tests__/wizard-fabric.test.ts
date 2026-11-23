@@ -58,7 +58,7 @@ describe('Wizard draft reopen', () => {
     expect(certs).toContain('draftData')
     expect(certs).toContain('Drafts')
     expect(certs).toContain('DraftActions')
-    expect(certs).toContain('Issue more')
+    expect(certs).toContain('ProgramActions')
     expect(certs).not.toContain('/dashboard/wizard?edit=')
 
     const actions = readFileSync(
@@ -68,6 +68,15 @@ describe('Wizard draft reopen', () => {
     expect(actions).toContain('Continue editing')
     expect(actions).toContain('deleteDraft')
     expect(actions).toContain('Delete')
+
+    const programActions = readFileSync(
+      join(process.cwd(), 'app/dashboard/certificates/program-actions.tsx'),
+      'utf-8'
+    )
+    expect(programActions).toContain('View')
+    expect(programActions).toContain('Issue more')
+    expect(programActions).toContain('deleteCertificateProgram')
+    expect(programActions).toContain('Delete')
   })
 
   it('redirects draft course pages back into the wizard', () => {

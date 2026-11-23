@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { checkFirstTimeUser } from '../wizard/actions'
 import { redirect } from 'next/navigation'
 import { DraftActions } from './draft-actions'
+import { ProgramActions } from './program-actions'
 
 function isDraftProgram(
   program: { draftData: unknown; code: string },
@@ -237,18 +238,12 @@ export default async function CertificatesPage() {
                       {metrics.linkedinClicks}
                     </td>
                     <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
-                      <Link
-                        href={`/dashboard/courses/${program.id}`}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        View
-                      </Link>
-                      <Link
-                        href={`/dashboard/courses/${program.id}/issue`}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Issue more
-                      </Link>
+                      <ProgramActions
+                        courseId={program.id}
+                        academyId={user.academyId}
+                        name={program.name}
+                        issuedCount={metrics.issued}
+                      />
                     </td>
                   </tr>
                 )

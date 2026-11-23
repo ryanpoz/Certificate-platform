@@ -1,11 +1,12 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { academies, courses, certificates, learners, templates } from '@/lib/db/schema'
-import { eq, and, sql } from 'drizzle-orm'
+import { academies, courses, certificates, learners, templates, events, batches } from '@/lib/db/schema'
+import { eq, and, sql, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { nanoid } from 'nanoid'
 import { sendCertificateEmail } from '@/lib/email/resend'
+import { getCurrentUser } from '@/lib/utils/session'
 
 interface CreateCertificateWizardData {
   academyId: string
@@ -207,28 +208,58 @@ export async function savePublishedDesign(data: {
 
 export async function deleteDraft(draftId: string, academyId?: string) {
   try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return { error: 'Draft not found' }
+    }
+    if (academyId && academyId !== user.academyId) {
+      return { error: 'Draft not found' }
+    }
+
     const [course] = await db
       .select()
       .from(courses)
-      .where(eq(courses.id, draftId))
+      .where(and(eq(courses.id, draftId), eq(courses.academyId, user.academyId)))
       .limit(1)
 
     if (!course) {
       return { error: 'Draft not found' }
     }
-    if (academyId && course.academyId !== academyId) {
-      return { error: 'Draft not found' }
-    }
 
     const isDraft =
       course.draftData != null ||
-      (course.code.startsWith('DRAFT-') && !course.templateId)
+      course.code.startsWith('DRAFT-')
 
     if (!isDraft) {
       return { error: 'Only drafts can be deleted from this action' }
     }
 
+    // Cascade: leftover preview/issued rows can block a plain course delete
+    const certRows = await db
+      .select({ id: certificates.id })
+      .from(certificates)
+      .where(eq(certificates.courseId, draftId))
+    const certIds = certRows.map((c) => c.id)
+    if (certIds.length > 0) {
+      await db.delete(events).where(inArray(events.certificateId, certIds))
+      await db.delete(certificates).where(inArray(certificates.id, certIds))
+    }
+    await db.delete(batches).where(eq(batches.courseId, draftId))
+
+    const templateId = course.templateId
     await db.delete(courses).where(eq(courses.id, draftId))
+
+    if (templateId) {
+      const stillUsed = await db
+        .select({ id: courses.id })
+        .from(courses)
+        .where(eq(courses.templateId, templateId))
+        .limit(1)
+      if (stillUsed.length === 0) {
+        await db.delete(templates).where(eq(templates.id, templateId))
+      }
+    }
+
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/certificates')
     return { success: true }

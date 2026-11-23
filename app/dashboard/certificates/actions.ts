@@ -1,9 +1,67 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { certificates, events, learners, courses, academies } from '@/lib/db/schema'
+import { certificates, events, learners, courses, academies, batches, templates } from '@/lib/db/schema'
 import { eq, inArray, and, like, or, gte, lte } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { getCurrentUser } from '@/lib/utils/session'
+
+/**
+ * Delete a certificate program (course) and all related issued certificates,
+ * events, and batches. Also removes the linked template if nothing else uses it.
+ */
+export async function deleteCertificateProgram(courseId: string, academyId: string) {
+  try {
+    const user = await getCurrentUser()
+    if (!user || user.academyId !== academyId) {
+      return { error: 'Certificate not found' }
+    }
+
+    const [course] = await db
+      .select()
+      .from(courses)
+      .where(and(eq(courses.id, courseId), eq(courses.academyId, user.academyId)))
+      .limit(1)
+
+    if (!course) {
+      return { error: 'Certificate not found' }
+    }
+
+    const certRows = await db
+      .select({ id: certificates.id })
+      .from(certificates)
+      .where(eq(certificates.courseId, courseId))
+    const certIds = certRows.map((c) => c.id)
+
+    if (certIds.length > 0) {
+      await db.delete(events).where(inArray(events.certificateId, certIds))
+      await db.delete(certificates).where(inArray(certificates.id, certIds))
+    }
+
+    await db.delete(batches).where(eq(batches.courseId, courseId))
+
+    const templateId = course.templateId
+    await db.delete(courses).where(eq(courses.id, courseId))
+
+    if (templateId) {
+      const stillUsed = await db
+        .select({ id: courses.id })
+        .from(courses)
+        .where(eq(courses.templateId, templateId))
+        .limit(1)
+      if (stillUsed.length === 0) {
+        await db.delete(templates).where(eq(templates.id, templateId))
+      }
+    }
+
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/certificates')
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to delete certificate program:', error)
+    return { error: 'Failed to delete certificate' }
+  }
+}
 
 async function buildFilteredQuery(academyId: string, filters: any) {
   let query = db
