@@ -1,231 +1,181 @@
 import Link from 'next/link'
 import { BRAND } from '@/lib/config/brand'
+import { CertificateVisual } from '@/components/marketing/certificate-visual'
 
 export const metadata = {
   title: `${BRAND.name} - ${BRAND.tagline}`,
   description: BRAND.description,
 }
 
+const STEPS = [
+  {
+    title: 'Upload your recipients',
+    body: 'Import a CSV with names and emails. We validate, deduplicate, and create certificates in seconds.',
+  },
+  {
+    title: 'They share instantly',
+    body: 'Email lands with a one-click \u201cAdd to LinkedIn\u201d button and a verification page with a QR code.',
+  },
+  {
+    title: 'Watch the reach grow',
+    body: 'On Growth, share and click analytics show issued, viewed, shared, and clicks back to your site\u2014no guessing what\u2019s working.',
+  },
+]
+
+const OUTCOMES = [
+  'Pre-filled with your program name, dates, and certificate URL',
+  'Track who clicked through from LinkedIn to your site (Growth plan)',
+  'See which certificates drive the most reach (Growth plan)',
+]
+
+const METRICS = ['Issued', 'Delivered', 'Viewed', 'LinkedIn adds', 'CTA clicks']
+
 export default function HomePage() {
   return (
-    <div className="bg-white">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-blue-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Certificates that show what your training actually drives
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
+    <div>
+      {/* Hero */}
+      <section className="pb-[88px] pt-14 lg:pt-[72px]">
+        <div className="site-wrap grid items-center gap-14 lg:grid-cols-[1fr_1.05fr]">
+          <div>
+            <p className="eyebrow">For trainers, associations and organisations</p>
+            <h1 className="display-1 mb-[22px] max-w-[11.5em]">Certificates that show what your training actually drives</h1>
+            <p className="lede mb-8 max-w-[36em]">
               Design certificates, send them by CSV, and let people share a verification page with a QR code and Add to LinkedIn. Share and click analytics are on the Growth plan.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link
-                href="/signup"
-                className="rounded-md bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-blue-700"
-              >
+            <div className="mb-[18px] flex flex-wrap items-center gap-3">
+              <Link href="/signup" className="btn btn-primary">
                 Start free
               </Link>
-              <Link href="/product" className="text-base font-semibold leading-7 text-gray-900">
+              <Link href="/product" className="btn btn-ghost">
                 See how it works <span aria-hidden="true">→</span>
               </Link>
             </div>
-            <p className="mt-6 text-sm text-gray-500">
-              Free plan: 250 certificates/year • No credit card required
-            </p>
+            <p className="fine">Free plan: 250 certificates/year • No credit card required</p>
           </div>
+          <CertificateVisual />
         </div>
-      </div>
+      </section>
 
-      {/* How It Works */}
-      <div className="py-24 sm:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              How it works
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              Three steps from CSV to LinkedIn shares
-            </p>
+      {/* How it works */}
+      <section className="border-y border-rule bg-paper py-[88px]">
+        <div className="site-wrap">
+          <div className="mb-12 max-w-[640px]">
+            <h2 className="display-2 mb-3.5">How it works</h2>
+            <p className="lede">Three steps from CSV to LinkedIn shares</p>
           </div>
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
-            <div className="text-center">
-              <div className="mx-auto h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg mb-4">
-                1
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload your recipients</h3>
-              <p className="text-gray-600">
-                Import a CSV with names and emails. We validate, deduplicate, and create certificates in seconds.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="mx-auto h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg mb-4">
-                2
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">They share instantly</h3>
-              <p className="text-gray-600">
-                Email lands with a one-click &quot;Add to LinkedIn&quot; button and a verification page with a QR code.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="mx-auto h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg mb-4">
-                3
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Watch the reach grow</h3>
-              <p className="text-gray-600">
-                On Growth, share and click analytics show issued, viewed, shared, and clicks back to your site—no guessing what&apos;s working.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Outcomes Section */}
-      <div className="py-24 sm:py-32 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 items-center">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-6">
-                LinkedIn shares = signups
-              </h2>
-              <p className="text-lg text-gray-600 mb-4">
-                Every certificate your recipients add to LinkedIn becomes a verified signal to their network: your training works.
-              </p>
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Pre-filled with your program name, dates, and certificate URL</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Track who clicked through from LinkedIn to your site (Growth plan)</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">See which certificates drive the most reach (Growth plan)</span>
-                </li>
-              </ul>
-            </div>
-            <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-              <div className="text-sm text-gray-500 mb-4">Example: Certificate page</div>
-              <div className="space-y-4">
-                <div className="border-b border-gray-200 pb-4">
-                  <div className="font-semibold text-gray-900 mb-1">Creative Strategy Certification</div>
-                  <div className="text-sm text-gray-600">Northwind Training</div>
+          <ol className="relative grid gap-10 md:grid-cols-3 md:gap-0">
+            <div className="pointer-events-none absolute left-[18px] right-[calc(33.333%-18px)] top-[17px] hidden h-px bg-[#B7AD9E] md:block" aria-hidden="true" />
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="relative md:pr-7">
+                <div className="relative z-[1] mb-[18px] flex h-9 w-9 items-center justify-center rounded-full bg-ink font-display text-base font-semibold text-parchment">
+                  {i + 1}
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Issued:</span>
-                    <span className="text-gray-900">Jan 15, 2026</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Certificate #:</span>
-                    <span className="text-gray-900 font-mono">CSB-2026-0123</span>
-                  </div>
-                </div>
-                <button className="w-full bg-[#0a66c2] text-white py-2 rounded font-medium text-sm">
-                  Add to LinkedIn
-                </button>
-              </div>
-            </div>
-          </div>
+                <h3 className="mb-2 text-xl font-semibold tracking-[-0.01em]">{step.title}</h3>
+                <p className="pr-2 text-[15px] leading-[1.55] text-ink-soft">{step.body}</p>
+              </li>
+            ))}
+          </ol>
         </div>
-      </div>
+      </section>
 
-      {/* Analytics Preview */}
-      <div className="py-24 sm:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Analytics that prove impact
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              On the Growth and Business plans. Clear numbers on reach and engagement.
+      {/* Outcomes */}
+      <section className="py-[88px]">
+        <div className="site-wrap grid items-center gap-16 lg:grid-cols-2">
+          <div>
+            <h2 className="display-2 mb-6">LinkedIn shares = signups</h2>
+            <p className="lede mb-6">
+              Every certificate your recipients add to LinkedIn becomes a verified signal to their network: your training works.
             </p>
+            <ul>
+              {OUTCOMES.map((item, i) => (
+                <li key={item} className={`grid grid-cols-[18px_1fr] gap-3 py-3 text-base text-ink-soft ${i ? 'border-t border-rule' : ''}`}>
+                  <span className="font-bold text-valid" aria-hidden="true">
+                    ✓
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="bg-gray-50 rounded-lg p-8 border border-gray-200">
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
-              <div>
-                <div className="text-3xl font-bold text-blue-600">2,847</div>
-                <div className="text-sm text-gray-600 mt-1">Issued</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-green-600">2,698</div>
-                <div className="text-sm text-gray-600 mt-1">Delivered</div>
-                <div className="text-xs text-gray-500">94.8%</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-purple-600">1,923</div>
-                <div className="text-sm text-gray-600 mt-1">Viewed</div>
-                <div className="text-xs text-gray-500">71.3%</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-indigo-600">847</div>
-                <div className="text-sm text-gray-600 mt-1">LinkedIn adds</div>
-                <div className="text-xs text-gray-500">44.0%</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-pink-600">312</div>
-                <div className="text-sm text-gray-600 mt-1">CTA clicks</div>
-                <div className="text-xs text-gray-500">16.2%</div>
-              </div>
+          <div className="overflow-hidden rounded-frame border border-ink bg-cream shadow-paper">
+            <div className="flex items-center gap-2 border-b border-rule bg-parchment px-3.5 py-2.5">
+              <span className="h-2 w-2 rounded-full bg-rule-strong" />
+              <span className="h-2 w-2 rounded-full bg-rule-strong" />
+              <span className="h-2 w-2 rounded-full bg-rule-strong" />
+              <div className="flex-1 rounded-btn border border-rule bg-paper px-2.5 py-1 text-[11px] text-muted">Example: Certificate page</div>
             </div>
-            <div className="mt-6 text-xs text-gray-500 text-center">
-              Example data • On Growth, your dashboard shows these metrics per program
+            <div className="p-7">
+              <div className="mb-5 border-b border-rule pb-5">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.12em]">Northwind Training</div>
+                <div className="mt-1 font-display text-[28px] font-medium leading-tight tracking-[-0.02em]">Creative Strategy Certification</div>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[11px] text-muted">
+                <div>
+                  <dt>Issued</dt>
+                  <dd className="mt-0.5 text-[13px] font-semibold text-ink">Jan 15, 2026</dd>
+                </div>
+                <div>
+                  <dt>Certificate #</dt>
+                  <dd className="mt-0.5 font-mono text-[13px] font-semibold text-ink">CSB-2026-0123</dd>
+                </div>
+              </dl>
+              <div className="mt-6">
+                <span className="btn btn-sm btn-primary w-full">Add to LinkedIn</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Pricing Teaser */}
-      <div className="py-24 sm:py-32 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-4">
-            Simple plans with a yearly certificate limit
-          </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+      {/* Analytics */}
+      <section className="border-y border-rule bg-paper py-[88px]">
+        <div className="site-wrap">
+          <div className="mb-10 max-w-[640px]">
+            <p className="eyebrow">Growth and Business</p>
+            <h2 className="display-2 mb-3.5">Analytics that prove impact</h2>
+            <p className="lede">On the Growth and Business plans. Clear numbers on reach and engagement.</p>
+          </div>
+          <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-rule bg-rule md:grid-cols-5">
+            {METRICS.map((metric) => (
+              <li key={metric} className="bg-cream px-5 py-6 text-[15px] font-semibold text-ink">
+                {metric}
+              </li>
+            ))}
+          </ul>
+          <p className="fine mt-4">On Growth, your dashboard shows these metrics per program</p>
+        </div>
+      </section>
+
+      {/* Pricing teaser */}
+      <section className="py-[88px]">
+        <div className="site-wrap text-center">
+          <h2 className="display-2 mb-4">Simple plans with a yearly certificate limit</h2>
+          <p className="lede mx-auto mb-8 max-w-2xl">
             Start free with 250 certificates per year. Move up to Starter, Growth or Business when you need more volume or features. Your full yearly allowance is available up front, billed monthly or annually.
           </p>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center px-6 py-3 text-base font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700"
-          >
+          <Link href="/pricing" className="btn btn-primary">
             See pricing
           </Link>
         </div>
-      </div>
+      </section>
 
       {/* Switch CTA */}
-      <div className="py-24 sm:py-32 bg-blue-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4">
-            Switching from Accredible? We&apos;ll help you move
-          </h2>
-          <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
+      <section className="bg-ink py-20 text-parchment">
+        <div className="site-wrap">
+          <h2 className="display-2 mb-3.5 !text-parchment">Switching from Accredible? We&apos;ll help you move</h2>
+          <p className="lede max-w-2xl !text-[#D8D0C4]">
             We&apos;ll help you import your existing certificates and reissue them with a fresh Add to LinkedIn button. Migration help is free; imported certificates count toward your plan&apos;s yearly allowance.
           </p>
-          <div className="flex justify-center gap-4">
-            <Link
-              href="/switch"
-              className="inline-flex items-center px-6 py-3 text-base font-semibold text-blue-600 bg-white rounded-md hover:bg-blue-50"
-            >
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link href="/switch" className="btn btn-on-ink">
               Learn about switching
             </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center px-6 py-3 text-base font-semibold text-white border-2 border-white rounded-md hover:bg-blue-700"
-            >
+            <Link href="/signup" className="btn btn-ghost-light">
               Start free
             </Link>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }

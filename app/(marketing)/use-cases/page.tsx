@@ -8,87 +8,75 @@ export const metadata = {
 
 export default function UseCasesPage() {
   return (
-    <div className="bg-white">
+    <div className="">
       {/* Hero */}
-      <div className="bg-gradient-to-b from-blue-50 to-white py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl mb-6">
+      <div className="py-24">
+        <div className="site-wrap text-center">
+          <h1 className="display-1 mb-6">
             Certificates that drive outcomes for every certification program
           </h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="lede max-w-3xl mx-auto">
             From customer education to partner enablement, turn your certification program into a LinkedIn-powered growth engine.
           </p>
         </div>
       </div>
 
       {/* Use Cases */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-32">
+      <div className="site-wrap py-24 space-y-32">
         
         {/* Customer Education */}
         <div id="customer-education">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Customer Education</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <h2 className="display-2 mb-4">Customer Education</h2>
+            <p className="lede max-w-2xl mx-auto">
               Turn product education into a signup channel. Every certificate your customers share becomes a verified signal that your product works.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-blue-50 rounded-lg p-8 border border-blue-200">
-              <h3 className="font-semibold text-gray-900 mb-3">The challenge</h3>
-              <p className="text-gray-700">
+            <div className="bg-tint rounded-card p-8 border border-rule">
+              <h3 className="font-semibold text-ink mb-3">The challenge</h3>
+              <p className="text-ink-soft">
                 Your customer education team certifies hundreds or thousands of users each quarter. Those certificates sit unused—no one sees them, and you can&apos;t prove they drive signups.
               </p>
             </div>
-            <div className="bg-green-50 rounded-lg p-8 border border-green-200">
-              <h3 className="font-semibold text-gray-900 mb-3">The {BRAND.name} outcome</h3>
-              <p className="text-gray-700">
+            <div className="bg-green-50 rounded-card p-8 border border-green-200">
+              <h3 className="font-semibold text-ink mb-3">The {BRAND.name} outcome</h3>
+              <p className="text-ink-soft">
                 Certificates land in email with a one-click LinkedIn button. Each share reaches their network with your product name and certification URL. On Growth, those clicks can be tracked back to your signup page.
               </p>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-8">
-            <h3 className="font-semibold text-gray-900 mb-4">What customer education teams get</h3>
+          <div className="bg-paper border border-rule rounded-card p-8">
+            <h3 className="font-semibold text-ink mb-4">What customer education teams get</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Bulk import of everyone who completes your program</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Bulk import of everyone who completes your program</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Branded certificate pages</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Branded certificate pages</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">LinkedIn share tracking (Growth plan)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">LinkedIn share tracking (Growth plan)</span>
                 </li>
               </ul>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Click-through analytics to signup page (Growth plan)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Click-through analytics to signup page (Growth plan)</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Per-program performance metrics (Growth plan)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Per-program performance metrics (Growth plan)</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">A yearly certificate limit on each plan, available up front, with 500-certificate top-ups for bursts (coming soon)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">A yearly certificate limit on each plan, available up front, with 500-certificate top-ups for bursts (coming soon)</span>
                 </li>
               </ul>
             </div>
@@ -98,68 +86,56 @@ export default function UseCasesPage() {
         {/* Partner Enablement */}
         <div id="partner-enablement">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Partner Enablement</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <h2 className="display-2 mb-4">Partner Enablement</h2>
+            <p className="lede max-w-2xl mx-auto">
               Certify partners, resellers, and service providers. Track who&apos;s promoting your product and turn certifications into referral channels.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-blue-50 rounded-lg p-8 border border-blue-200">
-              <h3 className="font-semibold text-gray-900 mb-3">The challenge</h3>
-              <p className="text-gray-700">
+            <div className="bg-tint rounded-card p-8 border border-rule">
+              <h3 className="font-semibold text-ink mb-3">The challenge</h3>
+              <p className="text-ink-soft">
                 You need partners to complete your certification program and promote it to their networks. You have no visibility into who shares their credentials or what reach they generate.
               </p>
             </div>
-            <div className="bg-green-50 rounded-lg p-8 border border-green-200">
-              <h3 className="font-semibold text-gray-900 mb-3">The {BRAND.name} outcome</h3>
-              <p className="text-gray-700">
+            <div className="bg-green-50 rounded-card p-8 border border-green-200">
+              <h3 className="font-semibold text-ink mb-3">The {BRAND.name} outcome</h3>
+              <p className="text-ink-soft">
                 Partners add certifications to LinkedIn with one click. On Growth, you can see who shares, how many views each partner drives, and which cohorts generate the most reach.
               </p>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-8">
-            <h3 className="font-semibold text-gray-900 mb-4">What partner teams get</h3>
+          <div className="bg-paper border border-rule rounded-card p-8">
+            <h3 className="font-semibold text-ink mb-4">What partner teams get</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Tiered certification levels</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Tiered certification levels</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Expiry dates (Starter plan)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Expiry dates (Starter plan)</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Partner reach analytics (Growth plan)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Partner reach analytics (Growth plan)</span>
                 </li>
               </ul>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Revocation for compliance</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Revocation for compliance</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Reissue certificates for renewals</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Reissue certificates for renewals</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Recertification campaigns (Business plan, coming soon)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Recertification campaigns (Business plan, coming soon)</span>
                 </li>
               </ul>
             </div>
@@ -169,68 +145,56 @@ export default function UseCasesPage() {
         {/* Trainers & Associations */}
         <div id="trainers-associations">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Trainers & Associations</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <h2 className="display-2 mb-4">Trainers & Associations</h2>
+            <p className="lede max-w-2xl mx-auto">
               Run professional training or a membership certification. Give everyone you certify a credential they&apos;re proud to share.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-blue-50 rounded-lg p-8 border border-blue-200">
-              <h3 className="font-semibold text-gray-900 mb-3">The challenge</h3>
-              <p className="text-gray-700">
+            <div className="bg-tint rounded-card p-8 border border-rule">
+              <h3 className="font-semibold text-ink mb-3">The challenge</h3>
+              <p className="text-ink-soft">
                 You certify professionals or members and need certificates that look as credible as your organisation. You want to know if people share them and whether that brings new people to you.
               </p>
             </div>
-            <div className="bg-green-50 rounded-lg p-8 border border-green-200">
-              <h3 className="font-semibold text-gray-900 mb-3">The {BRAND.name} outcome</h3>
-              <p className="text-gray-700">
+            <div className="bg-green-50 rounded-card p-8 border border-green-200">
+              <h3 className="font-semibold text-ink mb-3">The {BRAND.name} outcome</h3>
+              <p className="text-ink-soft">
                 Certificate pages in your brand colors, issued one at a time or in bulk by CSV. On Growth, LinkedIn shares can be tracked to your site, and analytics show which cohorts drive the most reach.
               </p>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-8">
-            <h3 className="font-semibold text-gray-900 mb-4">What trainers and associations get</h3>
+          <div className="bg-paper border border-rule rounded-card p-8">
+            <h3 className="font-semibold text-ink mb-4">What trainers and associations get</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Custom brand colors on certificate pages</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Custom brand colors on certificate pages</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Issue one at a time or in bulk by CSV</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Issue one at a time or in bulk by CSV</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Custom email templates, sent from your sender name (Starter plan)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Custom email templates, sent from your sender name (Starter plan)</span>
                 </li>
               </ul>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">LinkedIn reach analytics (Growth plan)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">LinkedIn reach analytics (Growth plan)</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Per-cohort performance tracking (Growth plan)</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Per-cohort performance tracking (Growth plan)</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-gray-700">Move up a plan when you need more volume or features</span>
+                  <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                  <span className="text-ink-soft">Move up a plan when you need more volume or features</span>
                 </li>
               </ul>
             </div>
@@ -239,21 +203,21 @@ export default function UseCasesPage() {
       </div>
 
       {/* CTA */}
-      <div className="bg-blue-600 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
+      <div className="bg-ink py-20">
+        <div className="site-wrap text-center">
+          <h2 className="display-2 !text-parchment mb-4">
             Ready to turn certificates into a growth channel?
           </h2>
           <div className="flex justify-center gap-4">
             <Link
               href="/signup"
-              className="inline-flex items-center px-6 py-3 text-base font-semibold text-blue-600 bg-white rounded-md hover:bg-blue-50"
+              className="btn btn-on-ink"
             >
               Start free
             </Link>
             <Link
               href="/contact"
-              className="inline-flex items-center px-6 py-3 text-base font-semibold text-white border-2 border-white rounded-md hover:bg-blue-700"
+              className="btn btn-ghost-light"
             >
               Talk to us
             </Link>

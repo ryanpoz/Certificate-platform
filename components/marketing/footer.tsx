@@ -1,44 +1,63 @@
 import Link from 'next/link'
 import { BRAND } from '@/lib/config/brand'
+import { Logo } from '@/components/brand/logo'
+
+const COLUMNS = [
+  {
+    title: 'Product',
+    links: [
+      { href: '/product', label: 'Features' },
+      { href: '/pricing', label: 'Pricing' },
+      { href: '/switch', label: 'Switch from Accredible' },
+    ],
+  },
+  {
+    title: 'Use Cases',
+    links: [
+      { href: '/use-cases#customer-education', label: 'Customer Education' },
+      { href: '/use-cases#partner-enablement', label: 'Partner Enablement' },
+      { href: '/use-cases#trainers-associations', label: 'Trainers & Associations' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [{ href: '/contact', label: 'Contact' }],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { href: '/privacy', label: 'Privacy' },
+      { href: '/terms', label: 'Terms' },
+    ],
+  },
+]
 
 export default function MarketingFooter() {
   return (
-    <footer className="bg-gray-50 border-t border-gray-200">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Product</h3>
-            <ul className="mt-4 space-y-3">
-              <li><Link href="/product" className="text-base text-gray-600 hover:text-gray-900">Features</Link></li>
-              <li><Link href="/pricing" className="text-base text-gray-600 hover:text-gray-900">Pricing</Link></li>
-              <li><Link href="/switch" className="text-base text-gray-600 hover:text-gray-900">Switch from Accredible</Link></li>
-            </ul>
+    <footer className="border-t border-rule bg-parchment">
+      <div className="site-wrap py-12">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+          <div className="space-y-3">
+            <Logo markSize={32} wordmarkClassName="text-[20px]" />
+            <p className="fine">Prices in CA$.</p>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Use Cases</h3>
-            <ul className="mt-4 space-y-3">
-              <li><Link href="/use-cases#customer-education" className="text-base text-gray-600 hover:text-gray-900">Customer Education</Link></li>
-              <li><Link href="/use-cases#partner-enablement" className="text-base text-gray-600 hover:text-gray-900">Partner Enablement</Link></li>
-              <li><Link href="/use-cases#trainers-associations" className="text-base text-gray-600 hover:text-gray-900">Trainers &amp; Associations</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Company</h3>
-            <ul className="mt-4 space-y-3">
-              <li><Link href="/about" className="text-base text-gray-600 hover:text-gray-900">About</Link></li>
-              <li><Link href="/contact" className="text-base text-gray-600 hover:text-gray-900">Contact</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Legal</h3>
-            <ul className="mt-4 space-y-3">
-              <li><Link href="/privacy" className="text-base text-gray-600 hover:text-gray-900">Privacy</Link></li>
-              <li><Link href="/terms" className="text-base text-gray-600 hover:text-gray-900">Terms</Link></li>
-            </ul>
-          </div>
+          {COLUMNS.map((col) => (
+            <div key={col.title}>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-brass">{col.title}</h3>
+              <ul className="mt-4 space-y-3">
+                {col.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm font-medium text-ink-soft hover:text-ink">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        <div className="mt-8 border-t border-gray-200 pt-8">
-          <p className="text-base text-gray-500 text-center">
+        <div className="mt-10 border-t border-rule pt-6">
+          <p className="fine">
             &copy; {new Date().getFullYear()} {BRAND.name}. All rights reserved.
           </p>
         </div>

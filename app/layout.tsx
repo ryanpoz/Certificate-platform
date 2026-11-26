@@ -1,9 +1,24 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Fraunces, IBM_Plex_Sans } from 'next/font/google'
 import './globals.css'
 import { BRAND } from '@/lib/config/brand'
 
-const inter = Inter({ subsets: ['latin'] })
+// Display / wordmark / prices. SOFT and WONK are set to 0 in globals.css.
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  axes: ['SOFT', 'WONK', 'opsz'],
+  variable: '--font-display',
+  display: 'swap',
+})
+
+// UI and body text
+const plexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -33,8 +48,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={`${fraunces.variable} ${plexSans.variable}`}>
+      <body className="font-sans">{children}</body>
     </html>
   )
 }

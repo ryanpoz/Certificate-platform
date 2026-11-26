@@ -36,12 +36,12 @@ function VerifyContent() {
 
   if (verifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full p-8 bg-white rounded-lg shadow">
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="max-w-md w-full p-8 bg-paper rounded-card shadow">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifying...</h2>
-            <p className="text-gray-600">Please wait while we log you in.</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-stamp mb-4"></div>
+            <h2 className="font-display text-2xl font-medium tracking-[-0.02em] text-ink mb-2">Verifying...</h2>
+            <p className="text-ink-soft">Please wait while we log you in.</p>
           </div>
         </div>
       </div>
@@ -50,13 +50,13 @@ function VerifyContent() {
 
   if (error === 'invalid') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full p-8 bg-white rounded-lg shadow">
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="max-w-md w-full p-8 bg-paper rounded-card shadow">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Invalid Link</h2>
-          <p className="text-gray-600 mb-4">This magic link is invalid or missing.</p>
+          <p className="text-ink-soft mb-4">This magic link is invalid or missing.</p>
           <a 
             href="/auth/login" 
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="inline-block px-4 py-2 bg-stamp text-cream rounded-btn hover:bg-stamp-hover"
           >
             Request a new link
           </a>
@@ -67,13 +67,13 @@ function VerifyContent() {
 
   if (error === 'expired') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full p-8 bg-white rounded-lg shadow">
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="max-w-md w-full p-8 bg-paper rounded-card shadow">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Link Expired</h2>
-          <p className="text-gray-600 mb-4">This magic link has expired or has already been used.</p>
+          <p className="text-ink-soft mb-4">This magic link has expired or has already been used.</p>
           <a 
             href="/auth/login" 
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="inline-block px-4 py-2 bg-stamp text-cream rounded-btn hover:bg-stamp-hover"
           >
             Request a new link
           </a>
@@ -83,13 +83,13 @@ function VerifyContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-8 bg-white rounded-lg shadow">
+    <div className="min-h-screen flex items-center justify-center bg-paper">
+      <div className="max-w-md w-full p-8 bg-paper rounded-card shadow">
         <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-        <p className="text-gray-600 mb-4">An error occurred while verifying your link. Please try again.</p>
+        <p className="text-ink-soft mb-4">An error occurred while verifying your link. Please try again.</p>
         <a 
           href="/auth/login" 
-          className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="inline-block px-4 py-2 bg-stamp text-cream rounded-btn hover:bg-stamp-hover"
         >
           Request a new link
         </a>
@@ -101,11 +101,11 @@ function VerifyContent() {
 export default function VerifyPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full p-8 bg-white rounded-lg shadow">
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="max-w-md w-full p-8 bg-paper rounded-card shadow">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading...</h2>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-stamp mb-4"></div>
+            <h2 className="font-display text-2xl font-medium tracking-[-0.02em] text-ink mb-2">Loading...</h2>
           </div>
         </div>
       </div>

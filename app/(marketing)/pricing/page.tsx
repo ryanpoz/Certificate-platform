@@ -110,33 +110,18 @@ const plans: Plan[] = [
 
 function CheckIcon() {
   return (
-    <svg
-      className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-      aria-hidden="true"
-    >
-      <path
-        fillRule="evenodd"
-        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-        clipRule="evenodd"
-      />
-    </svg>
+    <span className="absolute left-0 font-semibold text-brass" aria-hidden="true">
+      &ndash;
+    </span>
   )
 }
 
 function Feature({ text, comingSoon }: FeatureItem) {
   return (
-    <li className="flex items-start">
+    <li className="relative pl-[18px] text-[13.5px] leading-[1.4] text-ink-soft">
       <CheckIcon />
-      <span className="text-gray-700">
-        {text}
-        {comingSoon ? (
-          <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 align-middle">
-            Coming soon
-          </span>
-        ) : null}
-      </span>
+      {text}
+      {comingSoon ? <ComingSoonBadge /> : null}
     </li>
   )
 }
@@ -151,18 +136,33 @@ const EVERY_PLAN = [
 ]
 
 function ComingSoonBadge() {
-  return (
-    <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 align-middle">
-      Coming soon
-    </span>
-  )
+  return <span className="badge-soon ml-2">Coming soon</span>
 }
 
 function Included({ on }: { on: boolean }) {
   return on ? (
-    <span className="text-blue-600 font-semibold" aria-label="Included">&#10003;</span>
+    <span className="font-bold text-valid" aria-label="Included">&#10003;</span>
   ) : (
-    <span className="text-gray-300" aria-label="Not included">&mdash;</span>
+    <span className="text-[#C4B8A8]" aria-label="Not included">&mdash;</span>
+  )
+}
+
+/** Highlighted (recommended) plan column in the comparison table */
+const HIGHLIGHT: PlanId = 'growth'
+
+function Price({ plan }: { plan: Plan }) {
+  const [, currency, amount] = plan.price.match(/^(CA\$)?(.*)$/) ?? [null, '', plan.price]
+  return (
+    <div>
+      {plan.pricePrefix ? (
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">{plan.pricePrefix}</div>
+      ) : null}
+      <div className="flex items-start gap-[3px] font-display text-[44px] font-medium leading-[0.9] tracking-[-0.03em]">
+        {currency ? <span className="mt-1.5 font-sans text-[13px] font-semibold tracking-[0.04em] text-ink-soft">{currency}</span> : null}
+        {amount}
+      </div>
+      <div className="mb-1 mt-1.5 text-[13px] text-muted">{plan.period ? 'per month' : '\u00a0'}</div>
+    </div>
   )
 }
 
@@ -174,46 +174,50 @@ function ComparisonTable() {
   }
   const seats = (plan: PlanId) =>
     LIMITS.adminSeats.contractPlans.includes(plan) ? 'Custom' : String(LIMITS.adminSeats.perPlan[plan])
+  const th = (plan: PlanId) =>
+    `px-3.5 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em] ${plan === HIGHLIGHT ? 'bg-ink text-parchment' : 'bg-[#EFE8DC] text-ink'}`
+  const td = (plan: PlanId) => `px-3.5 py-3 text-center text-ink-soft ${plan === HIGHLIGHT ? 'bg-tint' : ''}`
+  const label = 'px-3.5 py-3 text-left font-medium text-ink w-[34%]'
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-sm" data-comparison-table>
+    <div className="overflow-x-auto rounded-card border border-rule">
+      <table className="min-w-full bg-paper text-sm" data-comparison-table>
         <thead>
-          <tr className="border-b border-gray-200">
-            <th className="py-3 pr-4 text-left font-semibold text-gray-900">Feature</th>
+          <tr className="border-b border-rule">
+            <th className="bg-[#EFE8DC] px-3.5 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-ink">Feature</th>
             {PLAN_ORDER.map((plan) => (
-              <th key={plan} className="py-3 px-4 text-center font-semibold text-gray-900">{PLANS[plan].name}</th>
+              <th key={plan} className={th(plan)}>{PLANS[plan].name}</th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-rule">
           <tr>
-            <td className="py-3 pr-4 text-gray-700">Certificates per year</td>
+            <td className={label}>Certificates per year</td>
             {PLAN_ORDER.map((plan) => (
-              <td key={plan} className="py-3 px-4 text-center text-gray-900">{certificates(plan)}</td>
+              <td key={plan} className={td(plan)}>{certificates(plan)}</td>
             ))}
           </tr>
           <tr>
-            <td className="py-3 pr-4 text-gray-700">Admin seats<ComingSoonBadge /></td>
+            <td className={label}>Admin seats<ComingSoonBadge /></td>
             {PLAN_ORDER.map((plan) => (
-              <td key={plan} className="py-3 px-4 text-center text-gray-900">{seats(plan)}</td>
+              <td key={plan} className={td(plan)}>{seats(plan)}</td>
             ))}
           </tr>
-          {EVERY_PLAN.map((label) => (
-            <tr key={label}>
-              <td className="py-3 pr-4 text-gray-700">{label}</td>
+          {EVERY_PLAN.map((text) => (
+            <tr key={text}>
+              <td className={label}>{text}</td>
               {PLAN_ORDER.map((plan) => (
-                <td key={plan} className="py-3 px-4 text-center"><Included on /></td>
+                <td key={plan} className={td(plan)}><Included on /></td>
               ))}
             </tr>
           ))}
           {FEATURE_KEYS.map((feature) => (
             <tr key={feature} data-feature={feature}>
-              <td className="py-3 pr-4 text-gray-700">
+              <td className={label}>
                 {FEATURES[feature].label}
                 {FEATURES[feature].status === 'coming_soon' ? <ComingSoonBadge /> : null}
               </td>
               {PLAN_ORDER.map((plan) => (
-                <td key={plan} className="py-3 px-4 text-center"><Included on={can(plan, feature)} /></td>
+                <td key={plan} className={td(plan)}><Included on={can(plan, feature)} /></td>
               ))}
             </tr>
           ))}
@@ -225,56 +229,43 @@ function ComparisonTable() {
 
 export default function PricingPage() {
   return (
-    <div className="bg-white py-24 sm:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+    <div className="pb-24">
+      <div className="site-wrap">
+        <div className="mx-auto max-w-3xl pb-4 pt-16 text-center">
+          <p className="eyebrow">Pricing in CA$</p>
+          <h1 className="display-1 mb-4">
             Pricing
           </h1>
-          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="lede mx-auto max-w-2xl">
             Prices in CA$. Pay monthly, or pay annually at 10x the monthly price and get two months free. Either way, your full yearly certificate allowance is available from day one.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 items-stretch gap-3.5 pb-6 pt-12 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`bg-white rounded-lg p-8 relative flex flex-col ${
-                plan.featured ? 'border-2 border-blue-600' : 'border-2 border-gray-200'
+              className={`relative flex flex-col rounded-card px-[22px] pb-[22px] ${
+                plan.featured ? 'border-2 border-ink bg-cream pt-8 shadow-soft' : 'border border-rule bg-paper pt-6'
               }`}
             >
               {plan.featured ? (
-                <div className="absolute top-0 right-6 -translate-y-1/2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white">
-                    Most popular
-                  </span>
-                </div>
+                <span className="absolute -top-[11px] left-[22px] rounded-badge bg-stamp px-[9px] py-[3px] text-[10px] font-bold uppercase tracking-[0.1em] text-cream">
+                  Most popular
+                </span>
               ) : null}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{plan.name}</h3>
-                <div className="flex items-baseline flex-wrap">
-                  {plan.pricePrefix ? (
-                    <span className="text-base font-medium text-gray-500 mr-2">{plan.pricePrefix}</span>
-                  ) : null}
-                  <span className="text-5xl font-bold text-gray-900">{plan.price}</span>
-                  {plan.period ? <span className="text-gray-600 ml-2">{plan.period}</span> : null}
-                </div>
-                <p className="mt-2 text-sm font-medium text-gray-900">{plan.volume}</p>
-                <p className="mt-1 text-sm text-gray-600">{plan.blurb}</p>
-              </div>
-              <ul className="space-y-4 mb-8 flex-1">
+              <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.04em] text-ink">{plan.name}</h3>
+              <Price plan={plan} />
+              <p className="mb-1.5 text-sm font-semibold text-ink">{plan.volume}</p>
+              <p className="mb-4 min-h-[3.2em] text-[13px] leading-[1.45] text-ink-soft">{plan.blurb}</p>
+              <ul className="mb-5 flex flex-1 flex-col gap-2">
                 {plan.features.map((feature) => (
                   <Feature key={feature.text} {...feature} />
                 ))}
               </ul>
               <Link
                 href={plan.href}
-                className={
-                  plan.ctaStyle === 'solid'
-                    ? 'block w-full text-center px-6 py-3 text-base font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700'
-                    : 'block w-full text-center px-6 py-3 text-base font-semibold text-blue-600 border-2 border-blue-600 rounded-md hover:bg-blue-50'
-                }
+                className={`btn mt-auto w-full ${plan.ctaStyle === 'solid' ? 'btn-primary' : 'btn-ghost'}`}
               >
                 {plan.cta}
               </Link>
@@ -282,53 +273,53 @@ export default function PricingPage() {
           ))}
         </div>
 
-        <div className="mt-12 text-center max-w-3xl mx-auto space-y-3">
-          <p className="text-gray-600">
+        <div className="mx-auto mt-6 max-w-3xl space-y-3 text-center">
+          <p className="text-[15px] text-ink-soft">
             A 10% grace applies over your plan limit. Tests and duplicates don&apos;t count. For bursts, top-ups of 500 certificates will be CA$49 on Starter, or CA$39 on Growth and Business.{' '}
-            <span className="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 align-middle">
+            <span className="badge-soon ml-1">
               Coming soon
             </span>
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="fine">
             Features marked coming soon are included in that plan and are still rolling out.
           </p>
         </div>
 
-        <div className="mt-24">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Compare plans</h2>
+        <div className="mt-20">
+          <h2 className="display-2 mb-6">Compare plans</h2>
           <ComparisonTable />
         </div>
 
-        <div className="mt-24 max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">FAQ</h2>
-          <div className="space-y-8">
+        <div className="mt-20">
+          <h2 className="display-2 mb-7">FAQ</h2>
+          <div className="grid gap-x-10 gap-y-5 md:grid-cols-2 [&>div]:border-b [&>div]:border-rule [&>div]:pb-5">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">What counts as a certificate?</h3>
-              <p className="text-gray-600">
+              <h3 className="mb-2 text-base font-semibold text-ink">What counts as a certificate?</h3>
+              <p className="text-[15px] text-ink-soft">
                 Each certificate you issue in your plan year counts toward your plan limit, including renewals, reissues and certificates imported from another platform. Tests, duplicates (the same person and program again) and certificates you delete within 7 days of issuing don&apos;t count. Your plan year starts on the day you sign up and resets on that date each year.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Do I get my whole yearly allowance on monthly billing?</h3>
-              <p className="text-gray-600">
+              <h3 className="mb-2 text-base font-semibold text-ink">Do I get my whole yearly allowance on monthly billing?</h3>
+              <p className="text-[15px] text-ink-soft">
                 Yes. On monthly or annual billing, your full yearly certificate allowance is available from the start of your plan year, so you can issue a big cohort in one go.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">What if I go over my limit?</h3>
-              <p className="text-gray-600">
+              <h3 className="mb-2 text-base font-semibold text-ink">What if I go over my limit?</h3>
+              <p className="text-[15px] text-ink-soft">
                 A 10% grace applies over your plan limit. After that, new issuing pauses until your plan year resets or you move up a plan. Top-ups of 500 certificates for bursts are coming soon. Certificates you have already issued stay live and verifiable.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">How does annual billing work?</h3>
-              <p className="text-gray-600">
+              <h3 className="mb-2 text-base font-semibold text-ink">How does annual billing work?</h3>
+              <p className="text-[15px] text-ink-soft">
                 Pay 10 times the monthly price for a year&mdash;that&apos;s two months free. You can still pay month to month and cancel anytime.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">What happens if I downgrade or cancel?</h3>
-              <ul className="list-disc pl-5 space-y-2 text-gray-600">
+              <h3 className="mb-2 text-base font-semibold text-ink">What happens if I downgrade or cancel?</h3>
+              <ul className="list-disc space-y-2 pl-5 text-[15px] text-ink-soft">
                 <li>Certificates you have issued always stay live and verifiable, and you can always revoke a certificate, on any plan.</li>
                 <li>Plan changes and cancellations take effect at the end of your current billing period.</li>
                 <li>
@@ -341,20 +332,20 @@ export default function PricingPage() {
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">What does branded email include?</h3>
-              <p className="text-gray-600">
+              <h3 className="mb-2 text-base font-semibold text-ink">What does branded email include?</h3>
+              <p className="text-[15px] text-ink-soft">
                 On Starter and above, certificate emails come from your sender name, and replies go to your reply-to address. On Free, emails come from {BRAND.name} and include a small &ldquo;Verified by&rdquo; footer.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">How do share analytics work?</h3>
-              <p className="text-gray-600">
+              <h3 className="mb-2 text-base font-semibold text-ink">How do share analytics work?</h3>
+              <p className="text-[15px] text-ink-soft">
                 On Growth and Business, we count shares and views of each verification page, so you can see which certificates get reach and which clicks come back to you. Basic counts (issued, emails sent, claimed) are on every plan.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Can I white-label and use my own domain?</h3>
-              <p className="text-gray-600">
+              <h3 className="mb-2 text-base font-semibold text-ink">Can I white-label and use my own domain?</h3>
+              <p className="text-[15px] text-ink-soft">
                 A custom domain and full white-label, including removal of our branding, are on Business and coming soon. Growth will include a page address on our domain, such as /acme, with a small &ldquo;Verified by&rdquo; mark in the footer.
               </p>
             </div>

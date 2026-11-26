@@ -1,5 +1,6 @@
 import { BRAND } from '@/lib/config/brand'
 import Link from 'next/link'
+import { QrSample } from '@/components/marketing/certificate-visual'
 
 export const metadata = {
   title: `Product - ${BRAND.name}`,
@@ -8,121 +9,105 @@ export const metadata = {
 
 export default function ProductPage() {
   return (
-    <div className="bg-white">
+    <div className="">
       {/* Hero */}
-      <div className="bg-gradient-to-b from-blue-50 to-white py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl mb-6">
+      <div className="py-24">
+        <div className="site-wrap text-center">
+          <h1 className="display-1 mb-6">
             Everything you need to issue certificates that prove impact
           </h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="lede max-w-3xl mx-auto">
             From CSV upload to a verification page, QR code, and LinkedIn shares in minutes. Share and click analytics are on the Growth plan.
           </p>
         </div>
       </div>
 
       {/* Features */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-32">
+      <div className="site-wrap py-24 space-y-32">
         
         {/* Issuing */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Bulk issuing</h2>
-            <p className="text-lg text-gray-600 mb-6">
+            <h2 className="display-2 mb-4">Bulk issuing</h2>
+            <p className="lede mb-6">
               Upload a CSV with names and emails. We validate, deduplicate, and create certificates in seconds. Up to 5,000 rows at once.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Automatic column mapping</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Automatic column mapping</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Row-by-row validation with error reporting</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Row-by-row validation with error reporting</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Idempotent publishing—safe to retry</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Idempotent publishing—safe to retry</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Single-person form for one-off certificates</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Single-person form for one-off certificates</span>
               </li>
             </ul>
           </div>
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <div className="text-sm text-gray-500 mb-4">CSV Upload</div>
+          <div className="bg-paper rounded-card p-6 border border-rule">
+            <div className="text-sm text-muted mb-4">CSV Upload</div>
             <div className="space-y-2 text-sm font-mono">
-              <div className="text-green-600">✓ Row 1: jane@example.com</div>
-              <div className="text-green-600">✓ Row 2: john@example.com</div>
-              <div className="text-green-600">✓ Row 3: sarah@example.com</div>
-              <div className="text-gray-400">...</div>
-              <div className="text-green-600">✓ 847 valid rows</div>
+              <div className="text-valid">✓ Row 1: jane@example.com</div>
+              <div className="text-valid">✓ Row 2: john@example.com</div>
+              <div className="text-valid">✓ Row 3: sarah@example.com</div>
+              <div className="text-muted">...</div>
+              <div className="text-valid">✓ 847 valid rows</div>
             </div>
           </div>
         </div>
 
         {/* Certificate Pages */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="order-2 lg:order-1 bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-            <div className="border-b border-gray-200 pb-4 mb-4">
-              <div className="font-semibold text-gray-900 mb-1">Creative Strategy Certification</div>
-              <div className="text-sm text-gray-600">Northwind Training</div>
+          <div className="order-2 lg:order-1 bg-paper rounded-card shadow-soft p-6 border border-rule">
+            <div className="border-b border-rule pb-4 mb-4">
+              <div className="font-semibold text-ink mb-1">Creative Strategy Certification</div>
+              <div className="text-sm text-ink-soft">Northwind Training</div>
             </div>
             <div className="space-y-2 text-sm mb-4">
               <div className="flex justify-between">
-                <span className="text-gray-500">Issued:</span>
-                <span className="text-gray-900">Jan 15, 2026</span>
+                <span className="text-muted">Issued:</span>
+                <span className="text-ink">Jan 15, 2026</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Certificate #:</span>
-                <span className="text-gray-900 font-mono">CSB-2026-0123</span>
+                <span className="text-muted">Certificate #:</span>
+                <span className="text-ink font-mono">CSB-2026-0123</span>
               </div>
             </div>
-            <button className="w-full bg-[#0a66c2] text-white py-2 rounded font-medium text-sm mb-2">
+            <button className="w-full bg-[#0a66c2] text-white py-2 rounded-btn font-medium text-sm mb-2">
               Add to LinkedIn
             </button>
-            <div className="flex items-center justify-center py-3 border-t border-gray-200">
-              <div className="w-24 h-24 bg-gray-100 rounded"></div>
+            <div className="flex items-center justify-center py-3 border-t border-rule">
+              <QrSample className="h-24 w-24" />
             </div>
           </div>
           <div className="order-1 lg:order-2">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Certificate pages & verification</h2>
-            <p className="text-lg text-gray-600 mb-6">
+            <h2 className="display-2 mb-4">Certificate pages & verification</h2>
+            <p className="lede mb-6">
               Every certificate gets a public verification page with a QR code, PDF download, and one-click LinkedIn sharing.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Verification pages in your brand colors</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Verification pages in your brand colors</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">QR code for instant verification</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">QR code for instant verification</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">PDF download with QR code</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">PDF download with QR code</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Revocation with reason shown publicly</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Revocation with reason shown publicly</span>
               </li>
             </ul>
           </div>
@@ -131,33 +116,27 @@ export default function ProductPage() {
         {/* LinkedIn Sharing */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">LinkedIn sharing</h2>
-            <p className="text-lg text-gray-600 mb-6">
+            <h2 className="display-2 mb-4">LinkedIn sharing</h2>
+            <p className="lede mb-6">
               One-click &quot;Add to LinkedIn&quot; button pre-filled with the certificate name, dates, and verification URL. Share tracking is on the Growth plan.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Pre-filled certification data</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Pre-filled certification data</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Track clicks back to your site (Growth plan)</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Track clicks back to your site (Growth plan)</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">See which certificates drive the most reach (Growth plan)</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">See which certificates drive the most reach (Growth plan)</span>
               </li>
             </ul>
           </div>
-          <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-            <div className="text-sm text-gray-600 mb-4">Example: LinkedIn certification</div>
+          <div className="bg-tint rounded-card p-6 border border-rule">
+            <div className="text-sm text-ink-soft mb-4">Example: LinkedIn certification</div>
             <div className="space-y-2 text-sm">
               <div><strong>Name:</strong> Creative Strategy Certification</div>
               <div><strong>Organization:</strong> Northwind Training</div>
@@ -169,55 +148,38 @@ export default function ProductPage() {
 
         {/* Analytics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="order-2 lg:order-1 bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-2xl font-bold text-blue-600">2,847</div>
-                <div className="text-xs text-gray-600">Issued</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-green-600">2,698</div>
-                <div className="text-xs text-gray-600">Delivered (94.8%)</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-purple-600">1,923</div>
-                <div className="text-xs text-gray-600">Viewed (71.3%)</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-indigo-600">847</div>
-                <div className="text-xs text-gray-600">LinkedIn (44.0%)</div>
-              </div>
+          <div className="order-2 lg:order-1 bg-paper rounded-card p-6 border border-rule">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-btn border border-rule bg-cream px-4 py-3 text-sm font-medium text-ink">Issued</div>
+              <div className="rounded-btn border border-rule bg-cream px-4 py-3 text-sm font-medium text-ink">Delivered</div>
+              <div className="rounded-btn border border-rule bg-cream px-4 py-3 text-sm font-medium text-ink">Viewed</div>
+              <div className="rounded-btn border border-rule bg-cream px-4 py-3 text-sm font-medium text-ink">LinkedIn shares</div>
+              <div className="rounded-btn border border-rule bg-cream px-4 py-3 text-sm font-medium text-ink">Clicks to your site</div>
+              <div className="rounded-btn border border-rule bg-cream px-4 py-3 text-sm font-medium text-ink">Trend over time</div>
             </div>
+            <p className="fine mt-4">On Growth, your dashboard shows these metrics per program</p>
           </div>
           <div className="order-1 lg:order-2">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Share and click analytics</h2>
-            <p className="text-lg text-gray-600 mb-6">
+            <h2 className="display-2 mb-4">Share and click analytics</h2>
+            <p className="lede mb-6">
               On the Growth and Business plans, see exactly how your certificates perform. Issued, delivered, viewed, shared to LinkedIn, and clicks back to your site.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Funnel metrics with conversion rates</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Funnel metrics with conversion rates</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Per-program breakdown</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Per-program breakdown</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Bot filtering for accurate data</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Bot filtering for accurate data</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Trend over time</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Trend over time</span>
               </li>
             </ul>
           </div>
@@ -226,51 +188,43 @@ export default function ProductPage() {
         {/* Managing */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Managing certificates</h2>
-            <p className="text-lg text-gray-600 mb-6">
+            <h2 className="display-2 mb-4">Managing certificates</h2>
+            <p className="lede mb-6">
               Search, filter, edit, reissue, and revoke certificates. Bulk actions for publishing, revoking, and CSV export.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Search by name, email, or certificate number</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Search by name, email, or certificate number</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Filter by program, status, date, engagement</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Filter by program, status, date, engagement</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Edit, reissue, or revoke individual certificates (revoking is available on every plan)</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Edit, reissue, or revoke individual certificates (revoking is available on every plan)</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Bulk actions apply to all filtered results</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Bulk actions apply to all filtered results</span>
               </li>
             </ul>
           </div>
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <div className="text-sm text-gray-500 mb-4">Certificate Management</div>
+          <div className="bg-paper rounded-card p-6 border border-rule">
+            <div className="text-sm text-muted mb-4">Certificate Management</div>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-900">Jane Smith</span>
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">Published</span>
+              <div className="flex items-center justify-between py-2 border-b border-rule">
+                <span className="text-ink">Jane Smith</span>
+                <span className="text-xs px-2 py-1 bg-valid-soft text-valid rounded-badge">Published</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-900">John Doe</span>
-                <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Pending Changes</span>
+              <div className="flex items-center justify-between py-2 border-b border-rule">
+                <span className="text-ink">John Doe</span>
+                <span className="text-xs px-2 py-1 bg-[#F3E9D2] text-brass rounded-badge">Pending Changes</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-900">Sarah Lee</span>
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">Published</span>
+              <div className="flex items-center justify-between py-2 border-b border-rule">
+                <span className="text-ink">Sarah Lee</span>
+                <span className="text-xs px-2 py-1 bg-valid-soft text-valid rounded-badge">Published</span>
               </div>
             </div>
           </div>
@@ -279,43 +233,35 @@ export default function ProductPage() {
         {/* Branding */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1">
-            <div className="bg-white rounded-lg shadow-lg p-6 border-4 border-purple-600">
-              <div className="border-b border-gray-200 pb-4 mb-4">
-                <div className="font-semibold text-gray-900 mb-1">Your Program Name</div>
-                <div className="text-sm" style={{ color: '#8b5cf6' }}>Your Organisation</div>
+            <div className="bg-paper rounded-card shadow-soft p-6 border-2 border-stamp">
+              <div className="border-b border-rule pb-4 mb-4">
+                <div className="font-semibold text-ink mb-1">Your Program Name</div>
+                <div className="text-sm" style={{ color: '#8E1B1B' }}>Your Organisation</div>
               </div>
-              <div className="text-sm text-gray-600">Your branding, your colors</div>
+              <div className="text-sm text-ink-soft">Your branding, your colors</div>
             </div>
           </div>
           <div className="order-1 lg:order-2">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Your branding</h2>
-            <p className="text-lg text-gray-600 mb-6">
+            <h2 className="display-2 mb-4">Your branding</h2>
+            <p className="lede mb-6">
               Customize certificate pages with your brand colors. Branded email (your sender name and reply-to) is on Starter and above. A custom domain is coming soon on Business.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Custom brand colors on certificate pages</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Custom brand colors on certificate pages</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Customizable email templates with merge fields</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Customizable email templates with merge fields</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Emails from your sender name and reply-to (Starter plan)</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Emails from your sender name and reply-to (Starter plan)</span>
               </li>
               <li className="flex items-start">
-                <svg className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-gray-700">Custom domains (Business plan, coming soon)</span>
+                <span className="mr-3 w-[18px] flex-shrink-0 font-bold text-valid" aria-hidden="true">✓</span>
+                <span className="text-ink-soft">Custom domains (Business plan, coming soon)</span>
               </li>
             </ul>
           </div>
@@ -323,21 +269,21 @@ export default function ProductPage() {
       </div>
 
       {/* CTA */}
-      <div className="bg-blue-600 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
+      <div className="bg-ink py-20">
+        <div className="site-wrap text-center">
+          <h2 className="display-2 !text-parchment mb-4">
             Ready to drive reach with certificates?
           </h2>
           <div className="flex justify-center gap-4">
             <Link
               href="/signup"
-              className="inline-flex items-center px-6 py-3 text-base font-semibold text-blue-600 bg-white rounded-md hover:bg-blue-50"
+              className="btn btn-on-ink"
             >
               Start free
             </Link>
             <Link
               href="/pricing"
-              className="inline-flex items-center px-6 py-3 text-base font-semibold text-white border-2 border-white rounded-md hover:bg-blue-700"
+              className="btn btn-ghost-light"
             >
               See pricing
             </Link>

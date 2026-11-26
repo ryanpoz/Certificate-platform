@@ -7,6 +7,7 @@ import { academies } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import UsageBanner from '@/components/dashboard/usage-banner'
 import { getSeatAccess } from '@/lib/billing/seats'
+import { BrandMark } from '@/components/brand/logo'
 
 async function logout() {
   'use server'
@@ -37,7 +38,8 @@ export default async function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
-              <Link href="/dashboard/certificates" className="flex items-center px-2 text-xl font-bold text-gray-900">
+              <Link href="/dashboard/certificates" className="flex items-center gap-2.5 px-2 font-display text-xl font-semibold text-gray-900">
+                <BrandMark size={28} />
                 {academy?.name || 'Certificate Platform'}
               </Link>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

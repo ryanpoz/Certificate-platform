@@ -9,14 +9,14 @@ export const metadata = {
 
 export default function SignupPage() {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="rounded-card border border-rule bg-paper p-8 shadow-soft">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="display-2 mb-2">
               Start free
             </h1>
-            <p className="text-gray-600">
+            <p className="text-ink-soft">
               250 certificates per year, no credit card required
             </p>
           </div>
@@ -24,9 +24,9 @@ export default function SignupPage() {
           <SignupForm />
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-ink-soft">
               Already have an account?{' '}
-              <Link href="/auth/login" className="font-medium text-blue-600 hover:underline">
+              <Link href="/auth/login" className="font-medium text-stamp hover:underline">
                 Log in
               </Link>
             </p>

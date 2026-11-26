@@ -24,7 +24,7 @@ export default async function MarketingLayout({
   return (
     <>
       <MarketingNav isLoggedIn={isLoggedIn} />
-      <main>{children}</main>
+      <main className="bg-parchment text-ink">{children}</main>
       <MarketingFooter />
     </>
   )
