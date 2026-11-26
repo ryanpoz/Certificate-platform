@@ -14,7 +14,7 @@ export default function ContactPage() {
       <div className="bg-paper border border-rule rounded-card p-6">
         <p className="text-ink mb-2">
           <strong>Email:</strong>{' '}
-          <a href={`mailto:${BRAND.supportEmail}`} className="text-stamp hover:underline">
+          <a href={`mailto:${BRAND.supportEmail}`} className="text-cheer hover:underline">
             {BRAND.supportEmail}
           </a>
         </p>

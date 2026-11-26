@@ -1,7 +1,22 @@
+import { SamplePill } from '@/components/brand/logo'
+
 /**
- * Sample certificate and verification slip for marketing pages. Built from
- * HTML/SVG; the content is fictional and labelled Sample.
+ * Hero imagery: a fictional learner's certificate and a generic share post,
+ * sitting like stickers on the ink poster. Built from HTML/SVG; everything is
+ * fictional and labelled Sample. The post is a generic feed card, not a copy of
+ * any network's UI.
  */
+
+const SPARK =
+  'M49.00,4.50 L51.14,12.83 L58.55,8.45 L54.17,15.86 L62.50,18.00 L54.17,20.14 L58.55,27.55 L51.14,23.17 L49.00,31.50 L46.86,23.17 L39.45,27.55 L43.83,20.14 L35.50,18.00 L43.83,15.86 L39.45,8.45 L46.86,12.83 Z'
+
+export function Spark({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="35 4 28 28" aria-hidden="true" className={className}>
+      <path fill="currentColor" d={SPARK} />
+    </svg>
+  )
+}
 
 export function QrSample({ className = '' }: { className?: string }) {
   const cells = [
@@ -11,18 +26,18 @@ export function QrSample({ className = '' }: { className?: string }) {
   ]
   const finder = (x: number, y: number) => (
     <g key={`${x}-${y}`}>
-      <rect x={x} y={y} width="16" height="16" fill="#1C1917" />
-      <rect x={x + 2.5} y={y + 2.5} width="11" height="11" fill="#FFFDF9" />
-      <rect x={x + 5} y={y + 5} width="6" height="6" fill="#1C1917" />
+      <rect x={x} y={y} width="16" height="16" rx="2" fill="#17141F" />
+      <rect x={x + 2.5} y={y + 2.5} width="11" height="11" rx="1" fill="#FFFFFF" />
+      <rect x={x + 5} y={y + 5} width="6" height="6" rx="1" fill="#17141F" />
     </g>
   )
   return (
-    <svg viewBox="0 0 52 52" aria-hidden="true" className={`border border-ink bg-cream p-[3px] ${className}`}>
-      <rect width="52" height="52" fill="#FFFDF9" />
+    <svg viewBox="0 0 52 52" aria-hidden="true" className={`rounded-md bg-white ${className}`}>
+      <rect width="52" height="52" fill="#FFFFFF" />
       {finder(3, 3)}
       {finder(33, 3)}
       {finder(3, 33)}
-      <g fill="#1C1917">
+      <g fill="#17141F">
         {cells.map(([x, y, w, h]) => (
           <rect key={`${x}-${y}`} x={x} y={y} width={w} height={h} />
         ))}
@@ -31,75 +46,93 @@ export function QrSample({ className = '' }: { className?: string }) {
   )
 }
 
-export function ValidPill() {
-  return (
-    <span className="valid-pill">
-      <span className="h-1.5 w-1.5 rounded-full bg-valid" aria-hidden="true" /> Valid
-    </span>
-  )
-}
+/** Decorative confetti ticks; drift slowly, static with reduced motion */
+const CONFETTI = [
+  { cls: 'left-[4%] top-[6%] bg-cheer', r: '20deg', delay: '0s' },
+  { cls: 'left-[46%] top-[1%] bg-gold-bright', r: '-30deg', delay: '-1.5s' },
+  { cls: 'right-[6%] top-[14%] bg-periwinkle', r: '45deg', delay: '-3s' },
+  { cls: 'left-[1%] top-[52%] bg-gold-bright', r: '-15deg', delay: '-2s' },
+  { cls: 'right-[2%] top-[58%] bg-cheer', r: '30deg', delay: '-4s' },
+  { cls: 'left-[30%] bottom-[2%] bg-mint', r: '60deg', delay: '-5s' },
+  { cls: 'right-[24%] bottom-[0%] bg-gold-bright', r: '-50deg', delay: '-2.5s' },
+  { cls: 'left-[58%] top-[44%] bg-periwinkle', r: '10deg', delay: '-6s' },
+]
 
-export function CertificateVisual() {
+export function ShareStage() {
   return (
-    <div className="relative mx-auto h-[440px] w-full max-w-[540px] sm:h-[480px]" aria-label="Sample certificate and verification slip">
-      <div className="absolute left-0 top-4 w-[92%] origin-[50%_60%] -rotate-[4.5deg] border-[1.5px] border-ink bg-cream p-[18px] shadow-paper sm:w-[500px]">
-        <div className="flex h-[320px] flex-col border border-ink px-6 pb-4 pt-5">
-          <div className="mb-4 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-ink">
-            <span>Harbour Skills Institute</span>
-            <span>Sample</span>
-          </div>
-          <div className="mb-1 text-center font-display text-[13px] font-medium italic text-brass">This is to certify that</div>
-          <div className="mx-6 mb-2.5 truncate border-b border-rule-strong pb-1.5 text-center font-display text-[36px] font-medium leading-none tracking-[-0.03em]">
-            Jordan Lee
-          </div>
-          <div className="mb-3 text-center font-display text-[20px] font-semibold tracking-[-0.02em]">Occupational First Aid — Level 2</div>
-          <p className="mx-auto mb-4 max-w-[340px] text-center text-[12.5px] leading-[1.45] text-ink-soft">
-            has completed the required training and assessment, and is entitled to hold this credential for the period shown below.
-          </p>
-          <div className="mt-auto grid grid-cols-[1fr_auto_1fr] items-end gap-3">
-            <div>
-              <div className="inline-block min-w-[110px] border-t border-ink pt-1 font-display text-base font-medium italic">A. Rahman</div>
-              <div className="mt-0.5 text-[10px] text-muted">Registrar</div>
-            </div>
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-stamp text-center text-[8px] font-semibold uppercase leading-[1.2] tracking-[0.12em] text-cream"
-              style={{ boxShadow: 'inset 0 0 0 5px #8E1B1B, inset 0 0 0 6.2px #FFFDF9' }}
-            >
-              Official
-              <br />
-              seal
-            </div>
-            <div className="text-right text-[10px] leading-normal text-ink-soft">
-              Issued 18 Mar 2025
-              <strong className="block text-[11px] font-semibold text-stamp">Valid until 18 Mar 2027</strong>
-            </div>
-          </div>
-        </div>
+    <div className="relative mx-auto h-[440px] w-full max-w-[500px] sm:h-[460px]">
+      <div aria-hidden="true">
+        {CONFETTI.map((c, i) => (
+          <span
+            key={i}
+            className={`absolute h-[5px] w-[14px] rounded-full ${c.cls} animate-drift motion-reduce:animate-none`}
+            style={{ ['--r' as string]: c.r, transform: `rotate(${c.r})`, animationDelay: c.delay }}
+          />
+        ))}
       </div>
-      <aside
-        className="absolute bottom-2 right-2 z-[2] w-[228px] rotate-[5deg] border border-ink bg-paper p-3.5 pb-3 shadow-paper"
-        aria-label="Sample verification slip"
+
+      {/* Generic share post, behind and up-right: "they posted it" */}
+      <article
+        aria-label="Sample share post, fictional"
+        className="absolute right-0 top-0 w-[290px] rotate-[3deg] rounded-[20px] bg-white p-4 text-ink shadow-sticker animate-rise-in motion-reduce:animate-none sm:w-[310px]"
       >
-        <div className="mb-2.5 flex items-center justify-between">
-          <ValidPill />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Sample</span>
-        </div>
-        <div className="flex items-start gap-2.5">
-          <QrSample className="h-[52px] w-[52px] shrink-0" />
-          <div>
-            <div className="mb-0.5 text-[13px] font-semibold">Jordan Lee</div>
-            <p className="text-[11px] leading-[1.4] text-ink-soft">Occupational First Aid — Level 2, Harbour Skills Institute.</p>
+        <SamplePill className="absolute -top-2.5 right-4">Sample post</SamplePill>
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal text-[13px] font-bold text-white" aria-hidden="true">
+            MC
+          </div>
+          <div className="leading-tight">
+            <strong className="block text-sm">Maya Chen</strong>
+            <span className="text-xs text-muted">Shared a certificate</span>
           </div>
         </div>
-        <div className="mt-2.5 flex justify-between gap-2 border-t border-rule pt-2 text-[10px] text-muted">
-          <div>
-            Expires<strong className="block font-semibold text-ink">18 Mar 2027</strong>
+        <p className="mt-3 text-[13.5px] leading-[1.5] text-ink-soft">
+          Just wrapped Facilitation Fundamentals with Lantern Collective. Grateful for the weekend, and proud to have this one to show for it.
+        </p>
+        <div className="mt-3 rounded-xl border border-rule bg-page px-3 py-2.5">
+          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-cheer">Lantern Collective</div>
+          <div className="font-display text-[15px] font-bold tracking-[-0.02em]">Facilitation Fundamentals</div>
+          <div className="text-xs text-muted">Awarded to Maya Chen</div>
+        </div>
+        <div className="mt-3 flex justify-between border-t border-rule pt-2.5 text-xs font-semibold text-muted" aria-hidden="true">
+          <span>Appreciate</span>
+          <span>Comment</span>
+          <span>Send</span>
+        </div>
+      </article>
+
+      {/* The certificate, in front */}
+      <article
+        aria-label="Sample certificate, fictional"
+        className="absolute bottom-0 left-0 w-[300px] -rotate-[2.5deg] overflow-hidden rounded-[20px] bg-white text-ink shadow-sticker sm:w-[320px]"
+      >
+        <div className="relative m-2.5 overflow-hidden rounded-[14px] border border-rule bg-[#FFFDF5] px-5 pb-4 pt-5">
+          <div className="absolute inset-y-0 left-0 w-1.5 bg-cheer" aria-hidden="true" />
+          <SamplePill className="absolute left-5 top-3">Sample</SamplePill>
+          <Spark className="absolute right-3 top-3 h-9 w-9 text-cheer" />
+          <div className="mt-6 text-[10px] font-bold uppercase tracking-[0.14em] text-gold">Lantern Collective</div>
+          <div className="mt-1 font-display text-[24px] font-extrabold leading-[1.02] tracking-[-0.035em]">
+            Facilitation
+            <br />
+            Fundamentals
           </div>
-          <div>
-            ID<strong className="block font-semibold text-ink">HSI-2026-0841</strong>
+          <div className="mt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Awarded to</div>
+          <div className="whitespace-nowrap font-display text-[22px] font-bold tracking-[-0.03em]">Maya Chen</div>
+          <div className="mt-3 flex items-end justify-between">
+            <div className="text-[11px] leading-snug text-muted">
+              Completed
+              <br />
+              <strong className="text-ink">24 October 2026</strong>
+            </div>
+            <QrSample className="h-11 w-11" />
           </div>
         </div>
-      </aside>
+        <div className="px-2.5 pb-2.5">
+          <span className="flex h-10 w-full items-center justify-center rounded-btn bg-ink text-sm font-semibold text-white" aria-hidden="true">
+            Share to LinkedIn
+          </span>
+        </div>
+      </article>
     </div>
   )
 }

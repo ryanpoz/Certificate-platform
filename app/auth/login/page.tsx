@@ -29,11 +29,11 @@ export default function LoginPage() {
   const hasGoogleOAuth = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === 'true'
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-parchment px-4 py-12 text-ink">
-      <Logo />
-      <div className="max-w-md w-full space-y-8 p-8 bg-paper border border-rule rounded-card shadow-soft">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-ink px-4 py-12 text-ink">
+      <Logo tone="dark" pop />
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-[20px] shadow-sticker">
         <div>
-          <h2 className="text-center font-display text-3xl font-medium tracking-[-0.02em] text-ink">
+          <h2 className="text-center font-display text-3xl font-extrabold tracking-[-0.04em] text-ink">
             Log in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-ink-soft">
@@ -49,7 +49,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-rule-strong"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-paper text-muted">Or continue with email</span>
+                <span className="px-2 bg-white text-muted">Or continue with email</span>
               </div>
             </div>
           </>
@@ -66,7 +66,7 @@ export default function LoginPage() {
               type="email"
               autoComplete="email"
               required
-              className="appearance-none rounded-btn relative block w-full bg-cream px-3 py-2.5 border border-rule-strong placeholder-muted text-ink focus:outline-none focus:ring-ink focus:border-ink focus:z-10 sm:text-sm"
+              className="appearance-none rounded-xl relative block w-full bg-white px-3 py-2.5 border border-rule-strong placeholder-muted text-ink focus:outline-none focus:ring-ink focus:border-ink focus:z-10 sm:text-sm"
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -74,7 +74,7 @@ export default function LoginPage() {
           </div>
 
           {message && (
-            <div className={`rounded-btn p-4 ${
+            <div className={`rounded-xl p-4 ${
               message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
             }`}>
               <p className="text-sm">{message.text}</p>
@@ -85,7 +85,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-btn text-cream bg-stamp hover:bg-stamp-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-btn text-white bg-cheer hover:bg-cheer-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink disabled:opacity-50"
             >
               {loading ? 'Sending...' : 'Send magic link'}
             </button>

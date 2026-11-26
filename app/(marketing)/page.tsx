@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BRAND } from '@/lib/config/brand'
-import { CertificateVisual } from '@/components/marketing/certificate-visual'
+import { ShareStage, Spark } from '@/components/marketing/certificate-visual'
+import { ComingSoonBadge } from '@/components/brand/logo'
 
 export const metadata = {
   title: `${BRAND.name} - ${BRAND.tagline}`,
@@ -9,171 +10,211 @@ export const metadata = {
 
 const STEPS = [
   {
-    title: 'Upload your recipients',
-    body: 'Import a CSV with names and emails. We validate, deduplicate, and create certificates in seconds.',
+    title: 'Design',
+    body: 'Pick a template, add your name and logo, and make a certificate you’d be happy to see posted. Minutes, not a design project.',
   },
   {
-    title: 'They share instantly',
-    body: 'Email lands with a one-click \u201cAdd to LinkedIn\u201d button and a verification page with a QR code.',
+    title: 'Issue',
+    body: 'Send certificates after a workshop, a cohort, a live session, or a training you already run. CSV, or one at a time.',
   },
   {
-    title: 'Watch the reach grow',
-    body: 'On Growth, share and click analytics show issued, viewed, shared, and clicks back to your site\u2014no guessing what\u2019s working.',
+    title: 'They share',
+    body: 'Learners get a public page and a one-tap Share to LinkedIn, plus X, Facebook and email. You get the visibility.',
   },
 ]
 
-const OUTCOMES = [
-  'Pre-filled with your program name, dates, and certificate URL',
-  'Track who clicked through from LinkedIn to your site (Growth plan)',
-  'See which certificates drive the most reach (Growth plan)',
+const FEATURES = [
+  {
+    title: 'Share to LinkedIn',
+    body: 'A ready-made post and a share prompt when they open their certificate, plus X, Facebook and email. The career moment, built in.',
+    well: 'bg-cheer-soft text-cheer',
+  },
+  {
+    title: 'A page worth showing',
+    body: 'Every certificate gets a public verification page and a QR code. Official enough to trust, handsome enough to post.',
+    well: 'bg-sun-pale text-gold',
+  },
+  {
+    title: 'Share analytics',
+    body: 'On Growth, see views, shares and clicks back to your site, so you can see the awareness your certificates create.',
+    well: 'bg-teal-soft text-teal',
+  },
+  {
+    title: 'A little fanfare',
+    body: 'Confetti and a reveal the first time a learner opens their certificate, with a big Share to LinkedIn button right there.',
+    well: 'bg-cheer-soft text-cheer',
+  },
+  {
+    title: 'Your next-step link',
+    body: 'On Growth, add your own call to action on the certificate page: a path from their proud moment back to your next offer.',
+    well: 'bg-sun-pale text-gold',
+  },
+  {
+    title: 'Designer and templates',
+    body: 'Professional certificates in minutes. Start from a template, add your branding, and make it yours.',
+    well: 'bg-teal-soft text-teal',
+  },
 ]
 
-const METRICS = ['Issued', 'Delivered', 'Viewed', 'LinkedIn adds', 'CTA clicks']
+const AUDIENCES = [
+  'Coaches',
+  'Yoga and wellness trainers',
+  'Course creators',
+  'Live and cohort trainers',
+  'Marketing teams',
+  'SaaS customer education',
+  'Associations',
+]
 
 export default function HomePage() {
   return (
     <div>
-      {/* Hero */}
-      <section className="pb-[88px] pt-14 lg:pt-[72px]">
-        <div className="site-wrap grid items-center gap-14 lg:grid-cols-[1fr_1.05fr]">
+      {/* Poster hero */}
+      <section className="band-ink overflow-hidden pb-24 pt-16 sm:pb-[100px] sm:pt-[72px]">
+        <div className="site-wrap grid items-center gap-14 lg:grid-cols-[1.05fr_1fr]">
           <div>
-            <p className="eyebrow">For trainers, associations and organisations</p>
-            <h1 className="display-1 mb-[22px] max-w-[11.5em]">Issue the credential. Set the expiry. Bring them back to recertify.</h1>
-            <p className="lede mb-8 max-w-[36em]">
-              Digital certificates with a public verification page, a QR code, and expiry dates employers can trust. Start free, add expiry dates on Starter, and send expiry reminder emails on Growth. Recertification campaigns are coming soon.
+            <p className="eyebrow">Digital certificates, built to be shared</p>
+            <h1 className="mb-6 max-w-[7.4em] font-display text-[54px] font-extrabold leading-[0.92] tracking-[-0.05em] text-cream sm:text-[80px]">
+              Certificates people are{' '}
+              <span className="bg-gold-bright px-[0.14em] pb-[0.04em] text-ink [box-decoration-break:clone] [-webkit-box-decoration-break:clone]">
+                proud to share.
+              </span>
+            </h1>
+            <p className="lede mb-8 max-w-[34em]">
+              Design it, issue it after a training, and give learners a one-tap way to share it. Every share is a little more visibility for your brand. Start free with 250 certificates a year.
             </p>
-            <div className="mb-[18px] flex flex-wrap items-center gap-3">
+            <div className="mb-5 flex flex-wrap items-center gap-3">
               <Link href="/signup" className="btn btn-primary">
                 Start free
               </Link>
-              <Link href="/product" className="btn btn-ghost">
-                See how it works <span aria-hidden="true">→</span>
+              <Link href="/pricing" className="btn btn-ghost-light">
+                See pricing
               </Link>
             </div>
-            <p className="fine">Free plan: 250 certificates/year • No credit card required</p>
+            <p className="fine">Free plan: 250 certificates/year • No credit card required • Prices in CA$</p>
           </div>
-          <CertificateVisual />
+          <ShareStage />
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="border-y border-rule bg-paper py-[88px]">
+      {/* Hard cut to sun */}
+      <section id="how-it-works" className="band-sun py-[84px]">
         <div className="site-wrap">
-          <div className="mb-12 max-w-[640px]">
-            <h2 className="display-2 mb-3.5">How it works</h2>
-            <p className="lede">Three steps from CSV to LinkedIn shares</p>
+          <div className="mb-11 max-w-[640px]">
+            <p className="eyebrow">How it works</p>
+            <h2 className="display-2 mb-3.5">Design. Issue. They share.</h2>
+            <p className="lede">
+              Three steps from a finished training to a career moment in someone’s feed, and a little more awareness for you.
+            </p>
           </div>
-          <ol className="relative grid gap-10 md:grid-cols-3 md:gap-0">
-            <div className="pointer-events-none absolute left-[18px] right-[calc(33.333%-18px)] top-[17px] hidden h-px bg-[#B7AD9E] md:block" aria-hidden="true" />
+          <ol className="grid gap-5 md:grid-cols-3">
             {STEPS.map((step, i) => (
-              <li key={step.title} className="relative md:pr-7">
-                <div className="relative z-[1] mb-[18px] flex h-9 w-9 items-center justify-center rounded-full bg-ink font-display text-base font-semibold text-parchment">
+              <li key={step.title} className="card p-7">
+                <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-sun font-display text-base font-extrabold text-ink ring-1 ring-ink/20">
                   {i + 1}
                 </div>
-                <h3 className="mb-2 text-xl font-semibold tracking-[-0.01em]">{step.title}</h3>
-                <p className="pr-2 text-[15px] leading-[1.55] text-ink-soft">{step.body}</p>
+                <h3 className="mb-2 font-display text-[22px] font-bold tracking-[-0.03em]">{step.title}</h3>
+                <p className="text-[15px] leading-[1.55] text-ink-soft">{step.body}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      {/* Outcomes */}
-      <section className="py-[88px]">
-        <div className="site-wrap grid items-center gap-16 lg:grid-cols-2">
-          <div>
-            <h2 className="display-2 mb-6">LinkedIn shares = signups</h2>
-            <p className="lede mb-6">
-              Every certificate your recipients add to LinkedIn becomes a verified signal to their network: your training works.
-            </p>
-            <ul>
-              {OUTCOMES.map((item, i) => (
-                <li key={item} className={`grid grid-cols-[18px_1fr] gap-3 py-3 text-base text-ink-soft ${i ? 'border-t border-rule' : ''}`}>
-                  <span className="font-bold text-valid" aria-hidden="true">
-                    ✓
-                  </span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+      {/* Made for the share */}
+      <section className="bg-page py-[84px]">
+        <div className="site-wrap">
+          <div className="mb-11 max-w-[700px]">
+            <p className="eyebrow">Made for the share</p>
+            <h2 className="display-2 mb-3.5">The moment they post it, your brand walks into a new feed.</h2>
+            <p className="lede">A ready-made post, a public page worth showing, and the analytics to see what those shares are doing.</p>
           </div>
-          <div className="overflow-hidden rounded-frame border border-ink bg-cream shadow-paper">
-            <div className="flex items-center gap-2 border-b border-rule bg-parchment px-3.5 py-2.5">
-              <span className="h-2 w-2 rounded-full bg-rule-strong" />
-              <span className="h-2 w-2 rounded-full bg-rule-strong" />
-              <span className="h-2 w-2 rounded-full bg-rule-strong" />
-              <div className="flex-1 rounded-btn border border-rule bg-paper px-2.5 py-1 text-[11px] text-muted">Example: Certificate page</div>
-            </div>
-            <div className="p-7">
-              <div className="mb-5 border-b border-rule pb-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.12em]">Northwind Training</div>
-                <div className="mt-1 font-display text-[28px] font-medium leading-tight tracking-[-0.02em]">Creative Strategy Certification</div>
-              </div>
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[11px] text-muted">
-                <div>
-                  <dt>Issued</dt>
-                  <dd className="mt-0.5 text-[13px] font-semibold text-ink">Jan 15, 2026</dd>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => (
+              <article key={f.title} className="card p-6 shadow-soft">
+                <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${f.well}`} aria-hidden="true">
+                  <Spark className="h-5 w-5" />
                 </div>
-                <div>
-                  <dt>Certificate #</dt>
-                  <dd className="mt-0.5 font-mono text-[13px] font-semibold text-ink">CSB-2026-0123</dd>
-                </div>
-              </dl>
-              <div className="mt-6">
-                <span className="btn btn-sm btn-primary w-full">Add to LinkedIn</span>
-              </div>
-            </div>
+                <h3 className="mb-2 font-display text-lg font-bold tracking-[-0.03em]">{f.title}</h3>
+                <p className="text-[15px] leading-[1.55] text-ink-soft">{f.body}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Analytics */}
-      <section className="border-y border-rule bg-paper py-[88px]">
-        <div className="site-wrap">
-          <div className="mb-10 max-w-[640px]">
-            <p className="eyebrow">Growth and Business</p>
-            <h2 className="display-2 mb-3.5">Analytics that prove impact</h2>
-            <p className="lede">On the Growth and Business plans. Clear numbers on reach and engagement.</p>
+      {/* Quieter, secondary: expiry and recertification */}
+      <section id="expiry" className="band-mint py-[84px]">
+        <div className="site-wrap grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
+          <div>
+            <p className="eyebrow">When a credential should end</p>
+            <h2 className="display-2 mb-3.5">Expiry and recertification, when you need them.</h2>
+            <p className="lede">
+              Some programs should stay current. Set an expiry date and remind people before it lapses. It’s here if you want it, not the first thing we lead with.
+            </p>
           </div>
-          <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-rule bg-rule md:grid-cols-5">
-            {METRICS.map((metric) => (
-              <li key={metric} className="bg-cream px-5 py-6 text-[15px] font-semibold text-ink">
-                {metric}
+          <dl className="card divide-y divide-ink/[0.12] px-6">
+            <div className="py-4">
+              <dt className="font-semibold">Expiry dates</dt>
+              <dd className="text-sm text-ink-soft">Starter, Growth and Business</dd>
+            </div>
+            <div className="py-4">
+              <dt className="font-semibold">Reminder emails and an expiring-soon view</dt>
+              <dd className="text-sm text-ink-soft">Growth and Business</dd>
+            </div>
+            <div className="py-4">
+              <dt className="font-semibold">
+                Recertification campaigns <ComingSoonBadge />
+              </dt>
+              <dd className="text-sm text-ink-soft">Business</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      {/* Who it's for */}
+      <section className="bg-page py-[84px] text-center">
+        <div className="site-wrap">
+          <p className="eyebrow">Who it’s for</p>
+          <h2 className="display-2 mb-8">From a solo coach to a whole association.</h2>
+          <ul className="mx-auto flex max-w-[860px] flex-wrap justify-center gap-2.5">
+            {AUDIENCES.map((a) => (
+              <li key={a} className="rounded-btn border border-ink/[0.14] bg-paper px-4 py-2 text-[15px] font-semibold text-ink">
+                {a}
               </li>
             ))}
           </ul>
-          <p className="fine mt-4">On Growth, your dashboard shows these metrics per program</p>
-        </div>
-      </section>
-
-      {/* Pricing teaser */}
-      <section className="py-[88px]">
-        <div className="site-wrap text-center">
-          <h2 className="display-2 mb-4">Simple plans with a yearly certificate limit</h2>
-          <p className="lede mx-auto mb-8 max-w-2xl">
-            Start free with 250 certificates per year. Move up to Starter, Growth or Business when you need more volume or features. Your full yearly allowance is available up front, billed monthly or annually.
-          </p>
-          <Link href="/pricing" className="btn btn-primary">
-            See pricing
-          </Link>
-        </div>
-      </section>
-
-      {/* Switch CTA */}
-      <section className="bg-ink py-20 text-parchment">
-        <div className="site-wrap">
-          <h2 className="display-2 mb-3.5 !text-parchment">Switching from Accredible? We&apos;ll help you move</h2>
-          <p className="lede max-w-2xl !text-[#D8D0C4]">
-            We&apos;ll help you import your existing certificates and reissue them with a fresh Add to LinkedIn button. Migration help is free; imported certificates count toward your plan&apos;s yearly allowance.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/switch" className="btn btn-on-ink">
-              Learn about switching
+          <p className="mt-8">
+            <Link href="/use-cases" className="font-semibold text-cheer underline decoration-2 underline-offset-4 hover:text-cheer-hover">
+              See how each one uses it
             </Link>
-            <Link href="/signup" className="btn btn-ghost-light">
+          </p>
+        </div>
+      </section>
+
+      {/* Cheer close */}
+      <section className="band-cheer relative overflow-hidden py-[84px] text-center">
+        <Spark className="absolute left-[6%] top-8 h-16 w-16 text-cream" />
+        <Spark className="absolute bottom-8 right-[7%] h-12 w-12 text-cream" />
+        <div className="site-wrap relative">
+          <h2 className="display-2 mx-auto mb-3.5 max-w-[16em]">Give your next training a moment worth posting.</h2>
+          <p className="lede mx-auto mb-8 max-w-[34em]">
+            Start free with 250 certificates a year. Upgrade when you need more room, branding, or the analytics behind the shares.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/signup" className="btn bg-white text-ink shadow-[0_14px_32px_rgba(23,20,31,0.18)] hover:bg-cream">
               Start free
             </Link>
+            <Link href="/pricing" className="btn border-white/70 text-white hover:bg-white/10">
+              See pricing
+            </Link>
           </div>
+          <p className="mx-auto mt-8 max-w-[40em] text-sm text-white">
+            <Link href="/switch" className="font-semibold underline decoration-2 underline-offset-4">
+              Moving from another certificate platform?
+            </Link>{' '}
+            Migration help is free; imported certificates count toward your plan&apos;s yearly allowance.
+          </p>
         </div>
       </section>
     </div>

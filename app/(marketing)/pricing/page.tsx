@@ -110,15 +110,13 @@ const plans: Plan[] = [
 
 function CheckIcon() {
   return (
-    <span className="absolute left-0 font-semibold text-brass" aria-hidden="true">
-      &ndash;
-    </span>
+    <span className="absolute left-0 top-[0.45em] h-1.5 w-1.5 rounded-full bg-teal" aria-hidden="true" />
   )
 }
 
 function Feature({ text, comingSoon }: FeatureItem) {
   return (
-    <li className="relative pl-[18px] text-[13.5px] leading-[1.4] text-ink-soft">
+    <li className="relative pl-4 text-[13.5px] leading-[1.45] text-ink-soft">
       <CheckIcon />
       {text}
       {comingSoon ? <ComingSoonBadge /> : null}
@@ -133,6 +131,7 @@ const EVERY_PLAN = [
   'Add to LinkedIn',
   'Basic counts: issued, emails sent, claimed',
   'Revoke certificates at any time',
+  'Claim celebration and share prompt for learners',
 ]
 
 function ComingSoonBadge() {
@@ -141,9 +140,9 @@ function ComingSoonBadge() {
 
 function Included({ on }: { on: boolean }) {
   return on ? (
-    <span className="font-bold text-valid" aria-label="Included">&#10003;</span>
+    <span className="font-semibold text-teal" aria-label="Included">Yes</span>
   ) : (
-    <span className="text-[#C4B8A8]" aria-label="Not included">&mdash;</span>
+    <span className="text-muted" aria-label="Not included">&mdash;</span>
   )
 }
 
@@ -157,7 +156,7 @@ function Price({ plan }: { plan: Plan }) {
       {plan.pricePrefix ? (
         <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">{plan.pricePrefix}</div>
       ) : null}
-      <div className="flex items-start gap-[3px] font-display text-[44px] font-medium leading-[0.9] tracking-[-0.03em]">
+      <div className="flex items-start gap-[3px] font-display text-[44px] font-extrabold leading-[0.95] tracking-[-0.04em]">
         {currency ? <span className="mt-1.5 font-sans text-[13px] font-semibold tracking-[0.04em] text-ink-soft">{currency}</span> : null}
         {amount}
       </div>
@@ -175,15 +174,15 @@ function ComparisonTable() {
   const seats = (plan: PlanId) =>
     LIMITS.adminSeats.contractPlans.includes(plan) ? 'Custom' : String(LIMITS.adminSeats.perPlan[plan])
   const th = (plan: PlanId) =>
-    `px-3.5 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em] ${plan === HIGHLIGHT ? 'bg-ink text-parchment' : 'bg-[#EFE8DC] text-ink'}`
-  const td = (plan: PlanId) => `px-3.5 py-3 text-center text-ink-soft ${plan === HIGHLIGHT ? 'bg-tint' : ''}`
+    `px-3.5 py-3 text-center text-xs font-bold uppercase tracking-[0.08em] ${plan === HIGHLIGHT ? 'bg-cheer text-white' : 'bg-ink text-cream'}`
+  const td = (plan: PlanId) => `px-3.5 py-3 text-center text-ink-soft ${plan === HIGHLIGHT ? 'bg-cheer-tint' : ''}`
   const label = 'px-3.5 py-3 text-left font-medium text-ink w-[34%]'
   return (
-    <div className="overflow-x-auto rounded-card border border-rule">
-      <table className="min-w-full bg-paper text-sm" data-comparison-table>
+    <div className="overflow-x-auto rounded-card border border-ink">
+      <table className="min-w-full bg-white text-sm" data-comparison-table>
         <thead>
           <tr className="border-b border-rule">
-            <th className="bg-[#EFE8DC] px-3.5 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-ink">Feature</th>
+            <th className="bg-ink px-3.5 py-3 text-left text-xs font-bold uppercase tracking-[0.08em] text-cream">Feature</th>
             {PLAN_ORDER.map((plan) => (
               <th key={plan} className={th(plan)}>{PLANS[plan].name}</th>
             ))}
@@ -230,33 +229,34 @@ function ComparisonTable() {
 export default function PricingPage() {
   return (
     <div className="pb-24">
-      <div className="site-wrap">
-        <div className="mx-auto max-w-3xl pb-4 pt-16 text-center">
+      <section className="band-ink pb-40 pt-16">
+        <div className="site-wrap mx-auto max-w-3xl text-center">
           <p className="eyebrow">Pricing in CA$</p>
-          <h1 className="display-1 mb-4">
-            Pricing
+          <h1 className="mx-auto mb-5 max-w-[13em] font-display text-[44px] font-extrabold leading-[0.96] tracking-[-0.045em] text-cream sm:text-[60px]">
+            Start free. Grow when the shares start adding up.
           </h1>
           <p className="lede mx-auto max-w-2xl">
             Prices in CA$. Pay monthly, or pay annually at 10x the monthly price and get two months free. Either way, your full yearly certificate allowance is available from day one.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 items-stretch gap-3.5 pb-6 pt-12 md:grid-cols-2 xl:grid-cols-4">
+      </section>
+      <div className="site-wrap">
+        <div className="-mt-28 grid grid-cols-1 items-stretch gap-4 pb-6 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((plan) => (
             <div
               key={plan.name}
               className={`relative flex flex-col rounded-card px-[22px] pb-[22px] ${
-                plan.featured ? 'border-2 border-ink bg-cream pt-8 shadow-soft' : 'border border-rule bg-paper pt-6'
+                plan.featured ? 'border-2 border-cheer bg-white pt-8 shadow-paper' : 'border border-ink/[0.16] bg-white pt-6 shadow-soft'
               }`}
             >
               {plan.featured ? (
-                <span className="absolute -top-[11px] left-[22px] rounded-badge bg-stamp px-[9px] py-[3px] text-[10px] font-bold uppercase tracking-[0.1em] text-cream">
+                <span className="absolute -top-[12px] left-1/2 -translate-x-1/2 rounded-badge bg-cheer px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white">
                   Recommended
                 </span>
               ) : null}
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.04em] text-ink">{plan.name}</h3>
+              <h3 className="mb-2 font-display text-[22px] font-bold tracking-[-0.03em] text-ink">{plan.name}</h3>
               <Price plan={plan} />
-              <p className="mb-1.5 text-sm font-semibold text-ink">{plan.volume}</p>
+              <p className={`mb-3 self-start rounded-badge px-2.5 py-1 text-xs font-bold ${plan.featured ? 'bg-cheer-soft text-cheer-hover' : 'bg-sun-soft text-ink'}`}>{plan.volume}</p>
               <p className="mb-4 min-h-[3.2em] text-[13px] leading-[1.45] text-ink-soft">{plan.blurb}</p>
               <ul className="mb-5 flex flex-1 flex-col gap-2">
                 {plan.features.map((feature) => (
@@ -291,7 +291,7 @@ export default function PricingPage() {
         </div>
 
         <div className="mt-20">
-          <h2 className="display-2 mb-7">FAQ</h2>
+          <h2 className="display-2 mb-7">Questions</h2>
           <div className="grid gap-x-10 gap-y-5 md:grid-cols-2 [&>div]:border-b [&>div]:border-rule [&>div]:pb-5">
             <div>
               <h3 className="mb-2 text-base font-semibold text-ink">What counts as a certificate?</h3>

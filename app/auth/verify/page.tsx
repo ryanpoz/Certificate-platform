@@ -39,7 +39,7 @@ function VerifyContent() {
       <div className="min-h-screen flex items-center justify-center bg-paper">
         <div className="max-w-md w-full p-8 bg-paper rounded-card shadow">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-stamp mb-4"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cheer mb-4"></div>
             <h2 className="font-display text-2xl font-medium tracking-[-0.02em] text-ink mb-2">Verifying...</h2>
             <p className="text-ink-soft">Please wait while we log you in.</p>
           </div>
@@ -56,7 +56,7 @@ function VerifyContent() {
           <p className="text-ink-soft mb-4">This magic link is invalid or missing.</p>
           <a 
             href="/auth/login" 
-            className="inline-block px-4 py-2 bg-stamp text-cream rounded-btn hover:bg-stamp-hover"
+            className="inline-block px-4 py-2 bg-cheer text-white rounded-btn hover:bg-cheer-hover"
           >
             Request a new link
           </a>
@@ -73,7 +73,7 @@ function VerifyContent() {
           <p className="text-ink-soft mb-4">This magic link has expired or has already been used.</p>
           <a 
             href="/auth/login" 
-            className="inline-block px-4 py-2 bg-stamp text-cream rounded-btn hover:bg-stamp-hover"
+            className="inline-block px-4 py-2 bg-cheer text-white rounded-btn hover:bg-cheer-hover"
           >
             Request a new link
           </a>
@@ -89,7 +89,7 @@ function VerifyContent() {
         <p className="text-ink-soft mb-4">An error occurred while verifying your link. Please try again.</p>
         <a 
           href="/auth/login" 
-          className="inline-block px-4 py-2 bg-stamp text-cream rounded-btn hover:bg-stamp-hover"
+          className="inline-block px-4 py-2 bg-cheer text-white rounded-btn hover:bg-cheer-hover"
         >
           Request a new link
         </a>
@@ -104,7 +104,7 @@ export default function VerifyPage() {
       <div className="min-h-screen flex items-center justify-center bg-paper">
         <div className="max-w-md w-full p-8 bg-paper rounded-card shadow">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-stamp mb-4"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cheer mb-4"></div>
             <h2 className="font-display text-2xl font-medium tracking-[-0.02em] text-ink mb-2">Loading...</h2>
           </div>
         </div>

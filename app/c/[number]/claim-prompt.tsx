@@ -77,7 +77,7 @@ export default function ClaimPrompt(props: ClaimPromptProps) {
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-celebrate" aria-hidden="true">
               🎉 Certificate earned
             </p>
-            <h2 className="mt-2 font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl" role="status">
+            <h2 className="mt-2 font-display text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl" role="status">
               {headline}
             </h2>
             <p className="mt-2 text-lg text-ink-soft">{subhead}</p>
@@ -89,7 +89,7 @@ export default function ClaimPrompt(props: ClaimPromptProps) {
             type="button"
             onClick={onDismiss}
             aria-label="Dismiss"
-            className="rounded-full p-1.5 text-muted hover:bg-parchment hover:text-ink"
+            className="rounded-full p-1.5 text-muted hover:bg-page hover:text-ink"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -123,7 +123,7 @@ export default function ClaimPrompt(props: ClaimPromptProps) {
           <a
             href={pdfUrl}
             onClick={onDownload}
-            className="inline-flex h-12 items-center justify-center rounded-xl border border-rule-strong bg-white px-5 text-base font-medium text-ink hover:bg-parchment"
+            className="inline-flex h-12 items-center justify-center rounded-xl border border-rule-strong bg-white px-5 text-base font-medium text-ink hover:bg-page"
           >
             Download PDF
           </a>
@@ -146,7 +146,7 @@ export default function ClaimPrompt(props: ClaimPromptProps) {
           <button
             type="button"
             onClick={copyText}
-            className="mt-2 inline-flex items-center rounded-full border border-rule-strong bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-parchment"
+            className="mt-2 inline-flex items-center rounded-full border border-rule-strong bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-page"
           >
             {copied ? 'Post copied' : 'Copy post'}
           </button>

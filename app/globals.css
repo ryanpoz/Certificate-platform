@@ -4,20 +4,21 @@
 
 :root {
   --brand-name: 'Credentially';
-  --background: #F4EFE6;
-  --foreground: #1C1917;
+  /* Poster ink (option C). Light page; ink is used for the poster bands. */
+  --background: #FFFDF8;
+  --foreground: #17141F;
 
   /* Celebration (recipient's first view). Re-theme here; components only use these tokens. */
-  --celebrate-accent: #8E1B1B;
-  --celebrate-accent-hover: #6F1414;
-  --celebrate-glow: #C9A45C;
-  --celebrate-surface: #FFFDF9;
-  --celebrate-ink: #1C1917;
-  --confetti-1: #8E1B1B;
-  --confetti-2: #C9A45C;
-  --confetti-3: #1F5C45;
-  --confetti-4: #1C1917;
-  --confetti-5: #E4DCD0;
+  --celebrate-accent: #D1185C;
+  --celebrate-accent-hover: #B0124D;
+  --celebrate-glow: #FFC44D;
+  --celebrate-surface: #FFFFFF;
+  --celebrate-ink: #17141F;
+  --confetti-1: #D1185C;
+  --confetti-2: #FFC44D;
+  --confetti-3: #0C6B5C;
+  --confetti-4: #6B6FD6;
+  --confetti-5: #FFD93D;
 }
 
 body {
@@ -28,10 +29,9 @@ body {
 }
 
 @layer base {
-  /* Fraunces stays a sober old-style: no soft or wonky forms */
+  /* Bricolage Grotesque at a large optical size for headlines */
   .font-display {
-    font-variation-settings: 'SOFT' 0, 'WONK' 0;
-    font-optical-sizing: auto;
+    font-variation-settings: 'opsz' 72, 'wdth' 100;
   }
 }
 
@@ -39,14 +39,15 @@ body {
   .site-wrap {
     @apply mx-auto w-full max-w-site px-6 lg:px-12;
   }
+  /* Cheer eyebrows on white/page (5.25:1). On sun, mint or ink bands override the colour. */
   .eyebrow {
-    @apply mb-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-brass;
+    @apply mb-3.5 text-xs font-bold uppercase tracking-[0.12em] text-cheer;
   }
   .display-1 {
-    @apply font-display text-[40px] font-medium leading-[1.08] tracking-[-0.02em] text-ink sm:text-[56px];
+    @apply font-display text-[44px] font-extrabold leading-[0.96] tracking-[-0.045em] text-ink sm:text-[60px];
   }
   .display-2 {
-    @apply font-display text-[32px] font-medium leading-[1.08] tracking-[-0.02em] text-ink sm:text-[40px];
+    @apply font-display text-[32px] font-extrabold leading-[1.02] tracking-[-0.04em] text-ink sm:text-[40px];
   }
   .lede {
     @apply text-lg leading-[1.55] text-ink-soft;
@@ -55,39 +56,89 @@ body {
     @apply text-[13px] leading-normal text-muted;
   }
   .btn {
-    @apply inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-btn border border-transparent px-[22px] text-[15px] font-semibold tracking-[0.01em] transition-colors;
+    @apply inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-btn border-[1.5px] border-transparent px-[22px] text-[15px] font-semibold tracking-[0.01em] transition-colors;
   }
   .btn-sm {
     @apply h-10 px-4 text-sm;
   }
+  /* White on cheer 5.25:1 AA */
   .btn-primary {
-    @apply bg-stamp text-cream hover:bg-stamp-hover;
+    @apply bg-cheer text-white shadow-cheer hover:bg-cheer-hover;
   }
   .btn-ghost {
     @apply border-ink bg-transparent text-ink hover:bg-ink hover:text-cream;
   }
   .btn-on-ink {
-    @apply bg-cream text-ink hover:bg-parchment;
+    @apply bg-white text-ink hover:bg-cream;
   }
   .btn-ghost-light {
-    @apply border-parchment bg-transparent text-parchment hover:bg-parchment hover:text-ink;
+    @apply border-cream/45 bg-transparent text-cream hover:bg-cream/10;
   }
+  /* Friendly label: cheer on cheer-soft */
   .badge-soon {
-    @apply inline-block whitespace-nowrap rounded-badge border border-stamp bg-transparent px-1.5 py-px align-[1px] text-[10px] font-semibold uppercase leading-[1.5] tracking-[0.08em] text-stamp;
+    @apply inline-block whitespace-nowrap rounded-badge bg-cheer-soft px-2 py-0.5 align-[1px] text-[10px] font-bold uppercase leading-[1.4] tracking-[0.06em] text-cheer-hover;
+  }
+  .sample-pill {
+    @apply inline-flex h-[22px] items-center rounded-badge bg-sun-pale px-2 text-[10px] font-bold uppercase tracking-[0.08em] text-gold;
   }
   .valid-pill {
-    @apply inline-flex items-center gap-1.5 rounded-badge bg-valid-soft px-2 py-[3px] text-[10px] font-bold uppercase tracking-[0.1em] text-valid;
+    @apply inline-flex items-center gap-1.5 rounded-badge bg-teal-soft px-2 py-[3px] text-[10px] font-bold uppercase tracking-[0.1em] text-teal;
   }
   .field {
-    @apply block w-full rounded-btn border border-rule-strong bg-cream px-3 py-2.5 text-[15px] text-ink placeholder:text-muted focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink;
+    @apply block w-full rounded-xl border border-rule-strong bg-white px-3.5 py-2.5 text-[15px] text-ink placeholder:text-muted focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink;
   }
   .card {
-    @apply rounded-card border border-rule bg-paper;
+    @apply rounded-card border border-ink/[0.12] bg-paper;
+  }
+  /* Ink poster band: cream type, haze ledes, gold eyebrows (all AAA on ink) */
+  .band-ink {
+    @apply bg-ink text-cream;
+  }
+  .band-ink .eyebrow {
+    @apply text-gold-bright;
+  }
+  .band-ink .display-1,
+  .band-ink .display-2 {
+    @apply text-cream;
+  }
+  .band-ink .lede {
+    @apply text-haze;
+  }
+  .band-ink .fine {
+    @apply text-haze-dim;
+  }
+  /* Cheer on sun or mint fails AA as small text, so eyebrows there are ink or teal */
+  .band-sun {
+    @apply bg-sun text-ink;
+  }
+  .band-sun .eyebrow {
+    @apply text-ink;
+  }
+  .band-mint {
+    @apply bg-mint text-ink;
+  }
+  .band-mint .eyebrow {
+    @apply text-teal;
+  }
+  .band-cheer {
+    @apply bg-cheer text-white;
+  }
+  .band-cheer .display-2 {
+    @apply text-white;
+  }
+  .band-cheer .lede {
+    @apply text-white;
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe-loop {
+    animation: none !important;
   }
 }

@@ -3,24 +3,41 @@ import { BRAND_NAME } from '@/lib/config/brand'
 
 type Tone = 'light' | 'dark'
 
+const SPARK =
+  'M49.00,4.50 L51.14,12.83 L58.55,8.45 L54.17,15.86 L62.50,18.00 L54.17,20.14 L58.55,27.55 L51.14,23.17 L49.00,31.50 L46.86,23.17 L39.45,27.55 L43.83,20.14 L35.50,18.00 L43.83,15.86 L39.45,8.45 L46.86,12.83 Z'
+
 /**
- * The mark: a landscape certificate with an official seal over its lower-right
- * corner. No letters, so it survives a rename. `light` is for parchment,
- * paper and cream; `dark` is for ink bands.
+ * The mark: a rounded landscape certificate (the thing being shared) with a
+ * raspberry spark popping off the top-right corner (the standing ovation).
+ * No letters, so it survives a rename. `light` is for light surfaces, `dark`
+ * for ink bands. Colours are the brand tokens ink #17141F, cream #FFF6EF and
+ * cheer #D1185C.
  */
-export function BrandMark({ size = 40, tone = 'light', className = '' }: { size?: number; tone?: Tone; className?: string }) {
-  const doc = tone === 'light' ? '#1C1917' : '#F4EFE6'
-  const line = tone === 'light' ? '#F4EFE6' : '#1C1917'
+export function BrandMark({
+  size = 36,
+  tone = 'light',
+  pop = false,
+  className = '',
+}: {
+  size?: number
+  tone?: Tone
+  /** Spark pops in once (cancelled by prefers-reduced-motion) */
+  pop?: boolean
+  className?: string
+}) {
+  const doc = tone === 'light' ? '#17141F' : '#FFF6EF'
+  const line = tone === 'light' ? '#FFF6EF' : '#17141F'
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className={`shrink-0 ${className}`} data-brand-mark>
-      <rect x="5" y="13" width="40" height="28" rx="3.25" fill={doc} />
-      <rect x="11" y="22.5" width="22" height="2.1" rx="1.05" fill={line} />
-      <rect x="11" y="28.5" width="14" height="2.1" rx="1.05" fill={line} opacity="0.72" />
-      <circle cx="46" cy="45" r="14" fill="#8E1B1B" />
-      <circle cx="46" cy="45" r="10.6" fill="none" stroke="#F4EFE6" strokeWidth="1.35" />
-      <rect x="40.2" y="40.4" width="11.6" height="7.4" rx="1.05" fill="#F4EFE6" />
-      <rect x="42" y="42.3" width="6.4" height="1.15" rx="0.5" fill="#8E1B1B" />
-      <rect x="42" y="44.7" width="4.2" height="1.15" rx="0.5" fill="#8E1B1B" />
+      <rect x="5" y="18" width="40" height="28" rx="5.5" fill={doc} />
+      <rect x="11.5" y="26.5" width="20" height="2.4" rx="1.2" fill={line} />
+      <rect x="11.5" y="32.5" width="13" height="2.4" rx="1.2" fill={line} opacity="0.7" />
+      <circle cx="14" cy="39.5" r="2.1" fill="#D1185C" />
+      <g className={pop ? 'origin-[49px_18px] animate-spark-pop motion-reduce:animate-none' : ''}>
+        <path fill="#D1185C" d={SPARK} />
+        <circle cx="49" cy="18" r="3.1" fill={line === '#FFF6EF' ? '#FFF6EF' : '#17141F'} />
+        <circle cx="49" cy="18" r="1.45" fill={line === '#FFF6EF' ? '#D1185C' : '#FFF6EF'} />
+      </g>
     </svg>
   )
 }
@@ -30,34 +47,41 @@ export function Wordmark({ tone = 'light', className = '' }: { tone?: Tone; clas
   return (
     <span
       data-brand-name
-      className={`font-display text-[22px] font-semibold leading-none tracking-[-0.02em] ${tone === 'light' ? 'text-ink' : 'text-parchment'} ${className}`}
+      className={`font-display text-[20px] font-bold leading-none tracking-[-0.03em] ${tone === 'light' ? 'text-ink' : 'text-cream'} ${className}`}
     >
       {BRAND_NAME}
     </span>
   )
 }
 
-/** Horizontal lockup: mark, 10px gap, wordmark */
+/** Horizontal lockup: mark 36px, 10px gap, wordmark */
 export function Logo({
   href = '/',
   tone = 'light',
-  markSize = 40,
+  markSize = 36,
+  pop = false,
   wordmarkClassName = '',
 }: {
   href?: string
   tone?: Tone
   markSize?: number
+  pop?: boolean
   wordmarkClassName?: string
 }) {
   return (
     <Link href={href} className="flex min-w-0 items-center gap-2.5" aria-label={`${BRAND_NAME} home`}>
-      <BrandMark size={markSize} tone={tone} />
+      <BrandMark size={markSize} tone={tone} pop={pop} />
       <Wordmark tone={tone} className={wordmarkClassName} />
     </Link>
   )
 }
 
-/** Small "Coming soon" rubber stamp */
+/** Friendly "Coming soon" label */
 export function ComingSoonBadge({ className = '' }: { className?: string }) {
   return <span className={`badge-soon ${className}`}>Coming soon</span>
+}
+
+/** Always on fictional certificates and posts */
+export function SamplePill({ children = 'Sample', className = '' }: { children?: React.ReactNode; className?: string }) {
+  return <span className={`sample-pill ${className}`}>{children}</span>
 }

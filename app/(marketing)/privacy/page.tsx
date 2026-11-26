@@ -7,8 +7,8 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-20">
-      <div className="bg-tint border border-rule rounded-card p-4 mb-8">
-        <p className="text-sm text-brass">
+      <div className="bg-cheer-tint border border-rule rounded-card p-4 mb-8">
+        <p className="text-sm text-gold">
           <strong>Draft:</strong> This privacy policy is a placeholder and should be reviewed by legal counsel before production use.
         </p>
       </div>

@@ -9,24 +9,26 @@ export const BRAND_NAME = 'Credentially'
 
 export const BRAND = {
   name: BRAND_NAME,
-  tagline: 'Certificates that show what your training actually drives',
-  description: 'A lower-cost alternative to Accredible for companies that certify external learners.',
+  tagline: 'Certificates people are proud to share',
+  description: 'Design a certificate, issue it after a training, and give learners a one-tap way to share it. Start free with 250 certificates a year.',
   url: process.env.NEXT_PUBLIC_APP_URL || 'https://certificate-platform-eta.vercel.app',
   
-  // Brand colors
-  // Brand colours ("the registrar"); Tailwind tokens in tailwind.config.ts
+  // Brand colours ("Poster ink"); Tailwind tokens in tailwind.config.ts
   colors: {
-    ink: '#1C1917',
-    parchment: '#F4EFE6',
-    paper: '#FBF8F3',
-    cream: '#FFFDF9',
-    stamp: '#8E1B1B',
-    stampHover: '#6F1414',
-    brass: '#6E5424',
-    brassBright: '#C9A45C',
-    valid: '#1F5C45',
-    primary: '#8E1B1B',
-    primaryHover: '#6F1414',
+    ink: '#17141F',
+    inkSoft: '#3E3851',
+    muted: '#5C5668',
+    page: '#FFFDF8',
+    cream: '#FFF6EF',
+    cheer: '#D1185C',
+    cheerHover: '#B0124D',
+    gold: '#8A5408',
+    goldBright: '#FFC44D',
+    teal: '#0C6B5C',
+    sun: '#FFD93D',
+    mint: '#B2F0C8',
+    primary: '#D1185C',
+    primaryHover: '#B0124D',
   },
   
   // Contact

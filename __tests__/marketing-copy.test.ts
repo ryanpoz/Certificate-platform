@@ -32,8 +32,16 @@ describe('marketing copy', () => {
     expect(read(p)).not.toMatch(/unlimited/i)
   })
 
-  it.each(PAGES)('%s has no course-creator / academy positioning', (p) => {
-    expect(copy(p)).not.toMatch(/\bacadem(y|ies)\b|course creators?|bootcamp|graduates/i)
+  // Course creators are now an audience (the non-compete no longer applies),
+  // but the product is still certificates, not an academy or course platform,
+  // and higher education is out of scope.
+  it.each(PAGES)('%s has no academy or higher-education positioning', (p) => {
+    expect(copy(p)).not.toMatch(/\bacadem(y|ies)\b|bootcamp|graduates|higher education|universit(y|ies)|\bcolleges?\b|\bLMS\b|sell your course/i)
+  })
+
+  it('names course creators as an audience on the homepage and use cases', () => {
+    expect(copy('app/(marketing)/page.tsx')).toContain('Course creators')
+    expect(copy('app/(marketing)/use-cases/page.tsx')).toContain('Course creators')
   })
 
   it('tagline and signup form drop academy wording; product name unchanged', () => {

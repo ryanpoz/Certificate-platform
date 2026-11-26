@@ -1,19 +1,18 @@
 import type { Metadata } from 'next'
-import { Fraunces, IBM_Plex_Sans } from 'next/font/google'
+import { Bricolage_Grotesque, Figtree } from 'next/font/google'
 import './globals.css'
 import { BRAND } from '@/lib/config/brand'
 
-// Display / wordmark / prices. SOFT and WONK are set to 0 in globals.css.
-const fraunces = Fraunces({
+// Display / wordmark / prices / plan names (variable: opsz + wdth)
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
-  style: ['normal', 'italic'],
-  axes: ['SOFT', 'WONK', 'opsz'],
+  axes: ['opsz', 'wdth'],
   variable: '--font-display',
   display: 'swap',
 })
 
 // UI and body text
-const plexSans = IBM_Plex_Sans({
+const figtree = Figtree({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
@@ -48,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${plexSans.variable}`}>
+    <html lang="en" className={`${bricolage.variable} ${figtree.variable}`}>
       <body className="font-sans">{children}</body>
     </html>
   )

@@ -52,7 +52,7 @@ export default function SignupForm() {
     return (
       <div className="text-center">
         <div className="mb-4">
-          <svg className="mx-auto h-12 w-12 text-valid" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="mx-auto h-12 w-12 text-teal" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>
         </div>
@@ -77,7 +77,7 @@ export default function SignupForm() {
               <div className="w-full border-t border-rule-strong"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-paper text-muted">Or continue with email</span>
+              <span className="px-2 bg-white text-muted">Or continue with email</span>
             </div>
           </div>
         </>
@@ -90,7 +90,7 @@ export default function SignupForm() {
             {error.includes('Google') && hasGoogleOAuth && (
               <button
                 onClick={() => window.location.href = '/auth/google'}
-                className="mt-2 text-sm font-medium text-stamp hover:text-stamp-hover underline"
+                className="mt-2 text-sm font-medium text-cheer hover:text-cheer-hover underline"
               >
                 Try Google sign-in →
               </button>
@@ -153,8 +153,8 @@ export default function SignupForm() {
 
         <p className="text-xs text-center text-muted">
           By signing up, you agree to our{' '}
-          <a href="/terms" className="text-stamp hover:underline">Terms</a> and{' '}
-          <a href="/privacy" className="text-stamp hover:underline">Privacy Policy</a>
+          <a href="/terms" className="text-cheer hover:underline">Terms</a> and{' '}
+          <a href="/privacy" className="text-cheer hover:underline">Privacy Policy</a>
         </p>
       </form>
     </>
