@@ -9,7 +9,6 @@ const LINKS = [
   { href: '/product', label: 'Product' },
   { href: '/use-cases', label: 'Use Cases' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/switch', label: 'Switch from Accredible' },
 ]
 
 export default function MarketingNav({ isLoggedIn }: { isLoggedIn?: boolean }) {

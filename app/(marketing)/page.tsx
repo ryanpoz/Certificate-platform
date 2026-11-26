@@ -38,9 +38,9 @@ export default function HomePage() {
         <div className="site-wrap grid items-center gap-14 lg:grid-cols-[1fr_1.05fr]">
           <div>
             <p className="eyebrow">For trainers, associations and organisations</p>
-            <h1 className="display-1 mb-[22px] max-w-[11.5em]">Certificates that show what your training actually drives</h1>
+            <h1 className="display-1 mb-[22px] max-w-[11.5em]">Issue the credential. Set the expiry. Bring them back to recertify.</h1>
             <p className="lede mb-8 max-w-[36em]">
-              Design certificates, send them by CSV, and let people share a verification page with a QR code and Add to LinkedIn. Share and click analytics are on the Growth plan.
+              Digital certificates with a public verification page, a QR code, and expiry dates employers can trust. Start free, add expiry dates on Starter, and send expiry reminder emails on Growth. Recertification campaigns are coming soon.
             </p>
             <div className="mb-[18px] flex flex-wrap items-center gap-3">
               <Link href="/signup" className="btn btn-primary">

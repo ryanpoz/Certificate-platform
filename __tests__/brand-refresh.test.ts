@@ -64,11 +64,37 @@ describe('Brand refresh (registrar direction)', () => {
     expect(read('app/(marketing)/pricing/page.tsx')).not.toMatch(/accredible|certifier|credly|sertifier/i)
   })
 
-  it('keeps the existing nav items', () => {
+  it('keeps the main nav items and moves Switch from Accredible to the footer only', () => {
     const nav = read('components/marketing/nav.tsx')
-    for (const label of ['Product', 'Use Cases', 'Pricing', 'Switch from Accredible']) {
+    for (const label of ['Product', 'Use Cases', 'Pricing']) {
       expect(nav).toContain(label)
     }
+    // Neither the desktop nor the mobile menu links to the switch page
+    expect(nav).not.toContain('Switch from Accredible')
+    expect(nav).not.toContain("'/switch'")
+    const footer = read('components/marketing/footer.tsx')
+    expect(footer).toContain('Switch from Accredible')
+    expect(footer).toContain("'/switch'")
+    expect(existsSync(join(process.cwd(), 'app/(marketing)/switch/page.tsx'))).toBe(true)
+  })
+
+  it('labels the Growth plan Recommended, not Most popular', () => {
+    const pricing = read('app/(marketing)/pricing/page.tsx')
+    expect(pricing).toContain('Recommended')
+    for (const file of [...MARKETING, 'app/(marketing)/signup/page.tsx']) {
+      expect(read(file)).not.toMatch(/most popular/i)
+    }
+  })
+
+  it('leads the homepage hero with recertification without implying campaigns ship today', () => {
+    const home = read('app/(marketing)/page.tsx')
+    const start = home.indexOf('<h1')
+    const hero = home.slice(start, home.indexOf('</section>', start))
+    expect(start).toBeGreaterThan(-1)
+    expect(hero).toContain('Issue the credential. Set the expiry. Bring them back to recertify.')
+    expect(hero).toContain('Recertification campaigns are coming soon.')
+    expect(hero).not.toMatch(/recipients/i)
+    expect(hero).toContain('250 certificates/year')
   })
 
   it('login no longer uses academy positioning', () => {

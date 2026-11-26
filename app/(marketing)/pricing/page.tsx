@@ -251,7 +251,7 @@ export default function PricingPage() {
             >
               {plan.featured ? (
                 <span className="absolute -top-[11px] left-[22px] rounded-badge bg-stamp px-[9px] py-[3px] text-[10px] font-bold uppercase tracking-[0.1em] text-cream">
-                  Most popular
+                  Recommended
                 </span>
               ) : null}
               <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.04em] text-ink">{plan.name}</h3>
