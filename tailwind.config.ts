@@ -17,6 +17,14 @@ const config: Config = {
     extend: {
       colors: {
         ink: { DEFAULT: '#1C1917', soft: '#44403C' },
+        // Celebration tokens are CSS variables (app/globals.css) so a rebrand only edits the theme
+        celebrate: {
+          DEFAULT: 'var(--celebrate-accent)',
+          hover: 'var(--celebrate-accent-hover)',
+          glow: 'var(--celebrate-glow)',
+          surface: 'var(--celebrate-surface)',
+          ink: 'var(--celebrate-ink)',
+        },
         muted: '#6F6A64',
         parchment: '#F4EFE6',
         paper: '#FBF8F3',
@@ -75,6 +83,22 @@ const config: Config = {
         badge: '2px',
         card: '8px',
         frame: '12px',
+      },
+      keyframes: {
+        'cert-reveal': {
+          '0%': { opacity: '0', transform: 'translateY(24px) scale(0.94) rotate(-1.5deg)' },
+          '60%': { opacity: '1', transform: 'translateY(-4px) scale(1.01) rotate(0.3deg)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1) rotate(0)' },
+        },
+        'celebrate-pop': {
+          '0%': { opacity: '0', transform: 'scale(0.9)' },
+          '70%': { opacity: '1', transform: 'scale(1.04)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+      },
+      animation: {
+        'cert-reveal': 'cert-reveal 900ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'celebrate-pop': 'celebrate-pop 600ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both',
       },
       boxShadow: {
         paper: '0 18px 40px rgba(28, 25, 23, 0.12), 0 2px 6px rgba(28, 25, 23, 0.06)',

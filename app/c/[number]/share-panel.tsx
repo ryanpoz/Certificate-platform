@@ -11,6 +11,8 @@ interface SharePanelProps {
   academyName: string
   onShare: (channel: ShareChannel) => void
   compact?: boolean
+  /** Limit to some channels, e.g. when LinkedIn already has its own primary button */
+  channels?: Array<'linkedin_post' | 'x' | 'facebook' | 'email'>
 }
 
 const channelLabels: Record<'linkedin_post' | 'x' | 'facebook' | 'email', string> = {
@@ -20,7 +22,7 @@ const channelLabels: Record<'linkedin_post' | 'x' | 'facebook' | 'email', string
   email: 'Email',
 }
 
-export default function SharePanel({ certificateUrl, postText, courseName, academyName, onShare, compact }: SharePanelProps) {
+export default function SharePanel({ certificateUrl, postText, courseName, academyName, onShare, compact, channels }: SharePanelProps) {
   const [copied, setCopied] = useState<'link' | null>(null)
   const links = buildShareLinks({ certificateUrl, postText, courseName, academyName })
 
@@ -33,7 +35,7 @@ export default function SharePanel({ certificateUrl, postText, courseName, acade
 
   return (
     <div className={`flex flex-wrap gap-2 ${compact ? '' : 'mt-1'}`}>
-      {(Object.keys(channelLabels) as Array<keyof typeof channelLabels>).map((channel) => (
+      {(channels ?? (Object.keys(channelLabels) as Array<keyof typeof channelLabels>)).map((channel) => (
         <a
           key={channel}
           href={links[channel]}

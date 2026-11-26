@@ -51,12 +51,20 @@ describe('public verification page', () => {
   })
 
   it('shows the post-claim share prompt only to recipients of valid certificates', () => {
-    expect(view).toContain("isRecipient && certificate.status === 'valid'")
-    expect(view).toContain('<ClaimPrompt')
+    // Who sees it is decided by resolveClaimMode (recipient + valid + not preview),
+    // covered behaviourally in claim-celebration.test.ts
+    expect(view).toContain('resolveClaimMode({')
+    expect(view).toContain('isRecipient: recipient,')
+    expect(view).toContain('status: certificate.status,')
+    expect(view).toContain("claimStyle !== 'none' && (")
+    expect(view.match(/<ClaimPrompt/g)).toHaveLength(1)
     const prompt = read('app/c/[number]/claim-prompt.tsx')
     expect(prompt).toContain('Suggested post')
     expect(prompt).toContain('Add to LinkedIn profile')
-    expect(prompt).toContain('localStorage')
+    // First view and dismissal are remembered in localStorage
+    expect(view).toContain('window.localStorage')
+    expect(view).toContain('markPromptDismissed(')
+    expect(view).toContain('markCelebrated(')
   })
 
   it('ends with a Verified by footer and a signup call to action', () => {

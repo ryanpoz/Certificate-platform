@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BRAND } from '@/lib/config/brand'
 import { formatDate, renderMergeFields } from '@/lib/utils/helpers'
 import { generateLinkedInUrl } from '@/lib/email/resend'
@@ -10,6 +10,16 @@ import ClaimPrompt from './claim-prompt'
 import VerifiedByFooter from './verified-by-footer'
 import { buildSharePostText, shortVerifyLink, type ShareChannel } from '@/lib/growth/share'
 import { tagCertificateUrl, signupRefUrl } from '@/lib/growth/tracking'
+import {
+  celebrationStyle,
+  markCelebrated,
+  markPromptDismissed,
+  prefersReducedMotion,
+  resolveClaimMode,
+  resolveIsRecipient,
+  stripRecipientParam,
+  type ClaimMode,
+} from '@/lib/growth/celebration'
 import { type CertificateDesignV2 } from '@/lib/certificate-builder/design-v2'
 import type { DesignConfigV3 } from '@/lib/design-config/v3-schema'
 import V2CertificateRenderer from '@/components/certificate/v2-renderer'
@@ -55,6 +65,10 @@ export default function CertificateView(props: CertificateViewProps) {
   const { certificate, learner, course, academy, template, certificateUrl, isPreviewMode, showPlatformCta = false } = props
   const [copied, setCopied] = useState(false)
   const [isRecipient, setIsRecipient] = useState(false)
+  const [claimMode, setClaimMode] = useState<ClaimMode>('none')
+  const [reducedMotion, setReducedMotion] = useState(false)
+  // Resolve the claim moment once per page load (StrictMode re-runs effects)
+  const claimResolved = useRef(false)
 
   const isV3 = template.designConfig && template.designConfig.version === 3
   const isV2 = template.designConfig && template.designConfig.version === 2
@@ -63,8 +77,45 @@ export default function CertificateView(props: CertificateViewProps) {
   useEffect(() => {
     // Recipient arrives from the issue email (email link has recipient=true param)
     const urlParams = new URLSearchParams(window.location.search)
-    const recipient = urlParams.get('recipient') === 'true'
+    const session = (() => {
+      try {
+        return window.sessionStorage
+      } catch {
+        return null
+      }
+    })()
+    const storage = (() => {
+      try {
+        return window.localStorage
+      } catch {
+        return null
+      }
+    })()
+    const recipient = resolveIsRecipient({ search: window.location.search, certificateNumber: certificate.number, session })
     setIsRecipient(recipient)
+
+    // Tidy the recipient flag out of the address bar so a copied URL never
+    // celebrates for the verifiers it is shared with
+    const cleanUrl = stripRecipientParam(window.location.href)
+    if (cleanUrl) window.history.replaceState(window.history.state, '', cleanUrl)
+
+    // First view by the recipient celebrates; later visits get the static prompt.
+    // Verifiers (no recipient flag), previews and invalid certificates get nothing.
+    const firstResolve = !claimResolved.current
+    claimResolved.current = true
+    const mode: ClaimMode = !firstResolve ? 'none' : resolveClaimMode({
+      isRecipient: recipient,
+      status: certificate.status,
+      isPreview: !trackingEnabled,
+      certificateNumber: certificate.number,
+      storage,
+      medium: urlParams.get('utm_medium'),
+    })
+    if (firstResolve) {
+      setReducedMotion(prefersReducedMotion(window))
+      setClaimMode(mode)
+      if (mode === 'celebrate') markCelebrated(storage, certificate.number)
+    }
 
     if (trackingEnabled) {
       fetch('/api/events/track', {
@@ -79,8 +130,16 @@ export default function CertificateView(props: CertificateViewProps) {
           utmMedium: urlParams.get('utm_medium'),
         }),
       })
+      if (mode === 'celebrate') {
+        fetch('/api/events/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+          body: JSON.stringify({ certificateNumber: certificate.number, type: 'celebration_shown', isRecipient: true }),
+        }).catch(() => {})
+      }
     }
-  }, [certificate.number, trackingEnabled])
+  }, [certificate.number, certificate.status, trackingEnabled])
 
   const renderedText = renderMergeFields(template.bodyText, {
     learnerName: learner.fullName,
@@ -132,6 +191,17 @@ export default function CertificateView(props: CertificateViewProps) {
   }
 
   const onShare = (channel: ShareChannel) => trackAction('share_click', { channel })
+  const claimStyle = celebrationStyle(claimMode, reducedMotion)
+  const pdfUrl = `/api/certificates/${certificate.number}/pdf`
+
+  function dismissClaim() {
+    try {
+      markPromptDismissed(window.localStorage, certificate.number)
+    } catch {
+      // storage blocked; just hide it for this view
+    }
+    setClaimMode('none')
+  }
 
   const statusStyles =
     certificate.status === 'valid'
@@ -151,7 +221,7 @@ export default function CertificateView(props: CertificateViewProps) {
           </div>
         )}
 
-        {isRecipient && certificate.status === 'valid' && (
+        {claimStyle !== 'none' && (
           <ClaimPrompt
             certificateNumber={certificate.number}
             learnerName={learner.fullName}
@@ -160,12 +230,21 @@ export default function CertificateView(props: CertificateViewProps) {
             certificateUrl={certificateUrl}
             postText={postText}
             linkedInAddUrl={linkedInUrl}
+            pdfUrl={pdfUrl}
+            variant={claimStyle}
             onShare={onShare}
             onAddToLinkedIn={() => trackAction('linkedin_add_click')}
+            onDownload={() => trackAction('pdf_download')}
+            onDismiss={dismissClaim}
           />
         )}
 
-        <div className="bg-white shadow-sm ring-1 ring-gray-200 rounded-2xl overflow-hidden">
+        <div
+          className={`bg-white shadow-sm ring-1 ring-gray-200 rounded-2xl overflow-hidden ${
+            claimStyle === 'animated' ? 'animate-cert-reveal motion-reduce:animate-none' : ''
+          }`}
+          data-certificate-card
+        >
           <div
             className="h-1.5"
             style={{ backgroundColor: academy.brandColor }}
@@ -313,7 +392,7 @@ export default function CertificateView(props: CertificateViewProps) {
                       Add to LinkedIn
                     </a>
                     <a
-                      href={`/api/certificates/${certificate.number}/pdf`}
+                      href={pdfUrl}
                       onClick={() => trackAction('pdf_download')}
                       className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                     >

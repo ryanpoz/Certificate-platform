@@ -6,6 +6,18 @@
   --brand-name: 'Credentially';
   --background: #F4EFE6;
   --foreground: #1C1917;
+
+  /* Celebration (recipient's first view). Re-theme here; components only use these tokens. */
+  --celebrate-accent: #8E1B1B;
+  --celebrate-accent-hover: #6F1414;
+  --celebrate-glow: #C9A45C;
+  --celebrate-surface: #FFFDF9;
+  --celebrate-ink: #1C1917;
+  --confetti-1: #8E1B1B;
+  --confetti-2: #C9A45C;
+  --confetti-3: #1F5C45;
+  --confetti-4: #1C1917;
+  --confetti-5: #E4DCD0;
 }
 
 body {

@@ -29,6 +29,8 @@ export const TRACKABLE_EVENTS = [
   'verified_by_click',
   'pdf_download',
   'cta_click',
+  // First-view celebration shown to the recipient
+  'celebration_shown',
 ] as const
 export type TrackableEvent = (typeof TRACKABLE_EVENTS)[number]
 
