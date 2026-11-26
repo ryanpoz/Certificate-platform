@@ -106,3 +106,31 @@ describe('terms reflect plan-change rules', () => {
     expect(terms).toContain('<strong>Draft:</strong>')
   })
 })
+
+describe('removed features: pass-score rule and Badgr / Open Badges import', () => {
+  const { readdirSync, statSync } = require('fs') as typeof import('fs')
+  const walk = (dir: string): string[] =>
+    readdirSync(dir).flatMap((name) => {
+      const p = join(dir, name)
+      return statSync(p).isDirectory() ? walk(p) : /\.(tsx?|mdx?)$/.test(name) ? [p] : []
+    })
+  const files = [
+    ...walk(join(process.cwd(), 'app/(marketing)')),
+    ...walk(join(process.cwd(), 'components')),
+    join(process.cwd(), 'lib/config/brand.ts'),
+    join(process.cwd(), 'lib/billing/entitlements.ts'),
+    join(process.cwd(), 'lib/billing/plans.ts'),
+  ]
+
+  it.each(files.map((f) => [f.replace(process.cwd() + '/', ''), f]))('%s does not mention them', (_name, file) => {
+    const text = readFileSync(file as string, 'utf8')
+    expect(text).not.toMatch(/pass-score|pass score|passScore|minimum score|badgr|open badges|openBadges/i)
+  })
+
+  it('other coming-soon labels stay on the pricing cards', () => {
+    const pricing = read('app/(marketing)/pricing/page.tsx')
+    for (const text of ['Issue API', 'Webhook', 'Zapier', 'Custom domain']) {
+      expect(pricing).toContain(`{ text: '${text}', comingSoon: true }`)
+    }
+  })
+})

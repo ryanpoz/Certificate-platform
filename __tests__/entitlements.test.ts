@@ -160,8 +160,6 @@ describe('coming-soon features sit at their pricing-page tiers', () => {
     issueApi: 'Issue API',
     webhooks: 'Webhook',
     zapier: 'Zapier',
-    passScoreRule: 'Pass-score rule',
-    openBadgesImport: 'Open Badges import',
     shareAnalytics: 'Share and click analytics',
     expiryReminders: 'Expiry reminder emails',
     expiringSoonView: 'expiring-soon view',
@@ -186,6 +184,12 @@ describe('coming-soon features sit at their pricing-page tiers', () => {
       expect([f, line]).not.toEqual([f, ''])
       expect([f, line.includes('comingSoon: true')]).toEqual([f, FEATURES[f].status === 'coming_soon'])
     }
+  })
+
+  it('pass-score rule and Badgr / Open Badges import are removed for now', () => {
+    expect(FEATURE_KEYS).not.toContain('passScoreRule')
+    expect(FEATURE_KEYS).not.toContain('openBadgesImport')
+    expect(pricing).not.toMatch(/pass-score|pass score|minimum score|badgr|open badges/i)
   })
 
   it('registers reminders, expiring-soon, custom domain, white-label, SSO, brands, audit log', () => {
@@ -300,7 +304,7 @@ describe('downgrade rules', () => {
   it('locks lost features straight away (as previews), except period-end ones', () => {
     const plan = planDowngrade('growth', 'free', { certificatesThisYear: 0 }, periodEnd, now)
     expect(plan.locks.sort()).toEqual(
-      ['brandedEmail', 'customCta', 'expiringSoonView', 'expiry', 'expiryReminders', 'issueApi', 'openBadgesImport', 'pageAddress', 'passScoreRule', 'shareAnalytics', 'webhooks', 'zapier'].sort()
+      ['brandedEmail', 'customCta', 'expiringSoonView', 'expiry', 'expiryReminders', 'issueApi', 'pageAddress', 'shareAnalytics', 'webhooks', 'zapier'].sort()
     )
     for (const f of plan.locks) expect(featureAccess('free', f).state).toBe('locked')
     const fromBusiness = planDowngrade('business', 'growth', { certificatesThisYear: 0 }, periodEnd, now)

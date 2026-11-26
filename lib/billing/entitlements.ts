@@ -49,8 +49,6 @@ export const FEATURES = {
   issueApi: { label: 'Issue API', minPlan: 'starter', status: 'coming_soon', enforced: false, downgrade: 'lock' },
   webhooks: { label: 'Webhook', minPlan: 'starter', status: 'coming_soon', enforced: false, downgrade: 'lock' },
   zapier: { label: 'Zapier', minPlan: 'starter', status: 'coming_soon', enforced: false, downgrade: 'lock' },
-  passScoreRule: { label: 'Pass-score rule', minPlan: 'starter', status: 'coming_soon', enforced: false, downgrade: 'lock' },
-  openBadgesImport: { label: 'Badgr / Open Badges import', minPlan: 'starter', status: 'coming_soon', enforced: false, downgrade: 'lock' },
   // Growth
   shareAnalytics: { label: 'Share and click analytics', minPlan: 'growth', status: 'live', enforced: true, downgrade: 'lock' },
   expiryReminders: { label: 'Expiry reminder emails', minPlan: 'growth', status: 'live', enforced: true, downgrade: 'lock' },
