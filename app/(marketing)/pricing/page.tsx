@@ -77,7 +77,7 @@ const plans: Plan[] = [
     volume: '5,000 certificates per year',
     features: [
       { text: 'Everything in Starter, plus:' },
-      { text: 'Expiry reminder emails and an expiring-soon view', comingSoon: true },
+      { text: 'Expiry reminder emails and an expiring-soon view' },
       { text: 'Share and click analytics' },
       { text: 'Your own call to action on certificate pages' },
       { text: 'Your own page address on our domain (e.g. /acme)', comingSoon: true },

@@ -10,10 +10,13 @@ export function LockedFeatureCard({
   feature,
   title,
   description,
+  withTrial = false,
 }: {
   feature: Feature
   title: string
   description: string
+  /** Show both "Upgrade now" and "Start 14-day trial" */
+  withTrial?: boolean
 }) {
   const planName = requiredPlanName(feature)
   return (
@@ -38,14 +41,42 @@ export function LockedFeatureCard({
           </span>
           <h3 className="mt-3 text-base font-semibold text-gray-900">{title}</h3>
           <p className="mt-1 text-sm text-gray-600">{description}</p>
-          <Link
-            href={UPGRADE_URL}
-            className="mt-4 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            Upgrade to {planName}
-          </Link>
+          {withTrial ? (
+            <UpgradeButtons className="mt-4 justify-center" />
+          ) : (
+            <Link
+              href={UPGRADE_URL}
+              className="mt-4 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Upgrade to {planName}
+            </Link>
+          )}
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * "Upgrade now" and "Start 14-day trial". There is no checkout or trial yet,
+ * so both go to the pricing page and the trial is marked Coming soon.
+ */
+export function UpgradeButtons({ className = '' }: { className?: string }) {
+  return (
+    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+      <Link
+        href={UPGRADE_URL}
+        className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+      >
+        Upgrade now
+      </Link>
+      <Link
+        href={UPGRADE_URL}
+        className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+      >
+        Start 14-day trial
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600">Coming soon</span>
+      </Link>
     </div>
   )
 }

@@ -7,7 +7,8 @@ import { accountFor, getWritableAccount, NOT_FOUND } from '@/lib/auth/ownership'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { slugify, validateUrl } from '@/lib/utils/helpers'
-import { getAcademyPlan } from '@/lib/billing/usage'
+import { accountCan, getAcademyPlan } from '@/lib/billing/usage'
+import { saveCourseReminders } from '@/lib/reminders/settings'
 import { effectiveValidityMonths, can } from '@/lib/billing/entitlements'
 
 export async function createCourse(academyId: string, data: {
@@ -184,4 +185,33 @@ export async function deleteCustomField(fieldId: string) {
     .where(and(eq(customFields.id, fieldId), eq(customFields.academyId, account.academyId)))
   revalidatePath('/dashboard/courses')
   return { success: true }
+}
+
+/**
+ * Turn expiry reminder emails on or off for one program (Growth and up).
+ * Below Growth nothing is changed: the saved setting is kept for when the
+ * account upgrades.
+ */
+export async function setCourseReminders(courseId: string, enabled: boolean) {
+  const account = await getWritableAccount()
+  if (!account) {
+    return { error: NOT_FOUND }
+  }
+  const [existing] = await db
+    .select({ id: courses.id })
+    .from(courses)
+    .where(and(eq(courses.id, courseId), eq(courses.academyId, account.academyId)))
+    .limit(1)
+  if (!existing) {
+    return { error: NOT_FOUND }
+  }
+  if (!(await accountCan(account.academyId, 'expiryReminders'))) {
+    return { error: 'Expiry reminders are available on the Growth plan.', locked: true }
+  }
+  const saved = await saveCourseReminders(account.academyId, courseId, enabled === true)
+  if (!saved.ok) {
+    return { error: saved.error }
+  }
+  revalidatePath(`/dashboard/courses/${courseId}`)
+  return { success: true, enabled: enabled === true }
 }

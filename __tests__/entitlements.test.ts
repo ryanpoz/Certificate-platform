@@ -114,7 +114,7 @@ describe('no behaviour change for gates that were live before', () => {
 
   it('only the previously enforced gates are marked enforced', () => {
     const enforced = FEATURE_KEYS.filter((f) => FEATURES[f].enforced).sort()
-    expect(enforced).toEqual(['brandedEmail', 'customCta', 'expiry', 'shareAnalytics'])
+    expect(enforced).toEqual(['brandedEmail', 'customCta', 'expiringSoonView', 'expiry', 'expiryReminders', 'shareAnalytics'])
   })
 
   it('usage metering reads the yearly limit through getLimit', () => {
@@ -239,7 +239,8 @@ describe('can() and getLimit()', () => {
     expect(featureAccess('free', 'shareAnalytics')).toEqual({
       state: 'locked', comingSoon: false, requiredPlan: 'growth', requiredPlanName: 'Growth',
     })
-    expect(featureAccess('starter', 'expiryReminders')).toMatchObject({ state: 'locked', comingSoon: true })
+    expect(featureAccess('starter', 'expiryReminders')).toMatchObject({ state: 'locked', comingSoon: false, requiredPlan: 'growth' })
+    expect(featureAccess('starter', 'issueApi')).toMatchObject({ state: 'enabled', comingSoon: true })
     expect(featureAccess('growth', 'shareAnalytics')).toEqual({ state: 'enabled', comingSoon: false })
     expect(requiredPlanName('auditLog')).toBe('Business')
   })

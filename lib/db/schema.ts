@@ -166,6 +166,31 @@ export const academyDomains = pgTable('academy_domains', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+/** Expiry reminders on/off per program (sql/007). No row = on. Kept when a plan loses reminders. */
+export const courseReminderSettings = pgTable('course_reminder_settings', {
+  courseId: uuid('course_id').primaryKey().references(() => courses.id, { onDelete: 'cascade' }),
+  academyId: uuid('academy_id').notNull().references(() => academies.id, { onDelete: 'cascade' }),
+  enabled: boolean('enabled').notNull().default(true),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+/** Reminder log (sql/007): one row per certificate, reminder and expiry date; the unique key prevents duplicates */
+export const expiryReminders = pgTable('expiry_reminders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  certificateId: uuid('certificate_id').notNull().references(() => certificates.id, { onDelete: 'cascade' }),
+  academyId: uuid('academy_id').notNull().references(() => academies.id, { onDelete: 'cascade' }),
+  daysBefore: integer('days_before').notNull(),
+  expiryDate: timestamp('expiry_date').notNull(),
+  status: text('status').notNull().default('sending'),
+  attempts: integer('attempts').notNull().default(1),
+  messageId: text('message_id'),
+  error: text('error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+}, (table) => ({
+  once: unique('expiry_reminders_once').on(table.certificateId, table.daysBefore, table.expiryDate),
+}))
+
 export const academiesRelations = relations(academies, ({ many }) => ({
   users: many(users),
   courses: many(courses),

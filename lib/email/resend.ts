@@ -156,3 +156,41 @@ function generateLinkedInUrl(params: {
 }
 
 export { generateLinkedInUrl }
+
+/**
+ * Send an expiry reminder (built by expiryReminderContent) through the same
+ * Resend path as certificate emails. Without RESEND_API_KEY it logs instead.
+ */
+export async function sendExpiryReminderEmail(params: {
+  to: string
+  content: import('./expiry-reminder').ExpiryReminderContent
+}): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const { identity, subject, html, text } = params.content
+  if (resend) {
+    try {
+      const result = await resend.emails.send({
+        from: `${identity.fromName} <onboarding@resend.dev>`,
+        to: params.to,
+        subject,
+        html,
+        text,
+        ...(identity.replyTo ? { replyTo: identity.replyTo } : {}),
+      })
+      if (result.error) {
+        console.error('Resend error (expiry reminder):', result.error)
+        return { success: false, error: result.error.message }
+      }
+      return { success: true, messageId: result.data?.id }
+    } catch (error) {
+      console.error('Failed to send expiry reminder via Resend:', error)
+      return { success: false, error: String(error) }
+    }
+  }
+  console.log('\n=== EXPIRY REMINDER EMAIL (Resend API key not set) ===')
+  console.log('To:', params.to)
+  console.log('From:', identity.fromName, identity.replyTo ? `(reply-to ${identity.replyTo})` : '(no reply-to)')
+  console.log('Subject:', subject)
+  console.log('\n' + text)
+  console.log('=== END EMAIL ===\n')
+  return { success: true, messageId: 'console-fallback' }
+}

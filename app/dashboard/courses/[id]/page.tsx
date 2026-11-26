@@ -8,7 +8,9 @@ import TemplateEditor from './template-editor'
 import RecipientProgress from './recipient-progress'
 import { getAcademyPlan } from '@/lib/billing/usage'
 import { can } from '@/lib/billing/entitlements'
-import { PlanBadgeLink } from '@/components/dashboard/locked-feature'
+import { PlanBadgeLink, UpgradeButtons } from '@/components/dashboard/locked-feature'
+import { getReminderSettings, remindersEnabledFor } from '@/lib/reminders/settings'
+import RemindersToggle from './reminders-toggle'
 
 export default async function CourseDetailPage({
   params,
@@ -37,6 +39,9 @@ export default async function CourseDetailPage({
   const canSeeShareAnalytics = can(plan, 'shareAnalytics')
   const canUseExpiry = can(plan, 'expiry')
   const canUseCta = can(plan, 'customCta')
+  const canUseReminders = can(plan, 'expiryReminders')
+  // Saved on/off is shown on every plan (kept when the plan loses reminders)
+  const remindersOn = remindersEnabledFor(await getReminderSettings(user.academyId, [course.id]), course.id)
 
   let template = null
   try {
@@ -137,6 +142,23 @@ export default async function CourseDetailPage({
                   </dd>
                 </div>
               )}
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Expiry reminder emails</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {canUseReminders ? (
+                    <RemindersToggle courseId={course.id} initialEnabled={remindersOn} hasExpiry={!!course.validityMonths} />
+                  ) : (
+                    <div data-locked-feature="expiryReminders">
+                      <p className="text-gray-600">
+                        Email recipients 30 and 7 days before their certificate expires.{' '}
+                        <PlanBadgeLink feature="expiryReminders" />
+                        {!remindersOn && <span className="ml-1 text-xs text-gray-500">(saved as off)</span>}
+                      </p>
+                      <UpgradeButtons className="mt-2" />
+                    </div>
+                  )}
+                </dd>
+              </div>
             </dl>
           </div>
         </div>

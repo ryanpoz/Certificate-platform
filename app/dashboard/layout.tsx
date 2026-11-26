@@ -48,6 +48,12 @@ export default async function DashboardLayout({
                   Certificates
                 </Link>
                 <Link
+                  href="/dashboard/expiring"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+                >
+                  Expiring soon
+                </Link>
+                <Link
                   href="/dashboard/results"
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
                 >
