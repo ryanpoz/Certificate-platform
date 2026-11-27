@@ -71,7 +71,7 @@ export default function HomePage() {
     <div>
       {/* Poster hero */}
       <section className="band-ink overflow-hidden pb-24 pt-16 sm:pb-[100px] sm:pt-[72px]">
-        <div className="site-wrap grid items-center gap-14 lg:grid-cols-[1.05fr_1fr]">
+        <div className="site-wrap grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
           <div>
             <p className="eyebrow">Digital certificates, built to be shared</p>
             <h1 className="mb-6 max-w-[7.4em] font-display text-[54px] font-extrabold leading-[0.92] tracking-[-0.05em] text-cream sm:text-[80px]">

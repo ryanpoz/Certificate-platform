@@ -100,10 +100,17 @@ describe('Brand: Poster ink (fun direction, option C)', () => {
       ['muted on page', token('muted'), token('page')],
       ['gold on sun-pale (Sample pill)', token('gold'), token('sun', 'pale')],
       ['teal on white (Yes in table)', token('teal'), '#FFFFFF'],
+      ['teal Verify cue on teal-soft', token('teal'), token('teal', 'soft')],
+      ['gold eyebrow on the certificate face', token('gold'), '#FFFDF5'],
+      ['muted labels on the certificate face', token('muted'), '#FFFDF5'],
+      ['ink-soft comment on cheer-soft', token('ink', 'soft'), token('cheer', 'soft')],
+      ['white avatar initials on teal', '#FFFFFF', token('teal')],
     ]
     for (const [label, fg, bg] of pairs) {
       expect({ label, ratio: contrast(fg, bg) >= 4.5 }).toEqual({ label, ratio: true })
     }
+    // Periwinkle is decorative only: never behind text in the hero visual
+    expect(read('components/marketing/certificate-visual.tsx')).not.toMatch(/bg-periwinkle text-/)
     // Eyebrows on sun and mint must not be cheer (fails AA there)
     const css = read('app/globals.css')
     expect(css).toMatch(/\.band-sun \.eyebrow \{\s*@apply text-ink;/)
@@ -121,12 +128,47 @@ describe('Brand: Poster ink (fun direction, option C)', () => {
     expect(product).not.toMatch(/2,847|2,698|1,923|94\.8%|71\.3%|44\.0%/)
   })
 
-  it('labels the fictional hero certificate and post as samples', () => {
+  it('labels the fictional hero certificate and post as examples', () => {
     const visual = read('components/marketing/certificate-visual.tsx')
-    expect(visual).toContain('<SamplePill className="absolute left-5 top-3">Sample</SamplePill>')
-    expect(visual).toContain('Sample post</SamplePill>')
-    expect(visual).toContain('aria-label="Sample certificate, fictional"')
-    expect(visual).toContain('aria-label="Sample share post, fictional"')
+    expect(visual).toContain('<SamplePill className="relative z-10">Example</SamplePill>')
+    expect(visual).toContain('Example post</SamplePill>')
+    expect(visual).toContain('aria-label="Example certificate, fictional"')
+    expect(visual).toContain('aria-label="Example post, fictional"')
+    expect(visual).toContain('aria-label="Example comments"')
+  })
+
+  it('shows a beautiful example certificate: frame, spark seal, name, title, issuer, date, ID and a verify cue', () => {
+    const visual = read('components/marketing/certificate-visual.tsx')
+    const cert = visual.slice(visual.indexOf('export function ExampleCertificate'), visual.indexOf('/** Reaction icons'))
+    expect(cert).toContain('<Seal ')
+    expect(visual).toMatch(/function Seal[\s\S]*d=\{SPARK\}/)
+    for (const field of ['{c.title}', '{c.recipient}', '{c.issuer}', '{c.issued}', '{c.credentialId}', 'Verify', '<QrSample']) {
+      expect(cert).toContain(field)
+    }
+    expect(visual).toContain("title: 'Breathwork Facilitator Training'")
+    // Long names never wrap on the certificate
+    expect(cert).toMatch(/whitespace-nowrap font-display[^"]*\{?/)
+  })
+
+  it('shows others engaging with the post, including a comment from someone who wants to sign up', () => {
+    const visual = read('components/marketing/certificate-visual.tsx')
+    const post = visual.slice(visual.indexOf('const COMMENTS'), visual.indexOf('/** Hero stage'))
+    expect(post).toContain('<Reactions />')
+    expect((post.match(/initials: '/g) ?? []).length).toBeGreaterThanOrEqual(2)
+    expect(post).toMatch(/Where do I sign up\?/)
+    // Generic social card: no network logos or brand names on the card itself
+    expect(post).not.toMatch(/linkedin|#0a66c2/i)
+    // Avatars are initials, never photos
+    expect(visual).not.toMatch(/<img|<Image|\.jpe?g|\.png|\.webp/)
+  })
+
+  it('animates the hero gently and stops all of it for reduced motion', () => {
+    const visual = read('components/marketing/certificate-visual.tsx')
+    const animations = visual.match(/animate-(?!none)[a-z-]+/g) ?? []
+    expect(animations.length).toBeGreaterThan(0)
+    for (const line of visual.split('\n').filter((l) => /animate-(?!none)[a-z-]+/.test(l))) {
+      expect(line).toContain('motion-reduce:animate-none')
+    }
   })
 
   it('keeps the hero and pricing page free of competitor names', () => {

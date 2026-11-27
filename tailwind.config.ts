@@ -117,6 +117,7 @@ const config: Config = {
       },
       animation: {
         drift: 'drift 7s ease-in-out infinite',
+        'spin-slow': 'spin 40s linear infinite',
         'spark-pop': 'spark-pop 500ms cubic-bezier(0.22, 1, 0.36, 1) both',
         'rise-in': 'rise-in 600ms cubic-bezier(0.22, 1, 0.36, 1) 350ms both',
         'cert-reveal': 'cert-reveal 900ms cubic-bezier(0.22, 1, 0.36, 1) both',
